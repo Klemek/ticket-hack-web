@@ -1,0 +1,76 @@
+
+.ticket{
+    margin-top: 5px;
+    padding:5px;
+    padding-bottom: 0;
+    border:1px solid #9E9E9E;
+    border-radius: 5px;
+    color:#212121;
+    overflow: hidden;
+}
+
+.ticket:hover{
+    background-color: #BDBDBD;
+    cursor: pointer;
+}
+
+.ticket h4{
+    overflow:hidden;
+    display:block; 
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding-left:5px;
+    padding-right:5px;
+}
+
+.new-ticket{
+    border:1px dashed #9E9E9E;
+    color:#757575;
+}
+
+.ticket .type{
+    font-size:1em;
+    float:left
+}
+
+.ticket .priority{
+    font-size:1.6em;
+    float:right;
+    margin-top:3px;
+    margin-right:10px;
+}
+
+.form-signin {
+  max-width: 330px;
+  padding: 15px;
+
+  margin: 0 auto;
+    margin-top: 100px;
+}
+.form-signin .form-signin-heading,
+.form-signin .checkbox {
+  margin-bottom: 10px;
+}
+.form-signin .checkbox {
+  font-weight: 400;
+}
+.form-signin .form-control {
+  position: relative;
+  box-sizing: border-box;
+  height: auto;
+  padding: 10px;
+  font-size: 16px;
+}
+.form-signin .form-control:focus {
+  z-index: 2;
+}
+.form-signin input[type="email"] {
+  margin-bottom: -1px;
+  border-bottom-right-radius: 0;
+  border-bottom-left-radius: 0;
+}
+.form-signin input[type="password"] {
+  margin-bottom: 10px;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}

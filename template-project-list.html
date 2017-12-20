@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Ticket'Hack</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="css/font-awesome.min.css">
+    <link rel="stylesheet" href="css/style.css"> </head>
+
+<body>
+    <script>
+        
+        function randInt(min, max){
+            return Math.floor((Math.random() * (max+1)) + min);
+        }
+        
+        function addProject(name, desc){
+            
+            var html = '<div class="ticket">'+
+                        '<h4>'+name+' <small>'+desc+'</small></h4></div>';
+            
+            $("#ticketList").append(html);
+            
+        }
+        
+        $(document).ready(function(){
+            addProject("TEST","test project ("+randInt(2,1000000)+" tickets)");
+            
+            $("#new-ticket").click(function(){
+                addProject("TEST","test project ("+randInt(2,1000000)+" tickets)");
+            });
+        });
+        
+    </script>
+    <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark"> <a class="navbar-brand" href="#"><i class="fa fa-ticket"></i> Ticket'Hack</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault" aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation"> <span class="navbar-toggler-icon"></span> </button>
+        <div class="collapse navbar-collapse" id="navbarsExampleDefault">
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item"> <a class="nav-link" href="template-ticket-list.html">Tickets</a> </li>
+                <li class="nav-item active"> <a class="nav-link" href="template-project-list.html">Projects</a> </li>
+                <li class="nav-item dropdown"> <a class="nav-link dropdown-toggle" href="#" id="dropdown01" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">GOUIN Clément</a>
+                    <div class="dropdown-menu" aria-labelledby="dropdown01"> <a class="dropdown-item" href="#">Logout</a> <a class="dropdown-item" href="#">Change password</a> <a class="dropdown-item" target="_blank" href="/phppgadmin">Database</a> </div>
+                </li>
+            </ul>
+            <form class="form-inline my-2 my-lg-0">
+                <input class="form-control mr-sm-2" type="text" placeholder="Search" aria-label="Search">
+                <button class="btn btn-outline-success my-2 my-sm-0" type="submit"><i class="fa fa-search"></i></button>
+            </form>
+        </div>
+    </nav>
+    <div class="container">
+        <div class="jumbotron primary">
+            <h1 style="margin-top:10px;">Projects</h1>
+            <div id="ticketList"></div>
+            <div class="ticket new-ticket" id="new-ticket">
+                <span title="improvement" class="fa-stack type">
+                  <i class="fa fa-square fa-stack-2x"></i>
+                  <i class="fa fa-plus fa-stack-1x fa-inverse"></i>
+                </span>
+                <h4>Create a new project</h4> </div>
+        </div>
+    </div>
+</body>
+
+</html>
