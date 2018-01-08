@@ -1,0 +1,3 @@
+Options +FollowSymlinks -MultiViews
+RewriteEngine On
+RewriteRule ^(?!api/) testeur.php [L]
