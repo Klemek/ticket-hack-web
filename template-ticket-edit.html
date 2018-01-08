@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Ticket'Hack</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="css/font-awesome.min.css">
+    <link rel="stylesheet" href="css/style.css"> </head>
+
+<body>
+    <script>
+        var infos = {};
+
+        function registerInput(name) {
+            $("#" + name).click(function () {
+                infos[name] = $("#" + name).val();
+                $("#" + name).removeAttr("readonly");
+                $("#" + name).removeClass("form-control-plaintext");
+                $("#" + name + "Edit").css("display", "block");
+                $("#" + name + "EditHint").css("display", "none");
+            });
+            $("#" + name).hover(function () {
+                if ($("#" + name).attr("readonly")) $("#" + name + "EditHint").css("display", "block");
+            });
+            $("#" + name).mouseleave(function () {
+                $("#" + name + "EditHint").css("display", "none");
+            });
+            $("#" + name).blur(function () {
+                if ($("#" + name).val() == infos[name]) {
+                    $("#" + name).attr("readonly", true);
+                    $("#" + name).addClass("form-control-plaintext");
+                    $("#" + name + "Edit").css("display", "none");
+                    $("#" + name).scroll();
+                }
+            });
+            $("#" + name).on("change", function () {
+                $("#" + name).scroll();
+            });
+            $("#" + name).scroll(function () {
+                $("#" + name).attr("rows", 1);
+                while ($("#" + name)[0].scrollHeight > $("#" + name).innerHeight()) {
+                    $("#" + name).attr("rows", parseInt($("#" + name).attr("rows")) + 1);
+                }
+            });
+            $("#" + name + "Cancel").click(function () {
+                $("#" + name).val(infos[name]);
+                $("#" + name).blur();
+            });
+            $("#" + name + "Confirm").click(function () {
+                infos[name] = $("#" + name).val();
+                $("#" + name).blur();
+            });
+            $("#form-" + name).submit(function () {
+                infos[name] = $("#" + name).val();
+                $("#" + name).blur();
+                return false;
+            });
+            $("#" + name).scroll();
+        }
+        $(document).ready(function () {
+            registerInput("ticketTitle");
+            registerInput("ticketDesc");
+        });
+    </script>
+    <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark"> <a class="navbar-brand" href="#"><i class="fa fa-ticket"></i> Ticket'Hack</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault" aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation"> <span class="navbar-toggler-icon"></span> </button>
+        <div class="collapse navbar-collapse" id="navbarsExampleDefault">
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item active"> <a class="nav-link" href="template-ticket-list.html">Tickets</a> </li>
+                <li class="nav-item"> <a class="nav-link" href="template-project-list.html">Projects</a> </li>
+                <li class="nav-item dropdown"> <a class="nav-link dropdown-toggle" href="#" id="dropdown01" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">John ROBERT</a>
+                    <div class="dropdown-menu" aria-labelledby="dropdown01"> <a class="dropdown-item" href="#">Logout</a> <a class="dropdown-item" href="#">Change password</a> <a class="dropdown-item" target="_blank" href="/phppgadmin">Database</a> </div>
+                </li>
+            </ul>
+            <form class="form-inline my-2 my-lg-0">
+                <input class="form-control mr-sm-2" type="text" placeholder="Search" aria-label="Search">
+                <button class="btn btn-outline-success my-2 my-sm-0" type="submit"><i class="fa fa-search"></i></button>
+            </form>
+        </div>
+    </nav>
+    <div class="container">
+        <div class="jumbotron primary">
+            <form id="form-ticketTitle" class="form-group row" style="font-size:2em;">
+                <label class="col-form-label" style="margin-left:0.4em"><b>[TEST-001]</b></label>
+                <div class="col-sm-6">
+                    <input style="font-size:1em;font-weight: bold;overflow: hidden;text-overflow: ellipsis;white-space: nowrap;" id="ticketTitle" class="form-control form-control-lg form-control-plaintext" readonly type="text" placeholder="Title" required autocomplete="off" value="Test ticket"> </div>
+                <label id="ticketTitleEdit" style="display: none;" class="col-sm-2 col-form-label"><i id="ticketTitleConfirm" class="fa fa-check"></i><i id="ticketTitleCancel" class="fa fa-times" style="margin-left: 10px;"></i></label>
+                <label id="ticketTitleEditHint" style="display: none;" class="col-sm-2 col-form-label"><i id="ticketTitleCancel" class="fa fa-pencil"></i></label>
+            </form>
+            <h4 style="margin-top:-0.8em;"><small>Created the 8th January 2018 by <a href="#">John ROBERT</a> - Edited the 9th January 2018 by <a href="#">Donald CHARLES</a></small></h4>
+            <h5>Type : <div class="dropdown" style="display:inline-block;">
+                <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span title="improvement" class="fa-stack text-success" style="font-size:0.8em;"><i class="fa fa-square fa-stack-2x"></i><i class="fa fa-arrow-up fa-stack-1x fa-inverse"></i></span> Improvement</button>
+                <div class="dropdown-menu" aria-labelledby="dropdownMenuButton"><a class="dropdown-item" href="#"><span class="fa-stack text-success" style="font-size:0.8em;"><i class="fa fa-square fa-stack-2x"></i><i class="fa fa-arrow-up fa-stack-1x fa-inverse"></i></span> Improvement</a><a class="dropdown-item" href="#"><span class="fa-stack text-danger" style="font-size:0.8em;"><i class="fa fa-square fa-stack-2x"></i><i class="fa fa-circle fa-stack-1x fa-inverse"></i></span> Bug</a><a class="dropdown-item" href="#"><span class="fa-stack text-primary" style="font-size:0.8em;"><i class="fa fa-square fa-stack-2x"></i><i class="fa fa-check fa-stack-1x fa-inverse"></i></span> Check</a></div>
+            </div>&nbsp;&nbsp;&nbsp;Manager : <a href="#">John ROBERT</a>&nbsp;&nbsp;&nbsp;Priority : <div class="dropdown" style="display:inline-block;">
+                <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fa fa-thermometer-0 text-success" style="font-size:1.2em;"></i> Lowest</button>
+                <div class="dropdown-menu" aria-labelledby="dropdownMenuButton"><a class="dropdown-item" href="#"><i class="fa fa-thermometer-4 text-danger" style="font-size:1.2em;"></i> Highest</a><a class="dropdown-item" href="#"><i class="fa fa-thermometer-3 text-warning" style="font-size:1.2em;"></i> High</a><a class="dropdown-item" href="#"><i class="fa fa-thermometer-2 text-warning" style="font-size:1.2em;"></i> Medium</a><a class="dropdown-item" href="#"><i class="fa fa-thermometer-1 text-success" style="font-size:1.2em;"></i> Low</a><a class="dropdown-item" href="#"><i class="fa fa-thermometer-0 text-success" style="font-size:1.2em;"></i> Lowest</a></div>
+            </div></h5>
+            <form id="form-ticketDesc" class="form-group row">
+                <div class="col-sm-11">
+                    <textarea style="font-size:1em;resize: none;font-weight: bold;" id="ticketDesc" class="form-control form-control-plaintext" readonly type="text" placeholder="Description..." autocomplete="off" wrap="hard" rows="3" maxlength="4096">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam in volutpat mauris, non finibus nulla. Vestibulum tincidunt diam ut magna efficitur tincidunt. Maecenas vitae sodales mi, non dictum dolor. Nullam imperdiet purus at magna aliquam, et tincidunt purus volutpat. Praesent nec nulla feugiat, placerat nisi in, interdum enim. Ut in vehicula nibh. Vivamus ullamcorper pellentesque arcu a mattis. Nulla a mi est. Suspendisse nec tincidunt elit, eu rutrum ante. Aenean ante mi, elementum in bibendum non, malesuada ac mauris.</textarea>
+                </div>
+                <label id="ticketDescEdit" style="display: none;"><i id="ticketDescConfirm" class="fa fa-check"></i><i id="ticketDescCancel" class="fa fa-times" style="margin-left: 10px;"></i></label>
+                <label id="ticketDescEditHint" style="display: none;"><i id="ticketDescCancel" class="fa fa-pencil"></i></label>
+            </form>
+            <h3 style="margin-top:10px;">Comments</h3> </div>
+    </div>
+</body>
+
+</html>

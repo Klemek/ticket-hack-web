@@ -24,8 +24,8 @@
                     }
                     else {
                         $("#btnSubmit").removeAttr("disabled");
-                        $("#inputPassword").val("");
-                        $("#notifications").html('<div class="alert alert-danger alert-dismissable"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a><strong>Error</strong> Invalid email or password.</div>')
+                        $("#inputEmail").val("");
+                        $("#notifications").html('<div class="alert alert-success alert-dismissable"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a><strong>Success</strong> We sent you an email with your new password.</div>')
                     }
                 }, 500);
                 return false;
@@ -34,20 +34,15 @@
     </script>
     <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark"> <a class="navbar-brand" href="#"><i class="fa fa-ticket"></i> Ticket'Hack</a> </nav>
     <div class="container">
-        <form id="main-form" class="custom-form form-signin" method="post">
+        <form id="main-form" class="custom-form" method="post">
             <div id="notifications"></div>
-            <h2 class="form-signin-heading">Please sign in</h2>
-            <label for="inputEmail" class="sr-only">Email address</label>
-            <input type="email" id="inputEmail" class="form-control" placeholder="Email address" required autofocus>
-            <label for="inputPassword" class="sr-only">Password</label>
-            <input type="password" id="inputPassword" class="form-control" placeholder="Password" required>
-            <div class="checkbox">
-                <label>
-                    <input type="checkbox" value="remember-me"> Remember me </label>
+            <h2 class="form-signin-heading">Forgot password ?</h2>
+            <div class="form-group">
+                <label for="inputEmail">Type your email address</label>
+                <input type="email" class="form-control" id="inputEmail" placeholder="Enter email"> </div>
+            <div class="row">
+                <button id="btnSubmit" class="col-sm-6 offset-sm-3 btn btn-lg btn-primary btn-block" type="submit">Reset my password</button>
             </div>
-            <button id="btnSubmit" class="btn btn-lg btn-primary btn-block" type="submit">Sign in</button>
-            <label class="text-center" style="width:100%">Or create a <a href="template-register.html">new account</a>
-                <br/><small><a href="template-forgot.html">Forgot your password ?</a></small></label>
         </form>
     </div>
 </body>
