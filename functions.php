@@ -159,6 +159,15 @@ function delete_project($id){
     execute($req,$values);
 }
 
+/*get a project*/
+function get_project($id){
+    $req = "SELECT * FROM projects WHERE id = ?";
+    $values = array($id);
+    
+    $sth = execute($req,$values);
+    return $sth->fetch(PDO::FETCH_ASSOC);
+}
+
 /*------------------------------------------------------------ PROJECTS & USER -----------------------------------------------------------*/
 
 function add_link_user_project($id_user, $id_project, $level){
@@ -417,7 +426,7 @@ $cat_0 = 1831344299;
 $comment_0 = 291600761;
 
 //print_r(get_tickets_for_category(1831344299));
-print_r(get_categories_for_ticket($ticket_0));
+//print_r(get_categories_for_ticket($ticket_0));
 //delete_link_user_project($user_0, $project_0);
 //edit_link_user_project($user_0, $project_0, 3);
 //add_link_user_project($user_0, $project_0, 5);
