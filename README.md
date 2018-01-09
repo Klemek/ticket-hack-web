@@ -1,4 +1,4 @@
-# Ticket-Hack-Web
+
 
 ## API
 
@@ -11,7 +11,7 @@
 * **GET** `/api/user/{id}`
 	* *Returns the "full" information on the wanted user*
 	* `{"id" : 123456, "creation_date" : 1515483816, "name" : "test", "email" : "test@test.com", "last_connection_date" : 1515483816}`
-* **POST** `/api/user/{id}`
+* **POST** `/api/user/{id}/edit`
 	* *Update information on the user  (need to be current user or superadmin)* 
 	* params : (name), (email), (password)
 * **POST** `/api/user/{id}/delete`
@@ -28,7 +28,7 @@
 * **GET** `/api/project/{id}`
 	* *Returns the "full" information on the wanted project  (need project read access)*
 	* `{"id" : 123456, "creation_date" : 1515483816, "name" : "testproject", "creator_id" : 123456, "edition_date" : 1515483816, "ticket_prefix" : "TEST"}`
-* **POST** `/api/project/{id}`
+* **POST** `/api/project/{id}/edit`
 	* *Update information on the project  (need project admin access)* 
 	* params : (name), (ticket_prefix)
 * **POST** `/api/project/{id}/delete`
@@ -56,7 +56,7 @@
 * **GET** `/api/ticket/{id}`
 	* *Returns the "full" information on the wanted ticket if access to it  (need project read access)*
 	* `{"id" : 123456, "creation_date" : 1515483816, "name" : "testticket", "creator_id" : 123456, "edition_date" : 1515483816, "simple_id" : "TEST-001", "project_id" : 123456, "manager_id" : 123456, "priority" : 5, "state" : 2, "description" : "Lorem ipsum...", "due_date" : 1515483816, "comments" : [{"id" : 123456, "creation_date" : 1515483816, "comment" : "lorem ipsum...", "creator_id" : 123456, "edition_date" : 1515483816, "ticket_id" : 123456}, ...]}`
-* **POST** `/api/ticket/{id}`
+* **POST** `/api/ticket/{id}/edit`
 	* *Update information on the ticket  (need project write access)* 
 	* params : (name), (manager_id), (priority), (state), (description), (due_date)
 * **POST** `/api/ticket/{id}/delete`
@@ -74,7 +74,7 @@
 * **GET** `/api/comment/{id}`
 	* *Returns the "full" information on the wanted comment  (need project read access)*
 	* `{"id" : 123456, "creation_date" : 1515483816, "comment" : "lorem ipsum...", "creator_id" : 123456, "edition_date" : 1515483816, "ticket_id" : 123456}`
-* **POST** `/api/comment/{id}`
+* **POST** `/api/comment/{id}/edit`
 	* *Update information on the comment  (need project comment access)* 
 	* params : (comment)
 * **POST** `/api/comment/{id}/delete`
