@@ -1,6 +1,5 @@
 # Ticket-Hack-Web
 
-
 ## API
 
 ### General information
@@ -12,6 +11,12 @@
 * **GET** `/api/user/{id}`
 	* *Returns the "full" information on the wanted user*
 	* `{"id" : 123456, "creation_date" : 1515483816, "name" : "test", "email" : "test@test.com", "last_connection_date" : 1515483816}`
+* **POST** `/api/user/{id}`
+	* *Update information on the user  (need to be current user or superadmin)* 
+	* params : (name), (email), (password)
+* **POST** `/api/user/{id}/delete`
+	* *"Delete" the user (need to be current user or superadmin)*
+	* params : confirm
 * **POST** `/api/user/new`
 	*  *Create a new user*
 	* params : name, email, hash(pass), 
