@@ -23,6 +23,7 @@
 * **POST** `/api/user/connect`
 	* *Try to create a new php session for the user*
 	* params : email, hash(pass)
+
 ### Projects
 * **GET** `/api/project/{id}`
 	* *Returns the "full" information on the wanted project  (need project read access)*
@@ -41,15 +42,16 @@
 	* params : id_user
 * **GET** `/api/project/list?params`
 	* *Returns a list of project associated to the current user* 
-	* params : (number), (offset), (query)
-	* `[{"id" : 123456, "creation_date" : 1515483816, "name" : "testproject", "ticket_prefix" : "TEST"}, ...]`
+	* params : (number), (offset), (query), (order)
+	* `{"total" : 15, "list" : [{"id" : 123456, "creation_date" : 1515483816, "name" : "testproject", "ticket_prefix" : "TEST"}, ...]}`
 * **POST** `/api/project/new`
 	* *Create a new project*
 	* params : name, ticket_prefix
 * **GET** `/api/project/{id}/ticketlist?params`
 	* *Returns a list of tickets associated to the project* 
-	* params : (number), (offset), (query)
-	* `[{"id" : 123456, "creation_date" : 1515483816, "name" : "testticket", "simple_id" : "TEST-001", "project_id" : 123456, "manager_id" : 123456, "priority" : 5, "state" : 2, "due_date" : 1515483816}, ...]`
+	* params : (number), (offset), (query), (order)
+	* `{"total" : 15, "list" : [{"id" : 123456, "creation_date" : 1515483816, "name" : "testticket", "simple_id" : "TEST-001", "project_id" : 123456, "manager_id" : 123456, "priority" : 5, "state" : 2, "due_date" : 1515483816}, ...]}`
+
 ### Tickets
 * **GET** `/api/ticket/{id}`
 	* *Returns the "full" information on the wanted ticket if access to it  (need project read access)*
@@ -62,18 +64,19 @@
 	* params : confirm
 * **GET** `/api/ticket/list?params`
 	* *Returns a list of tickets associated to the current user (at least read access)* 
-	* params : (number), (offset), (query)
-	* `[{"id" : 123456, "creation_date" : 1515483816, "name" : "testticket", "simple_id" : "TEST-001", "project_id" : 123456, "manager_id" : 123456, "priority" : 5, "state" : 2, "due_date" : 1515483816}, ...]`
+	* params : (number), (offset), (query), (order)
+	* `{"total" : 15, "list" : [{"id" : 123456, "creation_date" : 1515483816, "name" : "testticket", "simple_id" : "TEST-001", "project_id" : 123456, "manager_id" : 123456, "priority" : 5, "state" : 2, "due_date" : 1515483816}, ...]}`
 * **POST** `/api/ticket/new`
 	* *Create a new ticket  (need project write access)*
 	* params : name, project_id, (manager_id), priority, state, (due_date)
+
 ### Comments
-* **GET** `/api/comments/{id}`
+* **GET** `/api/comment/{id}`
 	* *Returns the "full" information on the wanted comment  (need project read access)*
 	* `{"id" : 123456, "creation_date" : 1515483816, "comment" : "lorem ipsum...", "creator_id" : 123456, "edition_date" : 1515483816, "ticket_id" : 123456}`
-* **POST** `/api/comments/{id}`
+* **POST** `/api/comment/{id}`
 	* *Update information on the comment  (need project comment access)* 
 	* params : (comment)
-* **POST** `/api/comments/{id}/delete`
+* **POST** `/api/comment/{id}/delete`
 	* *Delete the comment (need project comment access)*
 	* params : confirm
