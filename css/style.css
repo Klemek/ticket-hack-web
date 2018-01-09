@@ -1,10 +1,16 @@
+body {
+    color: #424242;
+}
+
+
+/* Ticket/project list*/
+
 .ticket {
     margin-top: 5px;
     padding: 5px;
     padding-bottom: 0;
     border: 1px solid #9E9E9E;
     border-radius: 5px;
-    color: #212121;
     overflow: hidden;
 }
 
@@ -52,8 +58,34 @@
     font-size: 1.6em;
     float: right;
     margin-top: 0.2em;
-    margin-right: 10px;
+    0 margin-right: 10px;
 }
+
+
+/* ticket/project edit*/
+
+.dropdown-item i {
+    font-size: 1.2em;
+}
+
+.dropdown-item span {
+    font-size: 0.8em;
+}
+
+.dropdown-item span .fa-stack-2x {
+    font-size: 2em;
+}
+
+.dropdown-item span .fa-stack-1x {
+    font-size: 1em;
+}
+
+.dropdown {
+    display: inline-block;
+}
+
+
+/* login/register forms*/
 
 .form-signin {
     max-width: 330px;

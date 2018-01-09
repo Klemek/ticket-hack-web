@@ -9,49 +9,14 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js"></script>
     <link rel="stylesheet" href="css/font-awesome.min.css">
-    <link rel="stylesheet" href="css/style.css"> </head>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="js/tools.js"></script>
+</head>
 
 <body>
     <script>
-        var infos = {};
-
-        function registerInput(name) {
-            $("#" + name).click(function () {
-                infos[name] = $("#" + name).val();
-                $("#" + name).removeAttr("readonly");
-                $("#" + name).removeClass("form-control-plaintext");
-                $("#" + name + "Edit").css("display", "block");
-                $("#" + name + "EditHint").css("display", "none");
-            });
-            $("#" + name).hover(function () {
-                if ($("#" + name).attr("readonly")) $("#" + name + "EditHint").css("display", "block");
-            });
-            $("#" + name).mouseleave(function () {
-                $("#" + name + "EditHint").css("display", "none");
-            });
-            $("#" + name).blur(function () {
-                if ($("#" + name).val() == infos[name]) {
-                    $("#" + name).attr("readonly", true);
-                    $("#" + name).addClass("form-control-plaintext");
-                    $("#" + name + "Edit").css("display", "none");
-                }
-            });
-            $("#" + name + "Cancel").click(function () {
-                $("#" + name).val(infos[name]);
-                $("#" + name).blur();
-            });
-            $("#" + name + "Confirm").click(function () {
-                infos[name] = $("#" + name).val();
-                $("#" + name).blur();
-            });
-            $("#form-" + name).submit(function () {
-                infos[name] = $("#" + name).val();
-                $("#" + name).blur();
-                return false;
-            });
-        }
         $(document).ready(function () {
-            registerInput("projectTitle");
+            registerCustomInput("projectTitle", false);
             $("#new-ticket").click(function () {
                 addTicket("TEST-" + pad(randInt(1, 999), 3), randString(ticketNames), randInt(0, 2), randInt(0, 4), randString(userNames));
             });
@@ -74,20 +39,6 @@
             , 'Michael WILLIAMS'
             , '', '', '', ''
         ];
-
-        function randInt(min, max) {
-            return Math.floor((Math.random() * (max + 1)) + min);
-        }
-
-        function randString(list) {
-            return list[randInt(0, list.length - 1)];
-        }
-
-        function pad(num, size) {
-            var s = num + "";
-            while (s.length < size) s = "0" + s;
-            return s;
-        }
 
         function addTicket(name, desc, type, priority, user) {
             var type_ttl, type_col, type_ico, prio_col, prio_ttl;
