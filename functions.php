@@ -5,7 +5,7 @@ session_start();
 
 /*connects to the database*/
 try{
-    $db = new PDO("pgsql:user=postgres;dbname=postgres;password=05Pjo4K;host=localhost");
+    $db = new PDO("pgsql:user=php;dbname=dbmain;password=php;host=localhost");
 }catch(PDOException $e){
     die("Erreur de connexion à la base de donnée");
 }
