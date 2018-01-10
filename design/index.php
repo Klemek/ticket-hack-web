@@ -4,25 +4,21 @@
 <head>
     <meta charset="utf-8">
     <title>Ticket'Hack</title>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css">
-    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js"></script>
-    <link rel="stylesheet" href="css/font-awesome.min.css">
-    <link rel="stylesheet" href="css/style.css"> </head>
+    <?php include("../template/head.php") ?>
+</head>
 
 <body>
+    <?php include("../template/anonymous-nav.php") ?>
     <script>
-        $(document).ready(function () {
-            $("#main-form").submit(function () {
+        $(document).ready(function() {
+            $("#main-form").submit(function() {
                 $("#btnSubmit").attr("disabled", "true");
                 $("#notifications").html("");
                 //fake ajax
-                setTimeout(function () {
+                setTimeout(function() {
                     if ($("#inputPassword").val() == "test") {
-                        window.location = "template-ticket-list.html";
-                    }
-                    else {
+                        window.location = "./tickets";
+                    } else {
                         $("#btnSubmit").removeAttr("disabled");
                         $("#inputPassword").val("");
                         $("#notifications").html('<div class="alert alert-danger alert-dismissable"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a><strong>Error</strong> Invalid email or password.</div>')
@@ -31,8 +27,8 @@
                 return false;
             });
         });
+
     </script>
-    <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark"> <a class="navbar-brand" href="#"><i class="fa fa-ticket"></i> Ticket'Hack</a> </nav>
     <div class="container">
         <form id="main-form" class="custom-form form-signin" method="post">
             <div id="notifications"></div>
@@ -46,8 +42,8 @@
                     <input type="checkbox" value="remember-me"> Remember me </label>
             </div>
             <button id="btnSubmit" class="btn btn-lg btn-primary btn-block" type="submit">Sign in</button>
-            <label class="text-center" style="width:100%">Or create a <a href="template-register.html">new account</a>
-                <br/><small><a href="template-forgot.html">Forgot your password ?</a></small></label>
+            <label class="text-center" style="width:100%">Or create a <a href="./register">new account</a>
+                <br/><small><a href="./forgot-password">Forgot your password ?</a></small></label>
         </form>
     </div>
 </body>

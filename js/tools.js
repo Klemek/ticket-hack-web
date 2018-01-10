@@ -39,16 +39,51 @@ function pad(num, size) {
     return s;
 }
 //CUSTOM
+
+
+var type_titles = {
+        0: "bug",
+        1: "improvement",
+        2: "check"
+    },
+    type_colors = {
+        0: "text-danger",
+        1: "text-success",
+        2: "text-primary"
+    },
+    type_icons = {
+        0: "fa-circle",
+        1: "fa-arrow-up",
+        2: "fa-check"
+    },
+    priority_titles = {
+        0: "lowest",
+        1: "low",
+        2: "medium",
+        3: "high",
+        4: "highest"
+    },
+    priority_colors = {
+        0: "text-success",
+        1: "text-success",
+        2: "text-warning",
+        3: "text-warning",
+        4: "text-danger"
+    };
+
+
 var customInputInfos = {};
 
-function registerCustomInput(name, textarea) {
+function registerCustomInput(name, textarea, callback) {
     $("#form-" + name).append('<label id="' + name + 'Edit" style="display: none;" class="col-form-label"><i id="' + name + 'Confirm" class="fa fa-check"></i><i id="' + name + 'Cancel" class="fa fa-times" style="margin-left: 10px;"></i></label><label id="' + name + 'EditHint" style="display: none;" class="col-form-label"><i class="fa fa-pencil"></i></label>');
     $("#" + name).click(function () {
-        customInputInfos[name] = $("#" + name).val();
-        $("#" + name).removeAttr("readonly");
-        $("#" + name).removeClass("form-control-plaintext");
-        $("#" + name + "Edit").css("display", "block");
-        $("#" + name + "EditHint").css("display", "none");
+        if ($("#" + name).attr("readonly")) {
+            customInputInfos[name] = $("#" + name).val();
+            $("#" + name).removeAttr("readonly");
+            $("#" + name).removeClass("form-control-plaintext");
+            $("#" + name + "Edit").css("display", "block");
+            $("#" + name + "EditHint").css("display", "none");
+        }
     });
     $("#" + name).hover(function () {
         if ($("#" + name).attr("readonly")) $("#" + name + "EditHint").css("display", "block");
@@ -69,12 +104,22 @@ function registerCustomInput(name, textarea) {
         $("#" + name).blur();
     });
     $("#" + name + "Confirm").click(function () {
-        customInputInfos[name] = $("#" + name).val();
-        $("#" + name).blur();
+        if ($("#" + name).val().length > 0) {
+            $("#" + name).blur();
+            if ($("#" + name).val() !== customInputInfos[name]) {
+                customInputInfos[name] = $("#" + name).val();
+                if (callback) callback(customInputInfos[name]);
+            }
+        }
     });
     $("#form-" + name).submit(function () {
-        customInputInfos[name] = $("#" + name).val();
-        $("#" + name).blur();
+        if ($("#" + name).val().length > 0) {
+            $("#" + name).blur();
+            if ($("#" + name).val() !== customInputInfos[name]) {
+                customInputInfos[name] = $("#" + name).val();
+                if (callback) callback(customInputInfos[name]);
+            }
+        }
         return false;
     });
     if (textarea) {

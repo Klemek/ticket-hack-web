@@ -2,10 +2,15 @@ body {
     color: #424242;
 }
 
+.jumbotron {
+    margin-top: 10px;
+}
+
 
 /* Ticket/project list*/
 
-.ticket {
+.ticket,
+.project {
     margin-top: 5px;
     padding: 5px;
     padding-bottom: 0;
@@ -14,12 +19,14 @@ body {
     overflow: hidden;
 }
 
-.ticket:hover {
+.ticket:hover,
+.project:hover {
     background-color: #BDBDBD;
     cursor: pointer;
 }
 
-.ticket h4 {
+.ticket h4,
+.project h4 {
     overflow: hidden;
     display: block;
     text-overflow: ellipsis;
@@ -44,9 +51,15 @@ body {
     }
 }
 
-.new-ticket {
+.new-ticket,
+.new-project {
     border: 1px dashed #9E9E9E;
     color: #757575;
+}
+
+.new-ticket span,
+.new-project span {
+    float: left;
 }
 
 .ticket .type {
@@ -63,6 +76,20 @@ body {
 
 
 /* ticket/project edit*/
+
+.form-custom input {
+    font-size: 1em;
+    font-weight: bold;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.form-custom textarea {
+    font-size: 1em;
+    resize: none;
+    font-weight: bold;
+}
 
 .dropdown-item i {
     font-size: 1.2em;
@@ -103,7 +130,7 @@ body {
 
 .form-heading,
 .custom-form .checkbox,
-{
+    {
     margin-bottom: 10px;
 }
 

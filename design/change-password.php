@@ -4,25 +4,21 @@
 <head>
     <meta charset="utf-8">
     <title>Ticket'Hack</title>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css">
-    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js"></script>
-    <link rel="stylesheet" href="css/font-awesome.min.css">
-    <link rel="stylesheet" href="css/style.css"> </head>
+    <?php include("../template/head.php") ?>
+</head>
 
 <body>
+    <?php include("../template/connected-nav.php") ?>
     <script>
-        $(document).ready(function () {
-            $("#main-form").submit(function () {
+        $(document).ready(function() {
+            $("#main-form").submit(function() {
                 $("#btnSubmit").attr("disabled", "true");
                 $("#notifications").html("");
                 //fake ajax
-                setTimeout(function () {
+                setTimeout(function() {
                     if ($("#inputPassword").val() == "test") {
                         window.location = "template-ticket-list.html";
-                    }
-                    else {
+                    } else {
                         $("#btnSubmit").removeAttr("disabled");
                         $("#inputEmail").val("");
                         $("#notifications").html('<div class="alert alert-success alert-dismissable"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a><strong>Success</strong> Password changed successfully.</div>')
@@ -31,23 +27,8 @@
                 return false;
             });
         });
+
     </script>
-    <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark"> <a class="navbar-brand" href="#"><i class="fa fa-ticket"></i> Ticket'Hack</a>
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault" aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation"> <span class="navbar-toggler-icon"></span> </button>
-        <div class="collapse navbar-collapse" id="navbarsExampleDefault">
-            <ul class="navbar-nav mr-auto">
-                <li class="nav-item"> <a class="nav-link" href="template-ticket-list.html">Tickets</a> </li>
-                <li class="nav-item"> <a class="nav-link" href="template-project-list.html">Projects</a> </li>
-                <li class="nav-item dropdown"> <a class="nav-link dropdown-toggle" href="#" id="dropdown01" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">John ROBERT</a>
-                    <div class="dropdown-menu" aria-labelledby="dropdown01"> <a class="dropdown-item" href="#">Logout</a> <a class="dropdown-item active" href="#">Change password</a> <a class="dropdown-item" target="_blank" href="/phppgadmin">Database</a> </div>
-                </li>
-            </ul>
-            <form class="form-inline my-2 my-lg-0">
-                <input class="form-control mr-sm-2" type="text" placeholder="Search" aria-label="Search">
-                <button class="btn btn-outline-success my-2 my-sm-0" type="submit"><i class="fa fa-search"></i></button>
-            </form>
-        </div>
-    </nav>
     <div class="container">
         <form id="main-form" class="custom-form form-register" method="post">
             <div id="notifications"></div>

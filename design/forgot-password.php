@@ -4,25 +4,21 @@
 <head>
     <meta charset="utf-8">
     <title>Ticket'Hack</title>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css">
-    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js"></script>
-    <link rel="stylesheet" href="css/font-awesome.min.css">
-    <link rel="stylesheet" href="css/style.css"> </head>
+    <?php include("../template/head.php") ?>
+</head>
 
 <body>
+    <?php include("../template/anonymous-nav.php") ?>
     <script>
-        $(document).ready(function () {
-            $("#main-form").submit(function () {
+        $(document).ready(function() {
+            $("#main-form").submit(function() {
                 $("#btnSubmit").attr("disabled", "true");
                 $("#notifications").html("");
                 //fake ajax
-                setTimeout(function () {
+                setTimeout(function() {
                     if ($("#inputPassword").val() == "test") {
                         window.location = "template-ticket-list.html";
-                    }
-                    else {
+                    } else {
                         $("#btnSubmit").removeAttr("disabled");
                         $("#inputEmail").val("");
                         $("#notifications").html('<div class="alert alert-success alert-dismissable"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a><strong>Success</strong> We sent you an email with your new password.</div>')
@@ -31,8 +27,8 @@
                 return false;
             });
         });
+
     </script>
-    <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark"> <a class="navbar-brand" href="#"><i class="fa fa-ticket"></i> Ticket'Hack</a> </nav>
     <div class="container">
         <form id="main-form" class="custom-form" method="post">
             <div id="notifications"></div>

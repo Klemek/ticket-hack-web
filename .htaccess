@@ -1,0 +1,16 @@
+Options +FollowSymlinks -MultiViews
+
+#ErrorDocument 404 /
+
+RewriteEngine On
+
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond /%{REQUEST_FILENAME}.php -f
+RewriteRule (.*) $1.php [L]
+
+RewriteRule ^(api/) api/testeur.php [L]
+RewriteRule "^template/(.*)" / [R]
+
+
+
