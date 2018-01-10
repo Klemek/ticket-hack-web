@@ -10,6 +10,14 @@
 <body>
     <?php include("../template/connected-nav.php") ?>
     <script>
+        function changePriority(priority) {
+            $("#dropdownPriority").html('<i class="fa fa-thermometer-' + priority + ' ' + priority_colors[priority] + '"></i> ' + priority_titles[priority]);
+        }
+
+        function changeType(type) {
+            $("#dropdownType").html('<span class="fa-stack ' + type_colors[type] + ' type">' + '<i class="fa fa-square fa-stack-2x"></i>' + '<i class="fa ' + type_icons[type] + ' fa-stack-1x fa-inverse"></i></span> ' + type_titles[type]);
+        }
+
         $(document).ready(function() {
             $("#navTickets").addClass("active");
 
@@ -20,12 +28,17 @@
                 console.log("todo save ticketDesc");
             });
 
+            $("#ticket-id").html("<b>[TEST-" + pad(randInt(1, 999), 3) + "]</b>");
+
+            changePriority(randInt(0, 4));
+            changeType(randInt(0, 2));
+
             for (var type = 0; type < 3; type++) {
-                $("#dropdownTypeMenu").append('<a class="dropdown-item" href="#"><span class="fa-stack ' + type_colors[type] + ' type">' + '<i class="fa fa-square fa-stack-2x"></i>' + '<i class="fa ' + type_icons[type] + ' fa-stack-1x fa-inverse"></i></span> ' + type_titles[type] + '</a>');
+                $("#dropdownTypeMenu").append('<a class="dropdown-item" href="#" onclick="changeType(' + type + ')"><span class="fa-stack ' + type_colors[type] + ' type">' + '<i class="fa fa-square fa-stack-2x"></i>' + '<i class="fa ' + type_icons[type] + ' fa-stack-1x fa-inverse"></i></span> ' + type_titles[type] + '</a>');
             }
 
             for (var priority = 0; priority < 5; priority++) {
-                $("#dropdownPriorityMenu").append('<a class="dropdown-item" href="#"><i class="fa fa-thermometer-' + priority + ' ' + priority_colors[priority] + '"></i> ' + priority_titles[priority] + '</a>');
+                $("#dropdownPriorityMenu").append('<a class="dropdown-item" href="#" onclick="changePriority(' + priority + ')"><i class="fa fa-thermometer-' + priority + ' ' + priority_colors[priority] + '"></i> ' + priority_titles[priority] + '</a>');
             }
 
         });
@@ -34,18 +47,18 @@
     <div class="container">
         <div class="jumbotron primary">
             <form id="form-ticketTitle" class="form-group row form-custom" style="font-size:2em;">
-                <label class="col-form-label" style="margin-left:0.4em"><b>[TEST-001]</b></label>
+                <label id="ticket-id" class="col-form-label" style="margin-left:0.4em"></label>
                 <div class="col-sm-6">
                     <input id="ticketTitle" class="form-control form-control-lg form-control-plaintext" readonly type="text" placeholder="Title" required autocomplete="off" value="Test ticket"> </div>
             </form>
             <h4 style="margin-top:-0.8em;"><small>Created the 8th January 2018 by <a href="#">John ROBERT</a> - Edited the 9th January 2018 by <a href="#">Donald CHARLES</a></small></h4>
             <h5>Type :
                 <div class="dropdown">
-                    <button class="btn btn-default dropdown-toggle" type="button" id="dropdownType" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span title="improvement" class="fa-stack text-success"><i class="fa fa-square fa-stack-2x"></i><i class="fa fa-arrow-up fa-stack-1x fa-inverse"></i></span> Improvement</button>
+                    <button class="btn btn-default dropdown-toggle" type="button" id="dropdownType" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></button>
                     <div id="dropdownTypeMenu" class="dropdown-menu" aria-labelledby="dropdownType"></div>
                 </div>&nbsp;&nbsp;&nbsp;Manager : <a href="#">John ROBERT</a>&nbsp;&nbsp;&nbsp;Priority :
                 <div class="dropdown">
-                    <button class="btn btn-default dropdown-toggle" type="button" id="dropdownPriority" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fa fa-thermometer-0 text-success"></i> Lowest</button>
+                    <button class="btn btn-default dropdown-toggle" type="button" id="dropdownPriority" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></button>
                     <div id="dropdownPriorityMenu" class="dropdown-menu" aria-labelledby="dropdownPriority"></div>
                 </div>
             </h5>

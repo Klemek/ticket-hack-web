@@ -11,26 +11,64 @@
     <?php include("../template/anonymous-nav.php") ?>
     <script>
         $(document).ready(function() {
+
+            var notf = readCookie("notify");
+            if (notf && notf.length > 0) {
+                notify(notf);
+                eraseCookie("notify");
+            }
+
             $("#main-form").submit(function() {
                 $("#btnSubmit").attr("disabled", "true");
-                $("#notifications").html("");
-                //fake ajax
-                setTimeout(function() {
-                    if ($("#inputPassword").val() == "test") {
-                        window.location = "./tickets";
-                    } else {
+                clearNotification();
+
+                var hashPass = CryptoJS.SHA256($("#inputPassword").val()).toString();
+                $("#inputPassword").val("");
+
+                var url = "http://echo.jsontest.com/result/ok";
+                if (randInt(0, 1) == 0)
+                    url = "http://echo.jsontest.com/result/error/message/error";
+
+                $.ajax({
+                    url: url,
+                    method: 'GET',
+                    success: function(result) {
+                        if (typeof result !== "object") { //mime type: text
+                            if (!validJSON(result + "")) {
+                                console.log("invalid json : " + result);
+                                notify("<b>Error</b> internal error", "danger");
+                                return;
+                            }
+                            var result = $.parseJSON(result);
+                        }
+
+                        if (result.result == "ok") {
+                            window.location = "./tickets";
+                        } else {
+                            notify("<strong>Error</strong> " + result.message, "danger");
+                        }
+
                         $("#btnSubmit").removeAttr("disabled");
-                        $("#inputPassword").val("");
-                        $("#notifications").html('<div class="alert alert-danger alert-dismissable"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a><strong>Error</strong> Invalid email or password.</div>')
+                    },
+                    error: function(result, data) {
+                        if (result.status == 0 || result.status == 404) {
+                            notify("<b>Error</b> internal error", "danger");
+                            console.log("unreachable url : " + url);
+                        } else {
+                            notify("<b>Error</b> internal error", "danger");
+                            console.log("server error " + result.status);
+                        }
+                        $("#btnSubmit").removeAttr("disabled");
                     }
-                }, 500);
+                });
+
                 return false;
             });
         });
 
     </script>
     <div class="container">
-        <form id="main-form" class="custom-form form-signin" method="post">
+        <form id="main-form" class="custom-form form-signin">
             <div id="notifications"></div>
             <h2 class="form-signin-heading">Please sign in</h2>
             <label for="inputEmail" class="sr-only">Email address</label>

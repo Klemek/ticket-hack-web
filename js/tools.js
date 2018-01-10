@@ -1,7 +1,9 @@
 'floor|random|round|abs|sqrt|PI|atan2|sin|cos|pow|max|min|hypot'.split('|').forEach(function (p) {
     window[p] = Math[p];
 });
+
 //COOKIES
+
 function writeCookie(cname, cvalue, exdays) {
     var d = new Date();
     d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
@@ -24,7 +26,13 @@ function readCookie(cname) {
     }
     return "";
 }
+
+function eraseCookie(name) {
+    createCookie(name, "", -1);
+}
+
 //OTHER
+
 function randInt(min, max) {
     return floor((random() * (max + 1)) + min);
 }
@@ -38,7 +46,32 @@ function pad(num, size) {
     while (s.length < size) s = "0" + s;
     return s;
 }
-//CUSTOM
+
+function validJSON(text) {
+    return /^[\],:{}\s]*$/.test(text.replace(/\\["\\\/bfnrtu]/g, '@').replace(/"[^"\\\n\r]*"|true|false|null|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?/g, ']').replace(/(?:^|:|,)(?:\s*\[)+/g, ''));
+}
+
+//DISPLAY
+
+function notify(msg, type) {
+    if ($("#notifications").length > 0) {
+
+        if (!type) {
+            var spl = msg.split("-", 2);
+            type = spl[0];
+            msg = spl[1];
+        }
+
+
+        $("#notifications").append('<div class="alert alert-' + type + ' alert-dismissable"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>' + msg + '</div>')
+    }
+}
+
+function clearNotification() {
+    if ($("#notifications").length > 0) {
+        $("#notifications").html("");
+    }
+}
 
 
 var type_titles = {

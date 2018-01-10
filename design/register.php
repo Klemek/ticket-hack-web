@@ -13,17 +13,57 @@
         $(document).ready(function() {
             $("#main-form").submit(function() {
                 $("#btnSubmit").attr("disabled", "true");
-                $("#notifications").html("");
-                //fake ajax
-                setTimeout(function() {
-                    if ($("#inputPassword").val() == "test") {
-                        window.location = "template-ticket-list.html";
-                    } else {
+                clearNotification();
+
+                var hashPass = CryptoJS.SHA256($("#inputPassword").val()).toString();
+                $("#inputPassword").val("");
+
+                var hashPassR = CryptoJS.SHA256($("#inputPasswordR").val()).toString();
+                $("#inputPasswordR").val("");
+
+                if (hashPass !== hashPassR) {
+                    notify("<b>Warning</b> Passwords doesn't match !", "warning");
+                    return false;
+                }
+
+                var url = "http://echo.jsontest.com/result/ok";
+                if (randInt(0, 1) == 0)
+                    url = "http://echo.jsontest.com/result/error/message/error";
+
+                $.ajax({
+                    url: url,
+                    method: 'GET',
+                    success: function(result) {
+                        if (typeof result !== "object") { //mime type: text
+                            if (!validJSON(result + "")) {
+                                console.log("invalid json : " + result);
+                                notify("<b>Error</b> internal error", "danger");
+                                return;
+                            }
+                            var result = $.parseJSON(result);
+                        }
+
+                        if (result.result == "ok") {
+                            writeCookie("notify", "success-Your account has been created successfuly !", 1)
+                            window.location = "./";
+                        } else {
+                            notify("<strong>Error</strong> " + result.message, "danger");
+                        }
+
                         $("#btnSubmit").removeAttr("disabled");
-                        $("#inputPassword").val("");
-                        $("#notifications").html('<div class="alert alert-danger alert-dismissable"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a><strong>Error</strong> Invalid email or password.</div>')
+                    },
+                    error: function(result, data) {
+                        if (result.status == 0 || result.status == 404) {
+                            notify("<b>Error</b> internal error", "danger");
+                            console.log("unreachable url : " + url);
+                        } else {
+                            notify("<b>Error</b> internal error", "danger");
+                            console.log("server error " + result.status);
+                        }
+                        $("#btnSubmit").removeAttr("disabled");
                     }
-                }, 500);
+                });
+
                 return false;
             });
         });
@@ -36,22 +76,22 @@
             <div class="form-group row">
                 <label for="inputEmail" class="col-sm-4 col-form-label">Email address</label>
                 <div class="col-sm-8">
-                    <input type="email" class="form-control" id="inputEmail" placeholder="Enter email"> </div>
+                    <input type="email" class="form-control" id="inputEmail" placeholder="Enter email" required autofocus autocomplete="email"> </div>
             </div>
             <div class="form-group row">
                 <label for="inputName" class="col-sm-4 col-form-label">Username</label>
                 <div class="col-sm-8">
-                    <input type="text" class="form-control" id="inputName" placeholder="Enter username"> </div>
+                    <input type="text" class="form-control" id="inputName" placeholder="Enter username" required autocomplete="nickname"> </div>
             </div>
             <div class="form-group row">
                 <label for="inputPassword" class="col-sm-4 col-form-label">Password</label>
                 <div class="col-sm-8">
-                    <input type="password" class="form-control" id="inputPassword" placeholder="Enter password"> </div>
+                    <input type="password" class="form-control" id="inputPassword" placeholder="Enter password" required> </div>
             </div>
             <div class="form-group row">
                 <label for="inputPasswordR" class="col-sm-4 col-form-label">Repeat Password</label>
                 <div class="col-sm-8">
-                    <input type="password" class="form-control" id="inputPasswordR" placeholder="Enter same password"> </div>
+                    <input type="password" class="form-control" id="inputPasswordR" placeholder="Enter same password" required> </div>
             </div>
             <div class="row">
                 <button id="btnSubmit" class="col-sm-4 offset-sm-4 btn btn-lg btn-primary btn-block" type="submit">Register</button>
