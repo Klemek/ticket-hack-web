@@ -28,7 +28,7 @@ function readCookie(cname) {
 }
 
 function eraseCookie(name) {
-    createCookie(name, "", -1);
+    writeCookie(name, "", -1);
 }
 
 //OTHER

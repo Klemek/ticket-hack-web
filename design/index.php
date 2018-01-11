@@ -69,6 +69,7 @@
     </script>
     <div class="container">
         <form id="main-form" class="custom-form form-signin">
+            <img class="img-fluid d-none d-sm-block" src="/img/ticket-hack-min.jpg">
             <div id="notifications"></div>
             <h2 class="form-signin-heading">Please sign in</h2>
             <label for="inputEmail" class="sr-only">Email address</label>

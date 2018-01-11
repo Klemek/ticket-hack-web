@@ -36,7 +36,7 @@
             });
 
             $("#ticket-id").html("<b>[" + randString(fakeProjectNames) + "-" + pad(randInt(1, 999), 3) + "]</b>");
-            $("#projectTitle").val(randString(fakeTicketDesc));
+            $("#ticketTitle").val(randString(fakeTicketDesc));
 
             changeStatus(randInt(0, 3));
             changePriority(randInt(0, 4));

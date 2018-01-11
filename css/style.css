@@ -147,6 +147,12 @@ body {
     margin-top: 100px;
 }
 
+.form-signin {
+    padding: 0;
+    margin: 0 auto;
+    margin-top: 60px;
+}
+
 .form-register {
     max-width: 600px;
 }
