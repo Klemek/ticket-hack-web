@@ -10,15 +10,6 @@
 <body>
     <?php include("../template/connected-nav.php") ?>
     <script>
-        function randInt(min, max) {
-            return Math.floor((Math.random() * (max + 1)) + min);
-        }
-
-        function addProject(name, desc) {
-            var html = '<div class="project" onclick="project_click(\'' + name + '\')">' + '<h4>' + name + ' <small>' + desc + '</small></h4></div>';
-            $("#projectList").append(html);
-        }
-
         function project_click(id) {
             console.log("project click:" + id);
             var win = window.open("./project-edit", '_blank');
@@ -28,9 +19,10 @@
         $(document).ready(function() {
 
             $("#navProjects").addClass("active");
+            $("#dropdownUser").html(randString(fakeUserNames));
 
             $("#new-project").click(function() {
-                addProject("TEST", "test project (" + randInt(2, 1000000) + " tickets)");
+                addFakeProject();
             });
 
             $("#new-project").click();

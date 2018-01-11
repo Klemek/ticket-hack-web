@@ -11,6 +11,9 @@
     <?php include("../template/connected-nav.php") ?>
     <script>
         $(document).ready(function() {
+            $("#dropdownUser").addClass("active");
+            $("#dropdownUser").html(randString(fakeUserNames));
+
             $("#main-form").submit(function() {
                 $("#btnSubmit").attr("disabled", "true");
                 $("#notifications").html("");

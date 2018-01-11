@@ -71,7 +71,14 @@ body {
     font-size: 1.6em;
     float: right;
     margin-top: 0.2em;
-    0 margin-right: 10px;
+    margin-right: 10px;
+}
+
+.ticket .status {
+    font-size: 1.6em;
+    float: right;
+    margin-top: 0.2em;
+    margin-right: 10px;
 }
 
 
@@ -91,20 +98,36 @@ body {
     font-weight: bold;
 }
 
-.dropdown-item i {
-    font-size: 1.2em;
+.dropdown-toggle {
+    margin-left: 10px;
 }
 
+.dropdown-toggle i {
+    font-size: 1.3em;
+    margin-right: 0.2em;
+}
+
+.dropdown-item i {
+    font-size: 1.5em;
+    margin-right: 0.2em;
+}
+
+.dropdown-toggle span,
 .dropdown-item span {
     font-size: 0.8em;
+    margin-right: 0.2em;
 }
 
+.dropdown-toggle span .fa-stack-2x,
 .dropdown-item span .fa-stack-2x {
     font-size: 2em;
+    margin: 0;
 }
 
+.dropdown-toggle span .fa-stack-1x,
 .dropdown-item span .fa-stack-1x {
     font-size: 1em;
+    margin: 0;
 }
 
 .dropdown {

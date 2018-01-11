@@ -85,7 +85,7 @@ var type_titles = {
         2: "text-primary"
     },
     type_icons = {
-        0: "fa-circle",
+        0: "fa-bug",
         1: "fa-arrow-up",
         2: "fa-check"
     },
@@ -102,6 +102,18 @@ var type_titles = {
         2: "text-warning",
         3: "text-warning",
         4: "text-danger"
+    },
+    status_titles = {
+        0: "open",
+        1: "working",
+        2: "review",
+        3: "closed"
+    },
+    status_icons = {
+        0: "fa-certificate",
+        1: "fa-cogs",
+        2: "fa-eye",
+        3: "fa-check-circle"
     };
 
 
@@ -167,4 +179,48 @@ function registerCustomInput(name, textarea, callback) {
         });
         $("#" + name).scroll();
     }
+}
+
+
+//DESIGN FAKE
+
+var fakeProjectNames = ['TEST', 'RAND', 'EX', 'ABC', 'SAMP'],
+    fakeProjectDesc = ['Sample project', 'Example project', 'Some project', 'Rule the world'],
+    fakeTicketDesc = [
+    'randomly generated ticket', 'a random ticket', 'some ticket', 'omg a ticket', 'a nice ticket', 'you should open this one'
+],
+    fakeUserNames = [
+    'John ROBERT', 'Joseph DAVID', 'Donald CHARLES', 'Michael WILLIAMS'
+];
+
+function addFakeTicket(project) {
+
+    if ($("#ticketList").length > 0) {
+        if (!project)
+            project = randString(fakeProjectNames)
+
+        var name = project + "-" + pad(randInt(1, 999), 3),
+            desc = randString(fakeTicketDesc),
+            type = randInt(0, 2),
+            priority = randInt(0, 4),
+            status = randInt(0, 3),
+            user = randString(fakeUserNames);
+
+        if (randInt(0, 2) == 0)
+            user = "";
+
+        if (user.length > 0) user = '<h5 class="text-primary">' + user + '</h5>';
+        var html = '<div class="ticket" onclick="ticket_click(\'' + name + '\')">' + '<span title="' + type_titles[type] + '" class="fa-stack ' + type_colors[type] + ' type">' + '<i class="fa fa-square fa-stack-2x"></i>' + '<i class="fa ' + type_icons[type] + ' fa-stack-1x fa-inverse"></i></span>' + '<i class="fa ' + status_icons[status] + ' status" title="status : ' + status_titles[status] + '"></i><i class="fa fa-thermometer-' + priority + ' ' + priority_colors[priority] + ' priority" title="priority : ' + priority_titles[priority] + '"></i>' + user + '<h4>' + name + ' <small>' + desc + '</small></h4></div>';
+        $("#ticketList").append(html);
+    }
+}
+
+function addFakeProject() {
+    if ($("#projectList").length > 0) {
+        var name = randString(fakeProjectNames),
+            desc = randString(fakeProjectDesc);
+        var html = '<div class="project" onclick="project_click(\'' + name + '\')">' + '<h4>' + name + ' <small>' + desc + '</small></h4></div>';
+        $("#projectList").append(html);
+    }
+
 }
