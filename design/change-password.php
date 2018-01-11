@@ -11,6 +11,7 @@
     <?php include("../template/connected-nav.php") ?>
     <script>
         $(document).ready(function() {
+            initNotification("#main-form");
             $("#dropdownUser").addClass("active");
             $("#dropdownUser").html(randString(fakeUserNames));
 

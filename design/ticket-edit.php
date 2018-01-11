@@ -25,6 +25,7 @@
 
 
         $(document).ready(function() {
+            initNotification(".jumbotron");
             $("#navTickets").addClass("active");
             $("#dropdownUser").html(randString(fakeUserNames));
 

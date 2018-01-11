@@ -6,6 +6,11 @@ body {
     margin-top: 10px;
 }
 
+#notifications {
+    position: absolute;
+    top: 0.1em;
+    z-index: 2000;
+}
 
 /* Ticket/project list*/
 

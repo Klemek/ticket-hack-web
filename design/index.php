@@ -11,6 +11,7 @@
     <?php include("../template/anonymous-nav.php") ?>
     <script>
         $(document).ready(function() {
+            initNotification("#main-form");
 
             var notf = readCookie("notify");
             if (notf && notf.length > 0) {
@@ -18,20 +19,25 @@
                 eraseCookie("notify");
             }
 
+
             $("#main-form").submit(function() {
                 $("#btnSubmit").attr("disabled", "true");
                 clearNotification();
 
-                var hashPass = CryptoJS.SHA256($("#inputPassword").val()).toString();
-                $("#inputPassword").val("");
+                var email = $("#inputEmail").val(),
+                    hashPass = getHashAndClean("#inputPassword");
 
                 var url = "http://echo.jsontest.com/result/ok";
                 if (randInt(0, 1) == 0)
                     url = "http://echo.jsontest.com/result/error/message/error";
 
                 $.ajax({
-                    url: url,
-                    method: 'GET',
+                    url: url, //"./api/user/connect"
+                    method: 'POST',
+                    data: {
+                        email: email,
+                        pass: hashPass
+                    },
                     success: function(result) {
                         if (typeof result !== "object") { //mime type: text
                             if (!validJSON(result + "")) {
@@ -70,7 +76,6 @@
     <div class="container">
         <form id="main-form" class="custom-form form-signin">
             <img class="img-fluid d-none d-sm-block" src="/img/ticket-hack-min.jpg">
-            <div id="notifications"></div>
             <h2 class="form-signin-heading">Please sign in</h2>
             <label for="inputEmail" class="sr-only">Email address</label>
             <input type="email" id="inputEmail" class="form-control" placeholder="Email address" required autofocus>
@@ -82,7 +87,7 @@
             </div>
             <button id="btnSubmit" class="btn btn-lg btn-primary btn-block" type="submit">Sign in</button>
             <label class="text-center" style="width:100%">Or create a <a href="./register">new account</a>
-                <br/><small><a href="./forgot-password">Forgot your password ?</a></small></label>
+                <!--<br/><small><a href="./forgot-password">Forgot your password ?</a></small>--></label>
         </form>
     </div>
 </body>

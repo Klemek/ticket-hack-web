@@ -11,7 +11,7 @@
     <?php include("../template/connected-nav.php") ?>
     <script>
         $(document).ready(function() {
-
+            initNotification(".jumbotron");
             $("#navProjects").addClass("active");
             $("#dropdownUser").html(randString(fakeUserNames));
 

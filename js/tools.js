@@ -51,7 +51,13 @@ function validJSON(text) {
     return /^[\],:{}\s]*$/.test(text.replace(/\\["\\\/bfnrtu]/g, '@').replace(/"[^"\\\n\r]*"|true|false|null|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?/g, ']').replace(/(?:^|:|,)(?:\s*\[)+/g, ''));
 }
 
-//DISPLAY
+//NOTIFICATIONS
+
+function initNotification(divName) {
+    $(divName).append('<div id="notifications"></div>');
+    $("#notifications").width($(divName).width());
+}
+
 
 function notify(msg, type) {
     if ($("#notifications").length > 0) {
@@ -73,6 +79,7 @@ function clearNotification() {
     }
 }
 
+//CONSTANTS
 
 var type_titles = {
         0: "bug",
@@ -116,6 +123,14 @@ var type_titles = {
         3: "fa-check-circle"
     };
 
+
+//INPUTS
+
+function getHashAndClean(inputName) {
+    var hash = CryptoJS.SHA256($(inputName).val()).toString();
+    $(inputName).val("");
+    return hash;
+}
 
 var customInputInfos = {};
 

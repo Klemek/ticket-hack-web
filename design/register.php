@@ -11,17 +11,22 @@
     <?php include("../template/anonymous-nav.php") ?>
     <script>
         $(document).ready(function() {
+            initNotification("#main-form");
             $("#main-form").submit(function() {
                 $("#btnSubmit").attr("disabled", "true");
                 clearNotification();
 
-                var hashPass = CryptoJS.SHA256($("#inputPassword").val()).toString();
-                $("#inputPassword").val("");
+                $("#notifications").width($("#main-form").width());
 
-                var hashPassR = CryptoJS.SHA256($("#inputPasswordR").val()).toString();
-                $("#inputPasswordR").val("");
+                $("#inputName2").val($("#inputName2").val().toUpperCase());
+
+                var name = $("#inputName").val() + " " + $("#inputName2").val(),
+                    email = $("#inputEmail").val(),
+                    hashPass = getHashAndClean("#inputPassword"),
+                    hashPassR = getHashAndClean("#inputPasswordR");
 
                 if (hashPass !== hashPassR) {
+                    $("#btnSubmit").removeAttr("disabled");
                     notify("<b>Warning</b> Passwords doesn't match !", "warning");
                     return false;
                 }
@@ -31,8 +36,13 @@
                     url = "http://echo.jsontest.com/result/error/message/error";
 
                 $.ajax({
-                    url: url,
-                    method: 'GET',
+                    url: url, //"./api/user/new"
+                    method: 'POST',
+                    data: {
+                        name: name,
+                        email: email,
+                        pass: hashPass
+                    },
                     success: function(result) {
                         if (typeof result !== "object") { //mime type: text
                             if (!validJSON(result + "")) {
@@ -71,17 +81,18 @@
     </script>
     <div class="container">
         <form id="main-form" class="custom-form form-register" method="post">
-            <div id="notifications"></div>
             <h2 class="form-signin-heading">Register</h2>
+            <div class="form-group row">
+                <label for="inputName" class="col-sm-4 col-form-label">Name</label>
+                <div class="col-sm-4">
+                    <input type="text" class="form-control" id="inputName" placeholder="Enter first name" required autocomplete="name"> </div>
+                <div class="col-sm-4">
+                    <input type="text" class="form-control" id="inputName2" placeholder="Enter last name" required autocomplete="family-name"> </div>
+            </div>
             <div class="form-group row">
                 <label for="inputEmail" class="col-sm-4 col-form-label">Email address</label>
                 <div class="col-sm-8">
                     <input type="email" class="form-control" id="inputEmail" placeholder="Enter email" required autofocus autocomplete="email"> </div>
-            </div>
-            <div class="form-group row">
-                <label for="inputName" class="col-sm-4 col-form-label">Username</label>
-                <div class="col-sm-8">
-                    <input type="text" class="form-control" id="inputName" placeholder="Enter username" required autocomplete="nickname"> </div>
             </div>
             <div class="form-group row">
                 <label for="inputPassword" class="col-sm-4 col-form-label">Password</label>

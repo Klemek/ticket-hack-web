@@ -17,7 +17,7 @@
         }
 
         $(document).ready(function() {
-
+            initNotification(".jumbotron");
             $("#navProjects").addClass("active");
             $("#dropdownUser").html(randString(fakeUserNames));
 
