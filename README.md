@@ -1,3 +1,58 @@
+## Data formats
+
+### Users informations
+
+* **Name** : editable
+* **Email** : editable
+* **Password** : editable, hashed with sha256
+* **Creation date**
+* **last_connection_date**
+
+### Projects informations
+
+* **Name** : editable
+* **Ticket prefix**
+* **Creation date**
+* **Creator** : id
+* **Edition date**
+* **Editor** : id
+
+### Tickets informations
+
+* **Name** : editable
+* **Simple ID**
+* **Manager** : editable, id
+* **Due date** : editable
+* **Type** : editable, number :
+* **State** : editable, number :
+* **Priority** : editable, number :
+* **Project** : id
+* **Creation date**
+* **Creator** : id
+* **Edition date**
+* **Editor** : id
+
+| Value | Ticket type |
+| -: | -|
+| 0 | Bug |
+| 1 | Improvement |
+| 2 | Verification |
+
+| Value | Ticket state |
+| -: | -|
+| 0 | Open |
+| 1 | Working |
+| 2 | Review |
+| 3 | Closed |
+
+| Value | Ticket priority |
+| -: | -|
+| 0 | Lowest |
+| 1 | Low |
+| 2 | Medium |
+| 3 | High |
+| 4 | Highest |
+
 ## API
 
 ### General information
@@ -33,7 +88,7 @@
 	* params : name, ticket_prefix
 * **GET** `/api/project/{id}`
 	* *Returns the "full" information on the wanted project  (need project read access)*
-	* `{"id" : 123456, "creation_date" : 1515483816, "name" : "testproject", "creator_id" : 123456, "edition_date" : 1515483816, "ticket_prefix" : "TEST"}`
+	* `{"id" : 123456, "creation_date" : 1515483816, "name" : "testproject", "creator_id" : 123456, "edition_date" : 1515483816, "editor_id" : 123456, "ticket_prefix" : "TEST"}`
 * **POST** `/api/project/{id}/edit`
 	* *Update information on the project  (need project admin access)* 
 	* params : (name), (ticket_prefix)
@@ -52,19 +107,19 @@
 * **GET** `/api/project/{id}/tickets`
 	* *Returns a list of tickets associated to the project* 
 	* params : (number), (offset), (query), (order)
-	* `{"total" : 15, "list" : [{"id" : 123456, "creation_date" : 1515483816, "name" : "testticket", "simple_id" : "TEST-001", "project_id" : 123456, "manager_id" : 123456, "priority" : 5, "state" : 2, "due_date" : 1515483816}, ...]}`
+	* `{"total" : 15, "list" : [{"id" : 123456, "creation_date" : 1515483816, "name" : "testticket", "simple_id" : "TEST-001", "project_id" : 123456, "manager_id" : 123456, "type" : 1, "priority" : 5, "state" : 2, "due_date" : 1515483816}, ...]}`
 
 ### Tickets
 * **GET** `/api/ticket/list`
 	* *Returns a list of tickets associated to the current user (at least read access)* 
 	* params : (number), (offset), (query), (order)
-	* `{"total" : 15, "list" : [{"id" : 123456, "creation_date" : 1515483816, "name" : "testticket", "simple_id" : "TEST-001", "project_id" : 123456, "manager_id" : 123456, "priority" : 5, "state" : 2, "due_date" : 1515483816}, ...]}`
+	* `{"total" : 15, "list" : [{"id" : 123456, "creation_date" : 1515483816, "name" : "testticket", "simple_id" : "TEST-001", "project_id" : 123456, "manager_id" : 123456, "type" : 1, priority" : 5, "state" : 2, "due_date" : 1515483816}, ...]}`
 * **POST** `/api/ticket/new | /api/project/{id}/addticket`
 	* *Create a new ticket  (need project write access)*
 	* params : title, (project_id if not given), (manager_id), priority, state, (due_date)
 * **GET** `/api/ticket/{id} | /api/project/{id_project}/ticket/{id_simple_ticket}`
 	* *Returns the "full" information on the wanted ticket if access to it  (need project read access)*
-	* `{"id" : 123456, "creation_date" : 1515483816, "name" : "testticket", "creator_id" : 123456, "edition_date" : 1515483816, "simple_id" : "TEST-001", "project_id" : 123456, "manager_id" : 123456, "priority" : 5, "state" : 2, "description" : "Lorem ipsum...", "due_date" : 1515483816, "comments" : [{"id" : 123456, "creation_date" : 1515483816, "comment" : "lorem ipsum...", "creator_id" : 123456, "edition_date" : 1515483816, "ticket_id" : 123456}, ...]}`
+	* `{"id" : 123456, "creation_date" : 1515483816, "name" : "testticket", "creator_id" : 123456, "edition_date" : 1515483816, "editor_id" : 123456, "simple_id" : "TEST-001", "project_id" : 123456, "manager_id" : 123456, "type" : 1, "priority" : 5, "state" : 2, "description" : "Lorem ipsum...", "due_date" : 1515483816, "comments" : [{"id" : 123456, "creation_date" : 1515483816, "comment" : "lorem ipsum...", "creator_id" : 123456, "edition_date" : 1515483816, "ticket_id" : 123456}, ...]}`
 * **POST** `/api/ticket/{id}/edit`
 	* *Update information on the ticket  (need project write access)* 
 	* params : (name), (manager_id), (priority), (state), (description), (due_date)

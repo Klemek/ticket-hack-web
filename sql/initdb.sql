@@ -66,9 +66,11 @@ CREATE TABLE projects(
 	edition_date timestamp,
 	name varchar(256) not null,
 	creator_id int not null,
+    editor_id int not null,
 	ticket_prefix varchar(5) not null, /* used for tickets identification */
 	primary key (id),
-	foreign key (creator_id) references users(id)
+	foreign key (creator_id) references users(id),
+    foreign key (editor_id) references users(id)
 );
 
 /* INSERT INTO projects (name, creator_id, ticket_prefix) VALUES ('name',id,'EXA'); */
@@ -92,13 +94,16 @@ CREATE TABLE tickets(
 	name varchar(512) not null,
 	project_id int not null,
 	creator_id int not null,
+    editor_id int not null,
 	manager_id int,
+    type int not null default 0,
 	priority int not null default 3, /* 1-lowest, 5-hightest */
 	state int not null default 0, /* 0-todo, 1-doing, 2-review, 3-done*/
 	description varchar(4096),
 	due_date timestamp,
 	primary key (id),
 	foreign key (creator_id) references users(id),
+    foreign key (editor_id) references users(id),
 	foreign key (manager_id) references users(id),
 	foreign key (project_id) references projects(id) ON DELETE CASCADE
 );
