@@ -139,3 +139,16 @@ CREATE TABLE link_ticket_category(
 	foreign key (category_id) references categories(id) ON DELETE CASCADE
 );
 
+/*
+
+User role :
+
+CREATE ROLE php WITH LOGIN ENCRYPTED PASSWORD 'password';
+GRANT CONNECT ON DATABASE dbmain TO php;
+GRANT USAGE ON SCHEMA public TO php;
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO php;
+GRANT INSERT ON ALL TABLES IN SCHEMA public TO php;
+GRANT UPDATE ON ALL TABLES IN SCHEMA public TO php;
+GRANT DELETE ON ALL TABLES IN SCHEMA public TO php;
+
+*/
