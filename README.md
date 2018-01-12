@@ -2,35 +2,41 @@
 
 ### Users informations
 
-* **Name** : editable
-* **Email** : editable
-* **Password** : editable, hashed with sha256
-* **Creation date**
-* **last_connection_date**
+| Information | Type | Editable |
+| -: | :-: | :-: |
+| **Name** | Text | **Yes** |
+| **Email** | Text | **Yes** |
+| **Password** | SHA256 | **Yes** |
+| **Creation date** | Date | No |
+| **Last connection date** | Date | No |
 
 ### Projects informations
 
-* **Name** : editable
-* **Ticket prefix**
-* **Creation date**
-* **Creator** : id
-* **Edition date**
-* **Editor** : id
+| Information | Type | Editable |
+| -: | :-: | :-: |
+| **Name** | Text | **Yes** |
+| **Ticket prefix** | Text | No |
+| **Creation date** | Date | No |
+| **Creator** | ID | No |
+| **Edition date** | Date | No |
+| **Editor** | ID | No |
 
 ### Tickets informations
 
-* **Name** : editable
-* **Simple ID**
-* **Manager** : editable, id
-* **Due date** : editable
-* **Type** : editable, number :
-* **State** : editable, number :
-* **Priority** : editable, number :
-* **Project** : id
-* **Creation date**
-* **Creator** : id
-* **Edition date**
-* **Editor** : id
+| Information | Type | Editable |
+| -: | :-: | :-: |
+| **Name** | Text | **Yes** |
+| **Simple ID** | Text | No |
+| **Manager** | ID | **Yes** |
+| **Due date** | Date | **Yes** |
+| **Type** | Number | **Yes** |
+| **State** | Number | **Yes** |
+| **Priority** | Number | **Yes** |
+| **Project** | ID | No |
+| **Creation date** | Date | No |
+| **Creator** | ID | No |
+| **Edition date** | Date | No |
+| **Editor** | ID | No |
 
 | Value | Ticket type |
 | -: | -|
