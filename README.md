@@ -25,8 +25,8 @@
 
 ### Tickets informations
 
-| Information | Type | Editable |
-| -: | :-: | :-: |
+| Information | Type | Editable | Name |
+| -: | :-: | :-: | - |
 | **ID** | ID | No | `id` |
 | **Name** | Text | **Yes** | `name` |
 | **Simple ID** | Text | No | `simple_id` |
@@ -65,8 +65,8 @@
 
 ### Comments informations
 
-| Information | Type | Editable |
-| -: | :-: | :-: |
+| Information | Type | Editable | Name |
+| -: | :-: | :-: | - |
 | **ID** | ID | No | `id` |
 | **Comment** | Text | **Yes** | `comment` |
 | **Creation date** | Date | No | `creation_date` |
