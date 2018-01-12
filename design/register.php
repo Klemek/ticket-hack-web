@@ -35,41 +35,18 @@
                 if (randInt(0, 1) == 0)
                     url = "http://echo.jsontest.com/result/error/message/error";
 
-                $.ajax({
+                ajax_post({
                     url: url, //"./api/user/new"
-                    method: 'POST',
                     data: {
                         name: name,
                         email: email,
-                        pass: hashPass
+                        password: hashPass
                     },
-                    success: function(result) {
-                        if (typeof result !== "object") { //mime type: text
-                            if (!validJSON(result + "")) {
-                                console.log("invalid json : " + result);
-                                notify("<b>Error</b> internal error", "danger");
-                                return;
-                            }
-                            var result = $.parseJSON(result);
-                        }
-
-                        if (result.result == "ok") {
-                            writeCookie("notify", "success-Your account has been created successfuly !", 1)
-                            window.location = "./";
-                        } else {
-                            notify("<strong>Error</strong> " + result.message, "danger");
-                        }
-
-                        $("#btnSubmit").removeAttr("disabled");
+                    success: function(content) {
+                        writeCookie("notify", "success-Your account has been created successfuly !", 1)
+                        window.location = "./";
                     },
-                    error: function(result, data) {
-                        if (result.status == 0 || result.status == 404) {
-                            notify("<b>Error</b> internal error", "danger");
-                            console.log("unreachable url : " + url);
-                        } else {
-                            notify("<b>Error</b> internal error", "danger");
-                            console.log("server error " + result.status);
-                        }
+                    error: function(code, data) {
                         $("#btnSubmit").removeAttr("disabled");
                     }
                 });

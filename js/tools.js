@@ -27,6 +27,12 @@ function readCookie(cname) {
     return "";
 }
 
+function readAndErase(name) {
+    var c = readCookie(name);
+    eraseCookie(name);
+    return c;
+}
+
 function eraseCookie(name) {
     writeCookie(name, "", -1);
 }
@@ -49,6 +55,56 @@ function pad(num, size) {
 
 function validJSON(text) {
     return /^[\],:{}\s]*$/.test(text.replace(/\\["\\\/bfnrtu]/g, '@').replace(/"[^"\\\n\r]*"|true|false|null|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?/g, ']').replace(/(?:^|:|,)(?:\s*\[)+/g, ''));
+}
+
+//AJAX
+
+function ajax_get(request) {
+    ajax('GET', request['url'], request['data'], request['success'], request['error']);
+}
+
+function ajax_post(request) {
+    ajax('POST', request['url'], request['data'], request['success'], request['error']);
+}
+
+function ajax(method, url, data, callbacksuccess, callbackerror) {
+    $.ajax({
+        url: url,
+        method: method,
+        data: data,
+        success: function (data) {
+            if (typeof data !== "object") {
+                console.log("invalid json : " + data);
+                notify("<b>Error</b> internal error", "danger");
+                return;
+            }
+
+            if (data.result == "ok") {
+                if (callbacksuccess)
+                    callbacksuccess(data.content);
+            } else {
+                notify("<strong>Error</strong> " + data.message, "danger");
+                if (callbackerror)
+                    callbackerror();
+            }
+
+        },
+        error: function (result, data) {
+            if (result.status == 0 || result.status == 404) {
+                notify("<b>Error</b> internal error", "danger");
+                console.log("unreachable url : " + url);
+            } else {
+                console.log("error " + result + " : " + data);
+                if (typeof data !== "object" || !data.result || !data.message) {
+                    notify("<b>Error</b> internal error", "danger");
+                } else {
+                    notify("<strong>Error</strong> " + data.message, "danger");
+                }
+            }
+            if (callbackerror)
+                callbackerror(result.status, data);
+        }
+    });
 }
 
 //NOTIFICATIONS

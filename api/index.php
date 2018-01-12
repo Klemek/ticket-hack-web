@@ -417,7 +417,6 @@ $route->get("/api/project/{id_project}/ticket/{id_simple_ticket}", function($id_
     echo json_encode(get_ticket_simple($id_project, $id_simple_ticket));
 });
 
-
 /**
 * TICKETS
 *   /ticket/{id} return the ticket information IF the user has access to the project

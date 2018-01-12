@@ -13,11 +13,9 @@
         $(document).ready(function() {
             initNotification("#main-form");
 
-            var notf = readCookie("notify");
-            if (notf && notf.length > 0) {
+            var notf = readAndErase("notify");
+            if (notf && notf.length > 0)
                 notify(notf);
-                eraseCookie("notify");
-            }
 
 
             $("#main-form").submit(function() {
@@ -31,39 +29,16 @@
                 if (randInt(0, 1) == 0)
                     url = "http://echo.jsontest.com/result/error/message/error";
 
-                $.ajax({
-                    url: url, //"./api/user/connect"
-                    method: 'POST',
+                ajax_post({
+                    url: url, //./api/user/connect
                     data: {
                         email: email,
-                        pass: hashPass
+                        password: hashPass
                     },
-                    success: function(result) {
-                        if (typeof result !== "object") { //mime type: text
-                            if (!validJSON(result + "")) {
-                                console.log("invalid json : " + result);
-                                notify("<b>Error</b> internal error", "danger");
-                                return;
-                            }
-                            var result = $.parseJSON(result);
-                        }
-
-                        if (result.result == "ok") {
-                            window.location = "./tickets";
-                        } else {
-                            notify("<strong>Error</strong> " + result.message, "danger");
-                        }
-
-                        $("#btnSubmit").removeAttr("disabled");
+                    success: function(content) {
+                        window.location = "./tickets";
                     },
-                    error: function(result, data) {
-                        if (result.status == 0 || result.status == 404) {
-                            notify("<b>Error</b> internal error", "danger");
-                            console.log("unreachable url : " + url);
-                        } else {
-                            notify("<b>Error</b> internal error", "danger");
-                            console.log("server error " + result.status);
-                        }
+                    error: function(code, data) {
                         $("#btnSubmit").removeAttr("disabled");
                     }
                 });
@@ -81,10 +56,10 @@
             <input type="email" id="inputEmail" class="form-control" placeholder="Email address" required autofocus>
             <label for="inputPassword" class="sr-only">Password</label>
             <input type="password" id="inputPassword" class="form-control" placeholder="Password" required>
-            <div class="checkbox">
+            <!--<div class="checkbox">
                 <label>
                     <input type="checkbox" value="remember-me"> Remember me </label>
-            </div>
+            </div>-->
             <button id="btnSubmit" class="btn btn-lg btn-primary btn-block" type="submit">Sign in</button>
             <label class="text-center" style="width:100%">Or create a <a href="./register">new account</a>
                 <!--<br/><small><a href="./forgot-password">Forgot your password ?</a></small>--></label>
