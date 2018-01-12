@@ -77,7 +77,7 @@ function get($str, $optionnal = false){
     }
 
     if (! $optionnal){
-        die("missing GET parameter - $str");
+        http_error(400, "missing GET parameter");
     }
 
     return null;
@@ -88,23 +88,32 @@ function post($str, $optionnal = false){
         return $_POST[$str];
     }
     if (! $optionnal){
-        die("missing POST parameter - $str");
+        http_error(400, "missing POST parameter");
     }
 
     return null;
 }
 
-function error_401(){
-    header("Content-Type: text/plain");
-    header("HTTP/1.1 401 Unauthorized");
-    echo "You must authentificate to access this service";
-    exit;
-}
+/**
+* generate an error and clsoe the programm
+* @param code the http code
+* @param msg the message you want to display
+* @param args additionnal output you may want to display
+*
+*/
+function http_error($code, $msg, $args = array()){
+    http_response_code($code);
+    $output = array(
+        "status"=>$code,
+        "result"=>"error",
+        "error"=>$msg
+    );
 
-function error_403($msg="Access Forbidden"){
-    header("Content-Type: text/plain");
-    header("HTTP/1.1 403 Forbidden");
-    echo $msg;
+    foreach ($args as $t=>$v){
+        $output["$t"] = $v;
+    }
+
+    echo json_encode($output);
     exit;
 }
 
@@ -116,7 +125,7 @@ function force_auth(){
     if (isset($_SESSION["user_id"])){
         return $_SESSION["user_id"];
     }else{
-        die("error - you need to log in to continue");
+        http_error(401, "You need to be authentified to access this method");
     }
 }
 
@@ -172,8 +181,7 @@ $route->post(array("/api/user/new",
     $password = post("password");
 
     if (user_test_mail($email)){
-        //todo : add 409 error
-        die("error - mail already exists");
+        http_error(405,"email already taken");
     }
 
     $id_user = add_user($name, $email, $password);
@@ -203,8 +211,9 @@ $route->get("/api/user/{id}", function($id){
 * @return the user infos
 **/
 //todo : add a security
-$route->post("/api/user/{id}/edit", function($id){
-    $id = (int) $id;
+$route->post(array("/api/user/{id}/edit",
+                   "/api/user/me/edit"), function($id = null){
+    $id = ($id !== null) ? (int) $id : force_auth();
     $name = post("name", true);
     $email = post("email", true);
     $password = post("password", true);
@@ -258,8 +267,11 @@ $route->delete(array("/api/user/me/delete",
                });
 
 //todo check here
-$route->route("/api/user/{id}/projects", function($id){
-    $id = (int) $id;
+$route->route(array("/api/user/{id}/projects",
+                    "/api/user/me/projects",
+                    "/api/projects"), function($id = null){
+
+    $id = ($id === null) ? force_auth() : (int) $id;
     $output = get_projects_for_user($id);
     echo json_encode($output);
 });
@@ -478,7 +490,6 @@ $route->get("/api/ticket/{id}/comments", function($id){
 * DELETE /api/comment/{id}/delete
 *
 **/
-
 //todo : check if the user has rights
 $route->get("/api/comment/{id_comment}", function($id_comment){
     echo json_encode(get_comment($id_comment));
@@ -489,7 +500,7 @@ $route->post("/api/comment/{id}/edit", function($comment_id){
     $creator_id = force_auth();
 
     if (get_comment($comment_id)["creator_id"] != $creator_id){
-        die("You cannot modify a comment that isn't yours");
+        http_error(403,"You cannot modify this comment as it isn't yours");
     }
 
     $id = edit_comment($comment_id, $comment);
@@ -501,7 +512,7 @@ $route->delete("/api/comment/{id}/delete", function($comment_id){
     $comment_id = (int) $comment_id;
     $id_user = force_auth();
     $id_project = execute("SELECT project_id FROM tickets WHERE id IN (SELECT ticket_id FROM comments WHERE id = ?)", array($comment_id))->fetch()["project_id"];
-    
+
     if (is_admin($id_user, $id_project) || get_comment($comment_id)["creator_id"] == $creator_id){
         delete_comment($comment_id);
     }
@@ -512,10 +523,13 @@ $route->delete("/api/comment/{id}/delete", function($comment_id){
 *
 *
 **/
-
 $route->error_404(function(){
-    echo "Oops... It seems i was unable to do anything with the request you gave me."."\n<br/>";
-    echo "Maybe check the type and the url ?";
+    http_response_code(404);
+    $output = array(
+        "error_code" => 404,
+        "message" => "404 - the server couldn't find a page corresponding to your url and method settings"
+    );
+    echo json_encode($output);
+    exit;
 });
-
 ?>

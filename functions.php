@@ -1,11 +1,13 @@
 <?php
 
 /*start the session*/
-session_start();
+if (session_status() == PHP_SESSION_NONE) {
+    session_start();
+}
 
 /*connects to the database*/
 try{
-    $db = new PDO("pgsql:user=php;dbname=dbmain;password=php;host=localhost");
+    $db = new PDO("pgsql:user=postgres;dbname=postgres;password=postgres;host=localhost");
 }catch(PDOException $e){
     die("Erreur de connexion à la base de donnée");
 }
@@ -18,13 +20,13 @@ try{
 function execute($req, $values){
     global $db;
     $sth = $db->prepare($req);
-    
+
     if (! $sth){
         echo "Erreur SQL";
         print_r($db->errorInfo());
         die();
     }
-    
+
     $sth->execute($values);
 
     return $sth;
@@ -119,7 +121,7 @@ function get_user_by_email($email){
 function validate_user($email, $password){
     global $db;
 
-    $req = "SELECT count(email) FORM users WHERE email=? AND password=?";
+    $req = "SELECT count(email) FROM users WHERE email=? AND password=?";
     $values = array($email, hash_passwd($password));
 
     $result = execute($req, $values);
@@ -163,7 +165,7 @@ function delete_project($id){
 function get_project($id){
     $req = "SELECT * FROM projects WHERE id = ?";
     $values = array($id);
-    
+
     $sth = execute($req,$values);
     return $sth->fetch(PDO::FETCH_ASSOC);
 }
@@ -173,7 +175,7 @@ function get_project($id){
 function add_link_user_project($id_user, $id_project, $level){
     //check if the user does'nt already possess a link to this project
     if (get_link_user_project($id_user, $id_project) !== false){
-        die("Lien déjà existant");
+        die("Link already existing");
     }
 
     $req = "INSERT INTO link_user_project VALUES (?,?,?);";
@@ -190,7 +192,6 @@ function get_link_user_project($id_user, $id_project){
     if ($sth->rowCount() > 0){
         return $sth->fetch(PDO::FETCH_ASSOC);
     }
-    echo "nofetch";
     return false;
 }
 
@@ -198,19 +199,19 @@ function get_link_user_project($id_user, $id_project){
 function get_projects_for_user($id_user){
     $req = "SELECT * FROM projects WHERE id IN (SELECT project_id FROM link_user_project WHERE user_id = ?);";
     $values = array($id_user);
-    
+
     $sth = execute($req, $values);
-    
+
     return $sth->fetchall(PDO::FETCH_ASSOC);
 }
 
 /*get all the users for the project*/
 function get_users_for_project($id_project){
-    $req = "SELECT * FROM users WHERE id IN (SELECT user_id FROM link_user_project WHERE project_id = ?);";
-    $values = array($id_project);
-    
+    $req = "SELECT * FROM users WHERE id IN (SELECT user_id FROM link_user_project WHERE project_id = ? UNION SELECT creator_id FROM projects WHERE id=?);";
+    $values = array($id_project,$id_project);
+
     $sth = execute($req, $values);
-    
+
     return $sth->fetchall(PDO::FETCH_ASSOC);
 }
 
@@ -233,8 +234,18 @@ function delete_link_user_project($id_user, $id_project){
     execute($req, $values);
 }
 
+//todo : add multiple admin by level, not only creator
+function is_admin($id_user, $id_project){
+    $req = "SELECT creator_id FROM projects WHERE id=?";
+    $args = array($id_project);
+    
+    $id = (int) execute($req, $args)->fetch()["creator_id"];
+    
+    return $id == $id_user;
+}
+
 /*----------------------------------------------------------------- TICKETS --------------------------------------------------------------*/
-//TODO : edit ticket
+//TODO : edit ticket, get ticket 
 
 /** add a ticket
 * return the id of the row inserted
@@ -272,6 +283,15 @@ function get_ticket($id){
     return false;
 }
 
+function get_ticket_simple($id_project, $id_simple){
+    $req = "SELECT * FROM tickets WHERE project_id=? AND simple_id=? ;";
+    $values = array($id_project, $id_simple);
+
+    $sth = execute($req, $values);
+
+    return $sth->fetch(PDO::FETCH_ASSOC);
+}
+
 /*return all tickets of a project*/
 function get_tickets_for_project($id_project){
     global $db;
@@ -290,6 +310,8 @@ function delete_ticket($id){
 
 /*----------------------------------------------------------------- COMMENTS -------------------------------------------------------------*/
 
+/*add a comment
+@return the id of the created comment*/
 function add_comment($ticket_id, $creator_id, $comment){
     $req = "INSERT INTO comments(ticket_id, creator_id, comment) VALUES (?,?,?) RETURNING id;";
     $values = array($ticket_id, $creator_id, $comment);
@@ -399,9 +421,9 @@ function delete_link_ticket_category($id_ticket, $id_category){
 function get_categories_for_ticket($id_ticket){
     $req = "SELECT * FROM categories WHERE id IN (SELECT category_id FROM link_ticket_category WHERE ticket_id = ?);";
     $values = array($id_ticket);
-    
+
     $sth = execute($req, $values);
-    
+
     return $sth->fetchall(PDO::FETCH_ASSOC);
 }
 
@@ -409,13 +431,24 @@ function get_categories_for_ticket($id_ticket){
 function get_tickets_for_category($id_category){
     $req = "SELECT * FROM tickets WHERE id IN (SELECT ticket_id FROM link_ticket_category WHERE category_id = ?);";
     $values = array($id_category);
-    
+
     $sth = execute($req, $values);
-    
+
     return $sth->fetchall(PDO::FETCH_ASSOC);
 }
 
 
+/*mail*/
+
+function simplemail($to, $subject, $message){
+    $headers = 'From: kalioz@kalioz.fr' . "\r\n" .
+        'Reply-To: kalioz@kalioz.fr' . "\r\n" .
+        'X-Mailer: PHP/' . phpversion();
+    
+    echo "test";
+
+    mail($to, $subject, $message, $headers);
+}
 /* -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ TESTS +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-*/
 
 /*test zone*/
