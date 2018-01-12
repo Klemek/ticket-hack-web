@@ -96,9 +96,9 @@ CREATE TABLE tickets(
 	creator_id int not null,
     editor_id int not null,
 	manager_id int,
-    type int not null default 0,
-	priority int not null default 3, /* 1-lowest, 5-hightest */
-	state int not null default 0, /* 0-todo, 1-doing, 2-review, 3-done*/
+    type smallint not null default 0,
+	priority smallint not null default 3, /* 1-lowest, 5-hightest */
+	state smallint not null default 0, /* 0-todo, 1-doing, 2-review, 3-done*/
 	description varchar(4096),
 	due_date timestamp,
 	primary key (id),
