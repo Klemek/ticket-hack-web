@@ -2,42 +2,45 @@
 
 ### Users informations
 
-| Information | Type | Editable |
-| -: | :-: | :-: |
-| **Name** | Text | **Yes** |
-| **Email** | Text | **Yes** |
-| **Password** | SHA256 | **Yes** |
-| **Creation date** | Date | No |
-| **Last connection date** | Date | No |
+| Information | Type | Editable | Name |
+| -: | :-: | :-: | - |
+| **ID** | ID | No | `id` |
+| **Name** | Text | **Yes** | `name` |
+| **Email** | Text | **Yes** | `email` |
+| **Password** | SHA256 | **Yes** | `password` |
+| **Creation date** | Date | No | `creation_date` |
+| **Last connection date** | Date | No | `last_connection_date` |
 
 ### Projects informations
 
-| Information | Type | Editable |
-| -: | :-: | :-: |
-| **Name** | Text | **Yes** |
-| **Ticket prefix** | Text | No |
-| **Creation date** | Date | No |
-| **Creator** | ID | No |
-| **Edition date** | Date | No |
-| **Editor** | ID | No |
+| Information | Type | Editable | Name |
+| -: | :-: | :-: | - |
+| **ID** | ID | No | `id` |
+| **Name** | Text | **Yes** | `name` |
+| **Ticket prefix** | Text | No | `ticket_prefix` |
+| **Creation date** | Date | No | `creation_date` |
+| **Creator** | ID | No | `creator_id` |
+| **Edition date** | Date | No | `edition_date` |
+| **Editor** | ID | No | `editor_id` |
 
 ### Tickets informations
 
 | Information | Type | Editable |
 | -: | :-: | :-: |
-| **Name** | Text | **Yes** |
-| **Simple ID** | Text | No |
-| **Description** | Text | **Yes** |
-| **Manager** | ID | **Yes** |
-| **Due date** | Date | **Yes** |
-| **Type** | Number | **Yes** |
-| **State** | Number | **Yes** |
-| **Priority** | Number | **Yes** |
-| **Project** | ID | No |
-| **Creation date** | Date | No |
-| **Creator** | ID | No |
-| **Edition date** | Date | No |
-| **Editor** | ID | No |
+| **ID** | ID | No | `id` |
+| **Name** | Text | **Yes** | `name` |
+| **Simple ID** | Text | No | `simple_id` |
+| **Description** | Text | **Yes** | `description` |
+| **Manager** | ID | **Yes** | `manager_id` |
+| **Due date** | Date | **Yes** | `due_date` |
+| **Type** | Number | **Yes** | `type` |
+| **State** | Number | **Yes** | `state` |
+| **Priority** | Number | **Yes** | `priority` |
+| **Project** | ID | No | `project_id` |
+| **Creation date** | Date | No | `creation_date` |
+| **Creator** | ID | No | `creator_id` |
+| **Edition date** | Date | No | `edition_date` |
+| **Editor** | ID | No | `editor_id` |
 
 | Value | Ticket type |
 | -: | -|
@@ -59,6 +62,16 @@
 | 2 | Medium |
 | 3 | High |
 | 4 | Highest |
+
+### Comments informations
+
+| Information | Type | Editable |
+| -: | :-: | :-: |
+| **ID** | ID | No | `id` |
+| **Comment** | Text | **Yes** | `comment` |
+| **Creation date** | Date | No | `creation_date` |
+| **Creator** | ID | No | `creator_id` |
+| **Edition date** | Date | No | `edition_date` |
 
 ## API
 
