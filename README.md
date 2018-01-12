@@ -27,6 +27,7 @@
 | -: | :-: | :-: |
 | **Name** | Text | **Yes** |
 | **Simple ID** | Text | No |
+| **Description** | Text | **Yes** |
 | **Manager** | ID | **Yes** |
 | **Due date** | Date | **Yes** |
 | **Type** | Number | **Yes** |
