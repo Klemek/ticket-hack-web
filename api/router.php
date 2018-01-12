@@ -5,6 +5,8 @@
 *      $route->route("/modele/{vue}/{controller}", function(vue, controller_or_other_name){}); to get all requests of the type /modele/(.*)/(.*) using this function
 *      $route->post("/modele2/{vue}", function(vue){}); to get only the POST requests; POST/GET/DELETE/PUT
 *      $route->error_404(function(){}); to set an error if no route correspond to the current url
+*      $route->route("path",function(){},array("POST","PUT")) to execute the path on POST and PUT
+*      $route->route(array(path1,path2,...),function, method) will route all paths to the method. please take care about possible missing arguments between paths. works for route, get, put, post and delete.
 *
 *      note the path must correspond to $_SERVER['REQUEST_URI']
 *      only the first corresponding route will be activated; all next one will be ignored.
@@ -85,7 +87,14 @@ class Route{
     /*take care of all cases
     @param $method = list containing the types authorized. keep null to authorize all*/
     public function route($path, $function, $methods = null){
-
+        
+        if (is_array($path)){
+            foreach($path as $p){
+                $this->route($p, $function, $methods);
+            }
+            return;
+        }
+        
         if ($methods !== null){
             $continue = false;
             foreach($methods as $method){
@@ -102,7 +111,11 @@ class Route{
 
             $args = $this->get_arguments_indexed_only($path);
             array_push($args,$this->get_arguments($path));//enable us to access directly by keyword
-
+            
+            if (count($args) === 1){//no arguments on the url, there's only the list containing everything
+                $args = array();
+            }
+            
             $function(...$args);
         }
     }
