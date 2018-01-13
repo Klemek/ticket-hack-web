@@ -53,7 +53,7 @@
             <label for="inputPassword" class="sr-only">Password</label>
             <input type="password" id="inputPassword" class="form-control" placeholder="Password" required>
             <button id="btnSubmit" class="btn btn-lg btn-primary btn-block" type="submit">Sign in</button>
-            <label class="text-center" style="width:100%">Or create a <a href="./register">new account</a>
+            <label class="text-center" style="width:100%">Or create a <a href="./register">new account</a></label>
         </form>
     </div>
 </body>
