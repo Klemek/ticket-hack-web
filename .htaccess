@@ -1,7 +1,5 @@
 Options +FollowSymlinks -MultiViews
 
-#ErrorDocument 404 /
-
 RewriteEngine On
 
 RewriteCond %{REQUEST_FILENAME} !-d
@@ -9,8 +7,10 @@ RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond /%{REQUEST_FILENAME}.php -f
 RewriteRule (.*) $1.php [L]
 
-RewriteRule ^(api/) api/testeur.php [L]
+RewriteRule ^(api/) api/index.php [L]
 RewriteRule "^template/(.*)" / [R]
 
-
+ErrorDocument 401 /error?error=401
+ErrorDocument 403 /error?error=403
+ErrorDocument 404 /error?error=404
 
