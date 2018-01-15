@@ -10,8 +10,6 @@ require_once "db_connect.php";
 
 
 /*-------------------------------------------------------------- USERS -------------------------------------------------------------------*/
-//TODO : edit
-
 
 /** hash the password
 * V1 : stupid hash + permasalt
@@ -490,43 +488,4 @@ function get_tickets_for_category($id_category){
 
     return $sth->fetchall(PDO::FETCH_ASSOC);
 }
-
-
-/*mail*/
-
-function simplemail($to, $subject, $message){
-    $headers = 'From: kalioz@kalioz.fr' . "\r\n" .
-        'Reply-To: kalioz@kalioz.fr' . "\r\n" .
-        'X-Mailer: PHP/' . phpversion();
-
-    echo "test";
-
-    mail($to, $subject, $message, $headers);
-}
-/* -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ TESTS +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-*/
-
-/*test zone*/
-$user_0 = 766929234;
-$project_0 = 1571240745;
-$ticket_0 = 1957972491;
-$cat_0 = 1831344299;
-$comment_0 = 291600761;
-
-//print_r(get_tickets_for_category(1831344299));
-//print_r(get_categories_for_ticket($ticket_0));
-//delete_link_user_project($user_0, $project_0);
-//edit_link_user_project($user_0, $project_0, 3);
-//add_link_user_project($user_0, $project_0, 5);
-//print_r(get_link_user_project($user_0, $project_0));
-//print_r(get_comments_for_ticket($ticket_0));
-//add_comment($ticket_0, $user_0, "un commentaire");
-//delete_link_ticket_category($ticket_0, $cat_0);
-//add_link_ticket_category($ticket_0, $cat_0);
-//print_r(get_categories_for_project($project_0));
-//add_category($project_0,"test categorie");
-//print_r(get_ticket($ticket_0 -1));
-//add_ticket("test ticket", $project_0, $user_0, $user_0, 3, "une description en html<br/> ou en simpletext \n", "now()");
-//add_project("Test Projet", $user_0, "PREF");
-//echo add_user("test","test10@test.fr","mytest");
-//print_r(get_user_by_email("test7@test.fr"));
 ?>
