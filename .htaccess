@@ -3,7 +3,7 @@ Options +FollowSymlinks -MultiViews
 RewriteEngine On
 
 RewriteCond %{SERVER_PORT} !443
-RewriteRule ^(/(.*))?$ https://%{HTTP_HOST}/$1 [R=301,L]
+RewriteRule (.*) https://kalioz.fr/$1 [R=301,L]
 
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_FILENAME} !-f
