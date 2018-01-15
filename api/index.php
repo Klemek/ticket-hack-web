@@ -236,8 +236,8 @@ $route->get("/api/user/{id}", function($id){
 *
 * you can only edit your own profile
 **/
-$route->post(array("/api/user/{id}/edit",
-                   "/api/user/me/edit"), function($id = null){
+$route->post(array("/api/user/me/edit",
+                   "/api/user/{id}/edit"), function($id = null){
     $id = ($id !== null) ? (int) $id : force_auth();
     $name = post("name", true);
     $email = post("email", true);
