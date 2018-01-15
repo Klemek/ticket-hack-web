@@ -106,7 +106,6 @@ function delete_user($id){
     $db->exec($req);
 }
 /*------------------------------------------------------------ PROJECTS ------------------------------------------------------------------*/
-//TODO : edit, update last time modified
 
 /** add a project
 * return the id of the row inserted
@@ -126,13 +125,22 @@ function delete_project($id){
     execute($req,$values);
 }
 
-/*get a project*/
+/**
+* get a project
+* add a "creator" field, corresponding to a user information
+**/
 function get_project($id){
     $req = "SELECT * FROM projects WHERE id = ?";
     $values = array($id);
 
     $sth = execute($req,$values);
-    return $sth->fetch(PDO::FETCH_ASSOC);
+    $res = $sth->fetch(PDO::FETCH_ASSOC);
+    
+    if ($res){
+        $res["creator"] = get_user($res["creator_id"]);
+    }
+    
+    return $res;
 }
 
 /*------------------------------------------------------------ PROJECTS & USER -----------------------------------------------------------*/
@@ -160,18 +168,32 @@ function get_link_user_project($id_user, $id_project){
     return false;
 }
 
-/*get all the projects for a user*/
+/**
+* get all the projects for a user
+* add a access_level field to each project
+**/
 function get_projects_for_user($id_user){
     $req = "SELECT * FROM projects WHERE id IN (SELECT project_id FROM link_user_project WHERE user_id = ?) OR creator_id = ?;";
     $values = array($id_user, $id_user);
 
     $sth = execute($req, $values);
 
-    return $sth->fetchall(PDO::FETCH_ASSOC);
+    $res = $sth->fetchall(PDO::FETCH_ASSOC);
+    
+    if ($res){
+        for ($i = 0; $i < count($res); $i++){
+            $res[$i]["creator"] = get_user($res[$i]["creator_id"]);
+            $res[$i]["access_level"] = access_level($id_user, $res[$i]["id"]);
+        }
+        
+    } 
+    return $res;
 }   
 
-/*todo test function*/
-/*get all the users for the project*/
+/**
+* get all the users for the project
+* add a access_level to each user
+*/
 function get_users_for_project($id_project){
     $req = "SELECT * FROM users WHERE id IN (SELECT user_id FROM link_user_project WHERE project_id = ? UNION SELECT creator_id FROM projects WHERE id=?);";
     $values = array($id_project,$id_project);
@@ -181,6 +203,7 @@ function get_users_for_project($id_project){
     $result = $sth->fetchall(PDO::FETCH_ASSOC);
     for ($i = 0; $i < count($result); $i++){
         unset($result[$i]["password"]);
+        $result[$i]["access_level"] = access_level((int) $result[$i]["id"], $id_project);
     }
 
     return $result;
@@ -205,7 +228,6 @@ function delete_link_user_project($id_user, $id_project){
     execute($req, $values);
 }
 
-//todo : add multiple admin by level, not only creator
 function is_admin($id_user, $id_project){
     return access_level($id_user, $id_project) >= 4;
 }
@@ -240,7 +262,6 @@ function access_level($id_user, $id_project){
 }
 
 /*----------------------------------------------------------------- TICKETS --------------------------------------------------------------*/
-//TODO : edit ticket, get ticket 
 
 /** add a ticket
 * return the id of the row inserted
@@ -265,13 +286,22 @@ function add_ticket($title, $project_id, $creator_id, $manager_id ,$priority, $d
     return $sth->fetch()["id"];
 }
 
-/*return the ticket*/
+/**  
+* return the tickets
+* add a creator field
+* add a manager field
+* add a project field
+*
+**/
 function get_ticket($id){
     global $db;
 
     $req = "SELECT * FROM tickets WHERE id = ".(int) $id." LIMIT 1;";
     $res = $db->query($req)->fetch(PDO::FETCH_ASSOC);
     if (count($res)){
+        $res["creator"] = get_user($res["creator_id"]);
+        $res["manager"] = get_user($res["manager_id"]);
+        $res["project"] = get_project($res["project_id"]);
         return $res;
     }
 
@@ -283,18 +313,37 @@ function get_ticket_simple($id_project, $id_simple){
     $values = array($id_project, $id_simple);
 
     $sth = execute($req, $values);
-
-    return $sth->fetch(PDO::FETCH_ASSOC);
+    
+    $res = $sth->fetch(PDO::FETCH_ASSOC);
+    if ($res){
+        $res["creator"] = get_user($res["creator_id"]);
+        $res["manager"] = get_user($res["manager_id"]);
+        $res["project"] = get_project($res["project_id"]);
+        return $res;
+    }
+    return false;
 }
 
-/*return all tickets of a project*/
+/** 
+* return the tickets
+* add a creator field
+* add a manager field
+*
+**/
 function get_tickets_for_project($id_project){
     global $db;
 
     $req = "SELECT * FROM tickets WHERE project_id = ".(int) $id_project;
-
-    return $db->query($req)->fetchall(PDO::FETCH_ASSOC);
+    $res = $db->query($req)->fetchall(PDO::FETCH_ASSOC);
+    
+    for ($i = 0; $i < count($res); $i++){
+        $res[$i]["creator"] = get_user($res[$i]["creator_id"]);
+        $res[$i]["manager"] = get_user($res[$i]["manager_id"]);
+    }
+    
+    return $res;
 }
+
 
 /*delete a ticket from the database (!= ticket passed to achieved) */
 function delete_ticket($id){
@@ -363,20 +412,44 @@ function delete_comment($id){
     $db->exec($req);
 }
 
+/**
+* return the comment
+* add a creator field
+* add a ticket field
+**/
+/*todo : test*/
 function get_comment($id){
     $req = "SELECT * FROM comments WHERE id = ? LIMIT 1;";
     $values= array($id);
 
     $sth = execute($req, $values);
-    return $sth->fetch(PDO::FETCH_ASSOC);
+    $res = $sth->fetch(PDO::FETCH_ASSOC);
+    
+    if ($res){
+        $res["creator"] = get_user($res["creator_id"]);
+        $res["ticket"] = get_ticket($res["ticket_id"]);
+    }
+    
+    return res;
 }
 
+/**
+* return the comment
+* add a creator field
+**/
+/*todo : test*/
 function get_comments_for_ticket($id_ticket){
     $req = "SELECT * FROM comments WHERE ticket_id = ?";
     $values= array($id_ticket);
 
     $sth = execute($req, $values);
-    return $sth->fetchall(PDO::FETCH_ASSOC);
+    $res = $sth->fetchall(PDO::FETCH_ASSOC);
+    
+    for ($i = 0; $i < count($res); $i++){
+        $res[$i]["creator"] = get_user($res[$i]["creator_id"]);
+    }
+    
+    return $res;
 }
 
 /** return the rights of the user on the ticket
