@@ -7,7 +7,7 @@ body {
 }
 
 #notifications {
-    position: absolute;
+    position: fixed;
     top: 0.1em;
     z-index: 2000;
 }

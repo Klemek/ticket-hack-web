@@ -1,0 +1,1 @@
+DELETE FROM connection_history WHERE first_request_date < now() - interval '1 minute' AND first_fail_date < now() - interval '5 minute';

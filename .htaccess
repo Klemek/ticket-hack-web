@@ -9,6 +9,7 @@ RewriteRule (.*) $1.php [L]
 
 RewriteRule ^(api/) api/index.php [L]
 RewriteRule "^template/(.*)" / [R]
+RewriteRule "^sql/(.*)" / [R]
 
 ErrorDocument 401 /error?error=401
 ErrorDocument 403 /error?error=403

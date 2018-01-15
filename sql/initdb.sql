@@ -139,16 +139,46 @@ CREATE TABLE link_ticket_category(
 	foreign key (category_id) references categories(id) ON DELETE CASCADE
 );
 
-/*
+DROP TABLE IF EXISTS connection_history;
+CREATE TABLE connection_history(
+	user_id int not null,
+    request_count smallint not null default 0,
+    first_request_date timestamp not null default current_timestamp,
+    fail_count smallint not null default 0,
+    first_fail_date timestamp not null default current_timestamp,
+	primary key (user_id),
+	foreign key (user_id) references users(id)
+);
 
-User role :
+CREATE OR REPLACE FUNCTION execute_if_role(ROLE varchar, CMD varchar) RETURNS VOID AS $$
+    DECLARE
+        count int;
+	BEGIN
+		SELECT count(*) INTO count FROM pg_roles WHERE rolname = ROLE;
+        IF count > 0 THEN
+            EXECUTE CMD;
+        END IF;
+	END;
+$$ LANGUAGE plpgsql volatile;
 
+SELECT execute_if_role('php','DROP OWNED BY php');
+DROP ROLE IF EXISTS php;
 CREATE ROLE php WITH LOGIN ENCRYPTED PASSWORD 'password';
-GRANT CONNECT ON DATABASE dbmain TO php;
+GRANT CONNECT ON DATABASE postgres TO php;
 GRANT USAGE ON SCHEMA public TO php;
 GRANT SELECT ON ALL TABLES IN SCHEMA public TO php;
 GRANT INSERT ON ALL TABLES IN SCHEMA public TO php;
 GRANT UPDATE ON ALL TABLES IN SCHEMA public TO php;
 GRANT DELETE ON ALL TABLES IN SCHEMA public TO php;
+
+/*
+
+pg_hba.conf :
+
+# TYPE  DATABASE        USER            ADDRESS                 METHOD
+local   all             all                                     trust
+host    all             all             127.0.0.1/32            trust
+host    all             all             ::1/128                 trust
+host    all             php             0.0.0.0/0               reject
 
 */

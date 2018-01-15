@@ -74,7 +74,7 @@ function ajax(method, url, data, callbacksuccess, callbackerror) {
         data: data,
         success: function (data) {
             if (typeof data !== "object") {
-                console.log("invalid json : " + data);
+                console.log("invalid JSON : " + data);
                 notify("<b>Error</b> internal error", "danger");
                 return;
             }
@@ -94,11 +94,11 @@ function ajax(method, url, data, callbacksuccess, callbackerror) {
                 notify("<b>Error</b> internal error", "danger");
                 console.log("unreachable url : " + url);
             } else {
-                console.log("error " + result + " : " + data);
-                if (typeof data !== "object" || !data.result || !data.message) {
+                console.log("error " + result.status + " : " + result.responseText);
+                if (!result.responseJSON || !result.responseJSON.error) {
                     notify("<b>Error</b> internal error", "danger");
                 } else {
-                    notify("<strong>Error</strong> " + data.message, "danger");
+                    notify("<strong>Error</strong> " + result.responseJSON.error, "danger");
                 }
             }
             if (callbackerror)
