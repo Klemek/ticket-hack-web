@@ -5,12 +5,7 @@ if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
 
-/*connects to the database*/
-try{
-    $db = new PDO("pgsql:user=postgres;dbname=postgres;password=postgres;host=localhost");
-}catch(PDOException $e){
-    die("Erreur de connexion à la base de donnée");
-}
+require_once "connexion_db.php";
 
 /** prepare and execute the query
 * $req = request (string)
@@ -196,14 +191,14 @@ function get_link_user_project($id_user, $id_project){
 }
 
 /*get all the projects for a user*/
-function get_projects_for_user($id_user){
-    $req = "SELECT * FROM projects WHERE id IN (SELECT project_id FROM link_user_project WHERE user_id = ?);";
-    $values = array($id_user);
+function _for_user($id_user){
+    $req = "SELECT * FROM projects WHERE id IN (SELECT project_id FROM link_user_project WHERE user_id = ?) OR creator_id = ?;";
+    $values = array($id_user, $id_user);
 
     $sth = execute($req, $values);
 
     return $sth->fetchall(PDO::FETCH_ASSOC);
-}
+}   
 
 /*get all the users for the project*/
 function get_users_for_project($id_project){
@@ -236,12 +231,36 @@ function delete_link_user_project($id_user, $id_project){
 
 //todo : add multiple admin by level, not only creator
 function is_admin($id_user, $id_project){
+    return access_level($id_user, $id_project) >= 4;
+}
+
+/**
+* return the access that a user has for a project.
+* 0 : no access
+* 1 : read only
+* 2 : comment + read
+* 3 : add ticket + comment + read
+* 4 : admin
+* 5 : creator
+**/
+function access_level($id_user, $id_project){
+    /*creator*/
     $req = "SELECT creator_id FROM projects WHERE id=?";
     $args = array($id_project);
-    
+
     $id = (int) execute($req, $args)->fetch()["creator_id"];
+
+    if ($id == $id_user){
+        return 5;
+    }
     
-    return $id == $id_user;
+    /*other ranks*/
+    $req = "SELECT COALESCE(user_access,0) FROM link_user_project WHERE project_id = ? AND user_id = ?";
+    $values = array($id_project,$id_user);
+    $req = execute($req, $values);
+    
+    $access_level = $req->fetchColumn();
+    return (int) $access_level;
 }
 
 /*----------------------------------------------------------------- TICKETS --------------------------------------------------------------*/
@@ -308,6 +327,41 @@ function delete_ticket($id){
     $db->exec($req);
 }
 
+/** return the rights of the user on the ticket
+*0 : no access
+*1 : read only
+*2 : comment
+*3 : manager (edit)
+*4 : creator (edit++)
+*5 : admin (edit+++)
+*
+* return false in case of error
+**/
+function rights_user_ticket($user_id, $ticket_id){
+    $ticket = get_ticket($ticket_id);
+    if ($ticket === false){
+        return false;
+    }
+    
+    if (access_level($user_id, (int) $ticket["project_id"]) == 0){
+        return 0;
+    }
+    
+    if (is_admin($user_id, (int) $ticket["project_id"])){
+        return 5;
+    }
+    
+    if ((int) $ticket["creator_id"] == $user_id){
+        return 4;
+    }
+    
+    if ((int) $ticket["manager_id"] == $user_id){
+        return 3;
+    }
+    
+    return access_level($user_id, (int) $ticket["project_id"]);
+}
+
 /*----------------------------------------------------------------- COMMENTS -------------------------------------------------------------*/
 
 /*add a comment
@@ -347,6 +401,34 @@ function get_comments_for_ticket($id_ticket){
 
     $sth = execute($req, $values);
     return $sth->fetchall(PDO::FETCH_ASSOC);
+}
+
+/** return the rights of the user on the ticket
+*0 : no access
+*1 : read
+*2 : edit
+* return false in case of error
+**/
+function rights_user_comment($user_id, $comment_id){
+    $comment = get_comment($comment_id);
+
+    $ticket = get_ticket((int) $comment["ticket_id"]);
+    
+    if ($ticket === false){
+        return false;
+    }
+
+    $ticket_id = $comment["ticket_id"];
+    
+    if (rights_user_ticket($user_id, (int) $ticket_id) == 0){
+        return 0;
+    }
+    
+    if ($ticket["creator_id"] == $user_id || is_admin($user_id, (int) $ticket["project_id"])){
+        return 2;
+    }
+    
+    return 1;
 }
 
 /*----------------------------------------------------------------- CATEGORIES -----------------------------------------------------------*/
@@ -444,7 +526,7 @@ function simplemail($to, $subject, $message){
     $headers = 'From: kalioz@kalioz.fr' . "\r\n" .
         'Reply-To: kalioz@kalioz.fr' . "\r\n" .
         'X-Mailer: PHP/' . phpversion();
-    
+
     echo "test";
 
     mail($to, $subject, $message, $headers);
