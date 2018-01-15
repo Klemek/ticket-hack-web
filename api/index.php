@@ -383,7 +383,6 @@ $route->post("/api/project/{id}/edit", function($id){
     http_success($output);
 });
 
-/*only the creator can delete for now*/
 $route->delete("/api/project/{id}/delete", function($id){
     $id = (int) $id;
     $id_user = force_auth();

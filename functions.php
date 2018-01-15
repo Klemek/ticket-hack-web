@@ -161,7 +161,7 @@ function get_link_user_project($id_user, $id_project){
 }
 
 /*get all the projects for a user*/
-function _for_user($id_user){
+function get_projects_for_user($id_user){
     $req = "SELECT * FROM projects WHERE id IN (SELECT project_id FROM link_user_project WHERE user_id = ?) OR creator_id = ?;";
     $values = array($id_user, $id_user);
 
@@ -170,14 +170,20 @@ function _for_user($id_user){
     return $sth->fetchall(PDO::FETCH_ASSOC);
 }   
 
+/*todo test function*/
 /*get all the users for the project*/
 function get_users_for_project($id_project){
     $req = "SELECT * FROM users WHERE id IN (SELECT user_id FROM link_user_project WHERE project_id = ? UNION SELECT creator_id FROM projects WHERE id=?);";
     $values = array($id_project,$id_project);
 
     $sth = execute($req, $values);
+    
+    $result = $sth->fetchall(PDO::FETCH_ASSOC);
+    for ($i = 0; $i < count($result); $i++){
+        unset($result[$i]["password"]);
+    }
 
-    return $sth->fetchall(PDO::FETCH_ASSOC);
+    return $result;
 }
 
 /*modify the level on the (id_user, id_project) link*/
