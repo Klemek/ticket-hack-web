@@ -150,11 +150,6 @@ CREATE TABLE connection_history(
 	foreign key (user_id) references users(id)
 );
 
-/* pg_cron extension : https://github.com/citusdata/pg_cron */
-SELECT cron.unschedule(jobid) FROM cron.job;
-SELECT cron.schedule('0 * * * *', $$DELETE FROM connection_history WHERE first_request_date < now() - interval '1 minute' AND first_fail_date < now() - interval '5 minute'$$);
-
-
 CREATE OR REPLACE FUNCTION execute_if_role(ROLE varchar, CMD varchar) RETURNS VOID AS $$
     DECLARE
         count int;

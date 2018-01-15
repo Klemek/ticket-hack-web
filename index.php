@@ -26,7 +26,7 @@
                     hashPass = getHashAndClean("#inputPassword");
 
                 ajax_post({
-                    url: "./api/user/connect",
+                    url: "/api/user/connect",
                     data: {
                         email: email,
                         password: hashPass
