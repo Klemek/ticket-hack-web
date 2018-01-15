@@ -7,35 +7,7 @@ if (session_status() == PHP_SESSION_NONE) {
 
 require_once "connexion_db.php";
 
-/** prepare and execute the query
-* $req = request (string)
-* $values = array
-@return PDOStatement $sth
-**/
-function execute($req, $values){
-    global $db;
-    $sth = $db->prepare($req);
 
-    if (! $sth){
-        echo "Erreur SQL";
-        print_r($db->errorInfo());
-        die();
-    }
-
-    $sth->execute($values);
-
-    return $sth;
-}
-
-/*apply the init SQL script*/
-function init_database(){
-    global $db;
-    $path_to_init = "./sql/initdb.sql";
-
-    $file = file_get_contents($path_to_init);
-
-    $db->exec($file);
-}
 
 /*-------------------------------------------------------------- USERS -------------------------------------------------------------------*/
 //TODO : edit
