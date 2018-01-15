@@ -155,15 +155,18 @@ SELECT cron.unschedule(jobid) FROM cron.job;
 SELECT cron.schedule('0 * * * *', $$DELETE FROM connection_history WHERE first_request_date < now() - interval '1 minute' AND first_fail_date < now() - interval '5 minute'$$);
 
 
-/* if role php exists delete links to database*/
-DO $$DECLARE count int;
-BEGIN
-SELECT count(*) INTO count FROM pg_roles WHERE rolname = 'php';
-IF count > 0 THEN
-    EXECUTE 'DROP OWNED BY php';
-END IF;
-END$$;
+CREATE OR REPLACE FUNCTION execute_if_role(ROLE varchar, CMD varchar) RETURNS VOID AS $$
+    DECLARE
+        count int;
+	BEGIN
+		SELECT count(*) INTO count FROM pg_roles WHERE rolname = ROLE;
+        IF count > 0 THEN
+            EXECUTE CMD;
+        END IF;
+	END;
+$$ LANGUAGE plpgsql volatile;
 
+SELECT execute_if_role('php','DROP OWNED BY php');
 DROP ROLE IF EXISTS php;
 CREATE ROLE php WITH LOGIN ENCRYPTED PASSWORD 'password';
 GRANT CONNECT ON DATABASE postgres TO php;
