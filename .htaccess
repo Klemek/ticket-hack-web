@@ -1,5 +1,9 @@
 Options +FollowSymlinks -MultiViews
 
+ErrorDocument 401 /error?error=401
+ErrorDocument 403 /error?error=403
+ErrorDocument 404 /error?error=404
+
 RewriteEngine On
 
 RewriteCond %{SERVER_PORT} !443
@@ -14,7 +18,5 @@ RewriteRule ^(api/) api/index.php [L]
 RewriteRule "^template/(.*)" / [R]
 RewriteRule "^sql/(.*)" / [R]
 
-ErrorDocument 401 /error?error=401
-ErrorDocument 403 /error?error=403
-ErrorDocument 404 /error?error=404
+
 
