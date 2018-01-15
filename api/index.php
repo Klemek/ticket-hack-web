@@ -164,7 +164,8 @@ $route = new Route();
 *
 **/
 $route->post(array("/api/login",
-                   "/api/user/login"), function(){
+                   "/api/user/login",
+                   "/api/user/connect"), function(){
     $mail = post("email");
     $password = post("password");
 
