@@ -169,12 +169,15 @@ $route->post(array("/api/login",
     $mail = post("email");
     $password = post("password");
 
-    if (validate_user($mail, $password)){
+    if (validate_user_with_fail($mail, $password)){
         $_SESSION["user_id"] = get_user_by_email($mail)["id"];
-        $output = array("user_id"=>$_SESSION["user_id"]);
+        $_SESSION["user"] = get_user_by_email($mail);
 
+        update_last_connection_user($_SESSION["user_id"]);
+
+        $output = array("user_id"=>$_SESSION["user_id"]);
         http_success($output);
-    }else{        
+    }else{  
         http_error(401, "login failed");
     }
 });
@@ -184,6 +187,7 @@ $route->route(array("/api/logout",
                     "/api/user/logout",
                     "/api/user/disconnect"), function(){
     if (session_status() == PHP_SESSION_ACTIVE) { session_destroy(); }
+    http_success(array("disconnected"=>true));
 });
 
 
@@ -236,8 +240,8 @@ $route->get("/api/user/{id}", function($id){
 *
 * you can only edit your own profile
 **/
-$route->post(array("/api/user/{id}/edit",
-                   "/api/user/me/edit"), function($id = null){
+$route->post(array("/api/user/me/edit",
+                   "/api/user/{id}/edit"), function($id = null){
     $id = ($id !== null) ? (int) $id : force_auth();
     $name = post("name", true);
     $email = post("email", true);
@@ -297,12 +301,18 @@ $route->delete(array("/api/user/me/delete",
                    http_success($output);
                });
 
+/**
+* get the user projects
+**/
+/*todo : test that*/
 $route->route(array("/api/user/me/projects",
                     "/api/user/{id}/projects",
-                    "/api/projects"), function($id = null){
+                    "/api/projects/list"), function($id = null){
 
     $id = ($id === null) ? force_auth() : (int) $id;
-    $output = get_projects_for_user($id);
+    $list = get_projects_for_user($id);
+    $output = array("total" => count($list),
+                    "list"=>$list);
     http_success($output);
 });
 
@@ -347,10 +357,20 @@ $route->post("/api/project/new", function(){
     http_success($output);
 });
 
-
+/**
+* return the project info
+* add a user_access info depending on the session; this field will valu false if the user isn't connected
+**/
 $route->get("/api/project/{id}", function($id){
     $id = (int) $id;
     $project = get_project($id);
+
+    if (isset($_SESSION["user_id"])){
+        $project["user_access"] = access_level($_SESSION["user_id"], $id);
+    }else{
+        $project["user_access"] = false;
+    }
+
     http_success($project);
 });
 
@@ -383,7 +403,6 @@ $route->post("/api/project/{id}/edit", function($id){
     http_success($output);
 });
 
-/*only the creator can delete for now*/
 $route->delete("/api/project/{id}/delete", function($id){
     $id = (int) $id;
     $id_user = force_auth();
@@ -448,7 +467,7 @@ $route->post("/api/project/{id}/addticket", function($id_project){
     $priority = post("priority");
     $description = post("description");
     $due_date = post("due_date");
-    $manager_id = post("manager_id");
+    $manager_id = post("manager_id", true) || null;
 
     $creator_id = force_auth();
 
@@ -510,6 +529,18 @@ $route->get("/api/project/{id_project}/ticket/{id_simple_ticket}", function($id_
 *      -comment
 *      user needs to be authenticated
 **/
+
+/*return the list of tickets of the connected user*/
+$route->get(array("/api/ticket/list",
+                  "/api/tickets/list"), function(){
+    $id_user = force_auth();
+
+    $tickets = get_tickets_for_user($id_user);
+
+    http_success($tickets);
+});
+
+
 $route->get("/api/ticket/{id}", function($id){
     $access_level = rights_user_ticket(force_auth(), $id);
     if ($access_level >=1){
@@ -630,10 +661,9 @@ $route->delete("/api/comment/{id}/delete", function($comment_id){
 
 /**
 * Error Handling
-*
-*
+* put it in the end for clarity, it works in all the cases.
 **/
 $route->error_404(function(){
-    http_error(404, "Error 404 - The server cannot find a page corresponding to your request. please check your url and method.");
+    http_error(404, "Error 404 - The server cannot find a page corresponding to your request. please check your url and method. do note this does NOT correspond to missing parameters.");
 });
 ?>
