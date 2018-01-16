@@ -184,6 +184,7 @@ $route->route(array("/api/logout",
                     "/api/user/logout",
                     "/api/user/disconnect"), function(){
     if (session_status() == PHP_SESSION_ACTIVE) { session_destroy(); }
+    http_success(array("disconnected"=>true));
 });
 
 
@@ -297,12 +298,18 @@ $route->delete(array("/api/user/me/delete",
                    http_success($output);
                });
 
+/**
+* get the user projects
+**/
+/*todo : test that*/
 $route->route(array("/api/user/me/projects",
                     "/api/user/{id}/projects",
-                    "/api/projects"), function($id = null){
+                    "/api/projects/list"), function($id = null){
 
     $id = ($id === null) ? force_auth() : (int) $id;
-    $output = get_projects_for_user($id);
+    $list = get_projects_for_user($id);
+    $output = array("total" => count($list),
+                    "list"=>$list);
     http_success($output);
 });
 
@@ -347,10 +354,20 @@ $route->post("/api/project/new", function(){
     http_success($output);
 });
 
-
+/**
+* return the project info
+* add a user_access info depending on the session; this field will valu false if the user isn't connected
+**/
 $route->get("/api/project/{id}", function($id){
     $id = (int) $id;
     $project = get_project($id);
+    
+    if (isset($_SESSION["user_id"])){
+        $project["user_access"] = access_level($_SESSION["user_id"], $id);
+    }else{
+        $project["user_access"] = false;
+    }
+    
     http_success($project);
 });
 
@@ -629,10 +646,9 @@ $route->delete("/api/comment/{id}/delete", function($comment_id){
 
 /**
 * Error Handling
-*
-*
+* put it in the end for clarity, it works in all the cases.
 **/
 $route->error_404(function(){
-    http_error(404, "Error 404 - The server cannot find a page corresponding to your request. please check your url and method.");
+    http_error(404, "Error 404 - The server cannot find a page corresponding to your request. please check your url and method. do note this does NOT correspond to missing parameters.");
 });
 ?>
