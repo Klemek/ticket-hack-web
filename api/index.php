@@ -169,7 +169,9 @@ $route->post(array("/api/login",
     $mail = post("email");
     $password = post("password");
 
-    if (validate_user_with_fail($mail, $password)){
+    $validation = validate_user_with_fail($mail, $password);
+
+    if (gettype($validation)=="boolean" && $validation){
         $_SESSION["user_id"] = get_user_by_email($mail)["id"];
         $_SESSION["user"] = get_user_by_email($mail);
 
@@ -177,7 +179,10 @@ $route->post(array("/api/login",
 
         $output = array("user_id"=>$_SESSION["user_id"]);
         http_success($output);
-    }else{  
+    }else{
+        if (gettype($validation)=="array"){
+            http_error(403, "login denied : ".$validation[1].". try again in 5 minutes.");
+        }
         http_error(401, "login failed");
     }
 });
@@ -291,26 +296,30 @@ $route->delete(array("/api/user/me/delete",
 
                    if ($id == force_auth()){
                        delete_user($id);
-                       if ($id == $_SESSION["user_id"]){
-                           session_destroy();
-                       }
+                       session_destroy();
+
+                       $output = array("delete"=>true);
+                       http_success($output);
                    }else{
                        http_error(403, "you cannot destroy an account if it is not yours / you are not connected.");
                    }
-                   $output = array();
-                   http_success($output);
                });
 
 /**
 * get the user projects
+* optional parameters : number = 20, offset = 0 by default.
 **/
 /*todo : test that*/
-$route->route(array("/api/user/me/projects",
-                    "/api/user/{id}/projects",
-                    "/api/projects/list"), function($id = null){
+$route->get(array("/api/user/me/projects",
+                  "/api/user/{id}/projects",
+                  "/api/projects/list",
+                  "/api/project/list"), function($id = null){
 
     $id = ($id === null) ? force_auth() : (int) $id;
-    $list = get_projects_for_user($id);
+    $offset = get("offset",true) || 0;
+    $number = get("number",true) || 20;
+
+    $list = get_projects_for_user($id, $offset, $number);
     $output = array("total" => count($list),
                     "list"=>$list);
     http_success($output);

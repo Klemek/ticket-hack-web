@@ -102,7 +102,7 @@ function get_user_by_email($email){
 function validate_user($email, $password){
     global $db;
 
-    $req = "SELECT count(email) FROM users WHERE email=? AND password=?";
+    $req = "SELECT count(email) FROM users WHERE email=? AND password=? AND deletion_date IS NULL";
     $values = array($email, hash_passwd($password));
 
     $result = execute($req, $values);
@@ -132,7 +132,7 @@ function validate_user_with_fail($email, $password){
 
     if (get_date()- $first_request_time<= 60){
         if ($connection["request_count"] > 10){
-            return false;
+            return array(false, "too_much_requests");
         }else{
             $req= "UPDATE connection_history SET request_count= request_count+1 WHERE user_id = ?";
             $values = array($id_user);
@@ -149,7 +149,7 @@ function validate_user_with_fail($email, $password){
     $first_fail_date = $connection["first_fail_date"] ? get_date($connection["first_fail_date"]) : get_date();
     if (get_date() - $first_fail_date <= 60){
         if ($connection["fail_count"] > 5){
-            return false;
+            return array(false, "too_much_fail");
         }else{
             $req= "UPDATE connection_history SET fail_count= ? WHERE user_id = ?";
             $values = array(($good_credentials) ? "0":"fail_count+1", $id_user);
@@ -173,15 +173,16 @@ function validate_user_with_fail($email, $password){
 function update_last_connection_user($id){
     $req = "UPDATE users SET last_connection_date = ? WHERE id = ?";
     $values = array(get_date_string(), $id);
-
     execute($req, $values);
 }
 
 function delete_user($id){
-    global $db;
-    $req = "DELETE FROM users WHERE id = ".(int) $id;
-    $db->exec($req);
+    /*$req = "DELETE FROM users WHERE id=:id";*/
+    $req = "UPDATE users SET deletion_date=NOW() WHERE id=:id;";
+    $values = array(":id"=>$id);
+    execute($req, $values);
 }
+
 /*------------------------------------------------------------ PROJECTS ------------------------------------------------------------------*/
 
 /** add a project
@@ -249,9 +250,11 @@ function get_link_user_project($id_user, $id_project){
 * get all the projects for a user
 * add a access_level field to each project
 **/
-function get_projects_for_user($id_user){
-    $req = "SELECT * FROM projects WHERE id IN (SELECT project_id FROM link_user_project WHERE user_id = ?) OR creator_id = ?;";
-    $values = array($id_user, $id_user);
+function get_projects_for_user($id_user, $offset=0, $limit=20){
+    $req = "SELECT * FROM projects WHERE id IN (SELECT project_id FROM link_user_project WHERE user_id = :user_id) OR creator_id = :user_id LIMIT :limit OFFSET :offset;";
+    $values = array(":user_id"=>$id_user,
+                   ":offset"=>(int) $offset,
+                   ":limit"=>(int) $limit);
 
     $sth = execute($req, $values);
 
@@ -424,9 +427,11 @@ function get_tickets_for_project($id_project){
 }
 
 /*return all the tickets the user has access to*/
-function get_tickets_for_user($id_user){
-    $req = "SELECT * FROM tickets WHERE project_id IN (SELECT project_id FROM link_user_project WHERE user_id = :user_id AND user_access > 0 UNION SELECT id FROM projects WHERE creator_id = :user_id);";
-    $values = array(":user_id"=>$id_user);
+function get_tickets_for_user($id_user, $limit, $offset){
+    $req = "SELECT * FROM tickets WHERE project_id IN (SELECT project_id FROM link_user_project WHERE user_id = :user_id AND user_access > 0 UNION SELECT id FROM projects WHERE creator_id = :user_id) LIMIT :limit OFFSET :offset;";
+    $values = array(":user_id"=>$id_user,
+                   ":offset"=>$offset,
+                   ":limit"=>$  $limit);
     return execute($req, $values)->fetchall(PDO::FETCH_ASSOC);
 }
 
