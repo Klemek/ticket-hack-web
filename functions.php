@@ -7,7 +7,23 @@ if (session_status() == PHP_SESSION_NONE) {
 
 require_once "db_connect.php";
 
+/**
+* function returning current time - use only this one to avoid using two references
+* @param str the date in string : "2017-12-19 14:38:45.12345"
+**/
+function get_date($str = null){
+    if ($str){
+        return strtotime($str);
+    }
+    return time();
+}
 
+/**
+* use this function instead of the pgsql::now() to avoid time differences
+**/
+function get_date_string(){
+    return date("Y-m-d h:i:s", get_date());
+}
 
 /*-------------------------------------------------------------- USERS -------------------------------------------------------------------*/
 
@@ -93,11 +109,72 @@ function validate_user($email, $password){
     return $result->fetchColumn() === 1; 
 }
 
-function update_last_connection_user($id){
-    global $db;
-    $req = "UPDATE users SET last_connection_date = NOW() WHERE id = ".(int) $id;
+/*test this function*/
+/*validate the user's password with a fail count, and deny access if the fail count is too high even if the combination is good*/
+function validate_user_with_fail($email, $password){
+    /*check the db*/
+    $i = 5;//paramètre anti-boucle infine
+    $id_user = get_user_by_email($email)["id"];
+    do{
+        $req = "SELECT * FROM connection_history WHERE user_id = ?";
+        $values = array($id_user);
 
-    $db->exec($req);
+        $connection = execute($req, $values)->fetch();
+
+        if (! $connection){
+            $req= "INSERT INTO connection_history(user_id) VALUES (?)";
+            $values = array($id_user);
+            execute($req, $values);
+        }
+    }while((! $connection) && $i-- > 0);
+
+    $first_request_time = $connection["first_request_date"] ? get_date($connection["first_request_date"]) : get_date();
+
+    if (get_date()- $first_request_time<= 60){
+        if ($connection["request_count"] > 10){
+            return false;
+        }else{
+            $req= "UPDATE connection_history SET request_count= request_count+1 WHERE user_id = ?";
+            $values = array($id_user);
+            execute($req, $values);
+        }
+    }else{
+        $req= "UPDATE connection_history SET request_count=1, first_request_date=? WHERE user_id = ?";
+        $values = array(get_date_string(), $id_user);
+        execute($req, $values);
+    }
+
+    $good_credentials = validate_user($email, $password);
+
+    $first_fail_date = $connection["first_fail_date"] ? get_date($connection["first_fail_date"]) : get_date();
+    if (get_date() - $first_fail_date <= 60){
+        if ($connection["fail_count"] > 5){
+            return false;
+        }else{
+            $req= "UPDATE connection_history SET fail_count= ? WHERE user_id = ?";
+            $values = array(($good_credentials) ? "0":"fail_count+1", $id_user);
+            execute($req, $values);
+            return $good_credentials;
+        }
+    }else{
+        if ($good_credentials){
+            $req = "UPDATE connection_history SET fail_count=0 WHERE user_id = ?";
+            $values = array($id_user);
+        }else{
+            $req = "UPDATE connection_history SET fail_count=1, first_fail_date=? WHERE user_id = ?";
+            $values = array(get_date_string(), $id_user);
+        }
+        execute($req, $values);
+        return $good_credentials;
+    }
+
+}
+
+function update_last_connection_user($id){
+    $req = "UPDATE users SET last_connection_date = ? WHERE id = ?";
+    $values = array(get_date_string(), $id);
+
+    execute($req, $values);
 }
 
 function delete_user($id){
@@ -135,11 +212,11 @@ function get_project($id){
 
     $sth = execute($req,$values);
     $res = $sth->fetch(PDO::FETCH_ASSOC);
-    
+
     if ($res){
         $res["creator"] = get_user($res["creator_id"]);
     }
-    
+
     return $res;
 }
 
@@ -179,13 +256,13 @@ function get_projects_for_user($id_user){
     $sth = execute($req, $values);
 
     $res = $sth->fetchall(PDO::FETCH_ASSOC);
-    
+
     if ($res){
         for ($i = 0; $i < count($res); $i++){
             $res[$i]["creator"] = get_user($res[$i]["creator_id"]);
             $res[$i]["access_level"] = access_level($id_user, $res[$i]["id"]);
         }
-        
+
     } 
     return $res;
 }   
@@ -199,7 +276,7 @@ function get_users_for_project($id_project){
     $values = array($id_project,$id_project);
 
     $sth = execute($req, $values);
-    
+
     $result = $sth->fetchall(PDO::FETCH_ASSOC);
     for ($i = 0; $i < count($result); $i++){
         unset($result[$i]["password"]);
@@ -251,12 +328,12 @@ function access_level($id_user, $id_project){
     if ($id == $id_user){
         return 5;
     }
-    
+
     /*other ranks*/
     $req = "SELECT COALESCE(user_access,0) FROM link_user_project WHERE project_id = ? AND user_id = ?";
     $values = array($id_project,$id_user);
     $req = execute($req, $values);
-    
+
     $access_level = $req->fetchColumn();
     return (int) $access_level;
 }
@@ -313,7 +390,7 @@ function get_ticket_simple($id_project, $id_simple){
     $values = array($id_project, $id_simple);
 
     $sth = execute($req, $values);
-    
+
     $res = $sth->fetch(PDO::FETCH_ASSOC);
     if ($res){
         $res["creator"] = get_user($res["creator_id"]);
@@ -335,15 +412,23 @@ function get_tickets_for_project($id_project){
 
     $req = "SELECT * FROM tickets WHERE project_id = ".(int) $id_project;
     $res = $db->query($req)->fetchall(PDO::FETCH_ASSOC);
-    
+
     for ($i = 0; $i < count($res); $i++){
         $res[$i]["creator"] = get_user($res[$i]["creator_id"]);
-        $res[$i]["manager"] = get_user($res[$i]["manager_id"]);
+        if ($res[$i]["manager_id"]){
+            $res[$i]["manager"] = get_user($res[$i]["manager_id"]);
+        }
     }
-    
+
     return $res;
 }
 
+/*return all the tickets the user has access to*/
+function get_tickets_for_user($id_user){
+    $req = "SELECT * FROM tickets WHERE project_id IN (SELECT project_id FROM link_user_project WHERE user_id = :user_id AND user_access > 0 UNION SELECT id FROM projects WHERE creator_id = :user_id);";
+    $values = array(":user_id"=>$id_user);
+    return execute($req, $values)->fetchall(PDO::FETCH_ASSOC);
+}
 
 /*delete a ticket from the database (!= ticket passed to achieved) */
 function delete_ticket($id){
@@ -367,23 +452,23 @@ function rights_user_ticket($user_id, $ticket_id){
     if ($ticket === false){
         return false;
     }
-    
+
     if (access_level($user_id, (int) $ticket["project_id"]) == 0){
         return 0;
     }
-    
+
     if (is_admin($user_id, (int) $ticket["project_id"])){
         return 5;
     }
-    
+
     if ((int) $ticket["creator_id"] == $user_id){
         return 4;
     }
-    
+
     if ((int) $ticket["manager_id"] == $user_id){
         return 3;
     }
-    
+
     return access_level($user_id, (int) $ticket["project_id"]);
 }
 
@@ -400,8 +485,8 @@ function add_comment($ticket_id, $creator_id, $comment){
 }
 
 function edit_comment($id, $comment){
-    $req = "UPDATE comments SET comment = ?, edition_date = NOW() WHERE id = ?";
-    $values = array($comment, $id);
+    $req = "UPDATE comments SET comment = ?, edition_date = ? WHERE id = ?";
+    $values = array($comment,get_date_string(), $id);
 
     execute($req, $values);
 }
@@ -424,12 +509,12 @@ function get_comment($id){
 
     $sth = execute($req, $values);
     $res = $sth->fetch(PDO::FETCH_ASSOC);
-    
+
     if ($res){
         $res["creator"] = get_user($res["creator_id"]);
         $res["ticket"] = get_ticket($res["ticket_id"]);
     }
-    
+
     return res;
 }
 
@@ -444,11 +529,11 @@ function get_comments_for_ticket($id_ticket){
 
     $sth = execute($req, $values);
     $res = $sth->fetchall(PDO::FETCH_ASSOC);
-    
+
     for ($i = 0; $i < count($res); $i++){
         $res[$i]["creator"] = get_user($res[$i]["creator_id"]);
     }
-    
+
     return $res;
 }
 
@@ -462,21 +547,21 @@ function rights_user_comment($user_id, $comment_id){
     $comment = get_comment($comment_id);
 
     $ticket = get_ticket((int) $comment["ticket_id"]);
-    
+
     if ($ticket === false){
         return false;
     }
 
     $ticket_id = $comment["ticket_id"];
-    
+
     if (rights_user_ticket($user_id, (int) $ticket_id) == 0){
         return 0;
     }
-    
+
     if ($ticket["creator_id"] == $user_id || is_admin($user_id, (int) $ticket["project_id"])){
         return 2;
     }
-    
+
     return 1;
 }
 

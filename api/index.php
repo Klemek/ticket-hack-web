@@ -169,13 +169,15 @@ $route->post(array("/api/login",
     $mail = post("email");
     $password = post("password");
 
-    if (validate_user($mail, $password)){
+    if (validate_user_with_fail($mail, $password)){
         $_SESSION["user_id"] = get_user_by_email($mail)["id"];
         $_SESSION["user"] = get_user_by_email($mail);
-        $output = array("user_id"=>$_SESSION["user_id"]);
 
+        update_last_connection_user($_SESSION["user_id"]);
+
+        $output = array("user_id"=>$_SESSION["user_id"]);
         http_success($output);
-    }else{        
+    }else{  
         http_error(401, "login failed");
     }
 });
@@ -362,13 +364,13 @@ $route->post("/api/project/new", function(){
 $route->get("/api/project/{id}", function($id){
     $id = (int) $id;
     $project = get_project($id);
-    
+
     if (isset($_SESSION["user_id"])){
         $project["user_access"] = access_level($_SESSION["user_id"], $id);
     }else{
         $project["user_access"] = false;
     }
-    
+
     http_success($project);
 });
 
@@ -465,7 +467,7 @@ $route->post("/api/project/{id}/addticket", function($id_project){
     $priority = post("priority");
     $description = post("description");
     $due_date = post("due_date");
-    $manager_id = post("manager_id");
+    $manager_id = post("manager_id", true) || null;
 
     $creator_id = force_auth();
 
@@ -527,6 +529,18 @@ $route->get("/api/project/{id_project}/ticket/{id_simple_ticket}", function($id_
 *      -comment
 *      user needs to be authenticated
 **/
+
+/*return the list of tickets of the connected user*/
+$route->get(array("/api/ticket/list",
+                  "/api/tickets/list"), function(){
+    $id_user = force_auth();
+
+    $tickets = get_tickets_for_user($id_user);
+
+    http_success($tickets);
+});
+
+
 $route->get("/api/ticket/{id}", function($id){
     $access_level = rights_user_ticket(force_auth(), $id);
     if ($access_level >=1){
