@@ -171,6 +171,7 @@ $route->post(array("/api/login",
 
     if (validate_user($mail, $password)){
         $_SESSION["user_id"] = get_user_by_email($mail)["id"];
+        $_SESSION["user"] = get_user_by_email($mail);
         $output = array("user_id"=>$_SESSION["user_id"]);
 
         http_success($output);
