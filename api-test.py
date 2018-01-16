@@ -108,7 +108,7 @@ def testDELETE(name, url, expected):
 
 
 print("Ticket'Hack API test")
-server = "192.168.42.10"  # input("Enter the server ip : ")
+server = input("Enter the server ip : ")
 if not(server.startswith("https")):
     server = "https://" + server
 
