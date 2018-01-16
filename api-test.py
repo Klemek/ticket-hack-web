@@ -22,7 +22,7 @@ def request(req_type,url,params):
         data = response.read().decode()
         return json.loads(data)
     except HTTPError as err:
-        return {"code":err.code,"reason":err.reason}
+        return {"status":err.code}
 
 def POST(url, params):
     return request("POST",url,params)
@@ -42,30 +42,33 @@ def testJSON(ref,obj):
     res = True
     for key in ref.keys():
         if key not in obj:
-            print("Error : key '"+key+"' not found", file=sys.stderr)
+            print(" Error : key '"+key+"' not found", file=sys.stderr)
             res = False
         elif ref[key] is not None:
             if type(ref[key]) != type(obj[key]):
-                print("Error : key '"+key+"' expected type '"+str(type(ref[key]))+"' got '"+str(type(obj[key]))+"'", file=sys.stderr)
+                print(" Error : key '"+key+"' expected type '"+str(type(ref[key]))+"' got '"+str(type(obj[key]))+"'", file=sys.stderr)
                 res = False
             elif type(ref[key]) == type(dict()):
                 res = res and testJSON(ref[key],obj[key])
             elif type(ref[key]) == type(list()):
                 if len(ref[key]) != len(obj[key]):
-                    print("Error : key '"+key+"' array length expected "+str(len(ref[key]))+" got "+str(len(obj[key]))+"", file=sys.stderr)
+                    print(" Error : key '"+key+"' array length expected "+str(len(ref[key]))+" got "+str(len(obj[key]))+"", file=sys.stderr)
                     res = False
                 for i in range(min(len(ref[key]),len(obj[key]))):
                         res = res and testJSON(ref[key][i],obj[key][i])
             elif ref[key] != obj[key]:
-                print("Error : key '"+key+"' expected '"+str(ref[key])+"' got '"+str(obj[key])+"'", file=sys.stderr)
+                print(" Error : key '"+key+"' expected '"+str(ref[key])+"' got '"+str(obj[key])+"'", file=sys.stderr)
                 res = False
+    for key in obj.keys():
+        if key not in ref:
+            print(" Warn : key '"+key+"' not found in reference")
     return res
 
 def testRequest(req_type,name,url,params,expected):
     result = request(req_type,url,params)
     test = testJSON(expected,result)
     if test:
-        print("OK :\t{:6} {:20} <= {}".format(req_type,url,name))
+        print("OK :\t{:6} {:20} {} <= {}".format(req_type,url,result["status"],name))
         return result
     else:
         print("Expected : "+str(expected), file=sys.stderr)
@@ -87,39 +90,96 @@ server = "192.168.42.10"#input("Enter the server ip : ")
 if not(server.startswith("https")):
     server = "https://" + server
 
-print("RESULT \t{:6} {:20}    TEST".format("METHOD","URL"))
-print("{:=<60}".format(""))
+print("RESULT \t{:6} {:^20} CODE    TEST EXECUTED".format("METHOD","URL"))
+print("{:=<70}".format(""))
 
 uniqueid = randint(0,sys.maxsize)
+email = "test-email-"+str(uniqueid)+"@test.fr"
+name = "test-name-"+str(uniqueid)
+password = "test-password-"+str(uniqueid)
 dbID = None
 
+testGET("project list no session","/api/projects/list",
+        {'status': 401})
+
 res = testPOST("normal register","/api/user/new",
-         {"email":"test-email-"+str(uniqueid)+"@test.fr",
-          "password":sha256("test-password"),
-          "name":"test-name"},
-         {'status': 200, 'result': 'ok', 'content':{'id_user':None}})
+         {"email":email,
+          "password":sha256(password),
+          "name":name},
+         {'status': 200,'result': 'ok',
+          'content':{'id_user':None}})
 
 if res:
     dbID = res["content"]["id_user"]
 
 testPOST("register with same mail","/api/user/new",
-     {"email":"test-email-"+str(uniqueid)+"@test.fr",
-      "password":sha256("test-password"),
-      "name":"test-name"},
-     {'code': 405})
+     {"email":email,
+      "password":sha256(password),
+      "name":name},
+     {'status': 405})
 
 testPOST("login normal","/api/user/connect",
-         {"email":"test-email-"+str(uniqueid)+"@test.fr",
-          "password":sha256("test-password")},
-         {'status': 200, 'result': 'ok', 'content': {'user_id': dbID}})
+         {"email":email,
+          "password":sha256(password)},
+         {'status': 200, 'result': 'ok',
+          'content': {'user_id': dbID}})
+
+testGET("information about current user","/api/user/me",
+        {'status': 200, 'result': 'ok',
+         'content': {"id" : dbID,
+                     "creation_date" : None,
+                     "name" : name,
+                     "email" : email,
+                     "last_connection_date" : None,
+                     "active":None,
+                     "deletion_date":None}})
+
+name += "2"
+password += "3"
+
+testPOST("change user information","/api/user/me/edit",
+         {"name":name,
+          "password":sha256(password)},
+        {'status': 200, 'result': 'ok',
+         'content': {"id" : dbID,
+                     "creation_date" : None,
+                     "name" : name,
+                     "email" : email,
+                     "last_connection_date" : None,
+                     "active":None,
+                     "deletion_date":None}})
+
+testGET("check information change","/api/user/me",
+        {'status': 200, 'result': 'ok',
+         'content': {"id" : dbID,
+                     "creation_date" : None,
+                     "name" : name,
+                     "email" : email,
+                     "last_connection_date" : None,
+                     "active":None,
+                     "deletion_date":None}})
+
+testGET("logout","/api/logout",
+        {'status': 200, 'result': 'ok', 'content':{'disconnected':True}})
+
+testGET("project list no session","/api/projects/list",
+        {'status': 401})
+
+testPOST("login normal","/api/user/connect",
+         {"email":email,
+          "password":sha256(password)},
+         {'status': 200, 'result': 'ok',
+          'content': {'user_id': dbID}})
+
 testGET("project list empty","/api/projects/list",
-        {'status': 200, 'result': 'ok', 'content': {'total': 0, 'list': []}})
+        {'status': 200, 'result': 'ok',
+         'content': {'total': 0, 'list': []}})
 
 testDELETE("delete user","/api/user/me/delete",
-         {'status': 200, 'result': 'ok', 'content': {'delete':True}})
+         {'status': 200, 'result': 'ok',
+          'content': {'delete':True}})
 
-testPOST("login user deleted","/api/user/new",
-     {"email":"test-email-"+str(uniqueid)+"@test.fr",
-      "password":sha256("test-password"),
-      "name":"test-name"},
-     {'code': 405})
+testPOST("login user deleted","/api/user/connect",
+         {"email":email,
+          "password":sha256(password)},
+         {'status': 401})
