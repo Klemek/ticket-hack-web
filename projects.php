@@ -21,7 +21,7 @@
             $("#new-project").css("display", "none");
             addLoading("#projectList");
             ajax_get({
-                url: "/api/projects/list",
+                url: "/api/project/list",
                 success: function(content) {
                     $("#new-project").css("display", "block");
                     removeLoading();
