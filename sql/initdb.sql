@@ -121,24 +121,6 @@ CREATE TABLE comments(
 	foreign key (creator_id) references users(id)
 );
 
-DROP TABLE IF EXISTS categories CASCADE;
-CREATE TABLE categories(
-	id int not null default random_int(),
-	project_id int not null,
-	name varchar(256) not null,
-	primary key (id),
-	foreign key (project_id) references projects(id) ON DELETE CASCADE
-);
-
-DROP TABLE IF EXISTS link_ticket_category;
-CREATE TABLE link_ticket_category(
-	ticket_id int not null,
-	category_id int not null,
-	primary key (ticket_id, category_id),
-	foreign key (ticket_id) references tickets(id) ON DELETE CASCADE,
-	foreign key (category_id) references categories(id) ON DELETE CASCADE
-);
-
 DROP TABLE IF EXISTS connection_history;
 CREATE TABLE connection_history(
 	user_id int not null,

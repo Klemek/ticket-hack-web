@@ -89,7 +89,7 @@ function ajax(method, url, data, callbacksuccess, callbackerror) {
             }
 
         },
-        error: function (result, data) {
+        error: function (result) {
             if (result.status == 0 || result.status == 404) {
                 notify("<b>Error</b> internal error", "danger");
                 console.log("unreachable url : " + url);
@@ -99,10 +99,11 @@ function ajax(method, url, data, callbacksuccess, callbackerror) {
                     notify("<b>Error</b> internal error", "danger");
                 } else {
                     notify("<strong>Error</strong> " + result.responseJSON.error, "danger");
+
                 }
             }
             if (callbackerror)
-                callbackerror(result.status, data);
+                callbackerror(result.status, result.responseJSON);
         }
     });
 }
@@ -113,7 +114,6 @@ function initNotification(divName) {
     $(divName).append('<div id="notifications"></div>');
     $("#notifications").width($(divName).width());
 }
-
 
 function notify(msg, type) {
     if ($("#notifications").length > 0) {
@@ -132,6 +132,16 @@ function notify(msg, type) {
 function clearNotification() {
     if ($("#notifications").length > 0) {
         $("#notifications").html("");
+    }
+}
+
+function addLoading(divName) {
+    $(divName).append('<div id="load-div" class="text-center"><i class="fa fa-spinner fa-spin fa-3x fa-fw"></i><span class="sr-only">Loading...</span></div>');
+}
+
+function removeLoading() {
+    if ($("#load-div").length > 0) {
+        $("#load-div").remove();
     }
 }
 
@@ -280,6 +290,13 @@ function addFakeTicket(project) {
         if (randInt(0, 2) == 0)
             user = "";
 
+        addTicket(name, desc, type, priority, status, user);
+    }
+}
+
+function addTicket(name, desc, type, priority, status, user) {
+
+    if ($("#ticketList").length > 0) {
         if (user.length > 0) user = '<h5 class="text-primary">' + user + '</h5>';
         var html = '<div class="ticket" onclick="ticket_click(\'' + name + '\')">' + '<span title="' + type_titles[type] + '" class="fa-stack ' + type_colors[type] + ' type">' + '<i class="fa fa-square fa-stack-2x"></i>' + '<i class="fa ' + type_icons[type] + ' fa-stack-1x fa-inverse"></i></span>' + '<i class="fa ' + status_icons[status] + ' status" title="status : ' + status_titles[status] + '"></i><i class="fa fa-thermometer-' + priority + ' ' + priority_colors[priority] + ' priority" title="priority : ' + priority_titles[priority] + '"></i>' + user + '<h4>' + name + ' <small>' + desc + '</small></h4></div>';
         $("#ticketList").append(html);

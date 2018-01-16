@@ -4,13 +4,18 @@ body {
 
 .jumbotron {
     margin-top: 10px;
-    background-color: #fff;
+    background-color: #00000000;
 }
 
 #notifications {
     position: fixed;
     top: 0.1em;
     z-index: 2000;
+}
+
+#load-div {
+    width: 100%;
+    margin-top: 20px;
 }
 
 /* Ticket/project list*/
