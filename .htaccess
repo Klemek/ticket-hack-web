@@ -23,5 +23,11 @@ RewriteRule ^doc/(.*) /error?error=404 [L]
 RewriteRule ^api/(.*) api/index.php [L]
 
 #Application processing
-RewriteRule ^ticket/(.*) /ticket-edit.php [L]
-RewriteRule ^project/(.*) /project-edit.php [L]
+
+RewriteRule ^ticket/new$ ticket/ticket-new.php [END]
+RewriteRule ^ticket/(?!new)(.*) ticket/ticket-edit.php [L]
+RewriteRule ^project/new$ project/project-new.php [END]
+RewriteRule ^project/(.*)$ project/project-edit.php [L]
+
+
+

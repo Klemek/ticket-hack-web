@@ -4,11 +4,12 @@
 <head>
     <meta charset="utf-8">
     <title>Ticket'Hack</title>
-    <?php include("./template/head.php") ?>
+    <?php include($_SERVER['DOCUMENT_ROOT']."/template/head.php"); ?>
 </head>
 
 <body>
-    <?php include("./template/anonymous-nav.php") ?>
+    <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+        <a class="navbar-brand" href="./"><i class="fa fa-ticket"></i> Ticket'Hack</a> </nav>
     <div class="container">
         <div class="jumbotron">
             <img class="img-fluid" style="max-width:50%;margin-left:25%;" src="/img/error-min.jpg">

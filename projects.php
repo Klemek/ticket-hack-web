@@ -4,15 +4,14 @@
 <head>
     <meta charset="utf-8">
     <title>Ticket'Hack</title>
-    <?php include("./template/head.php") ?>
+    <?php include($_SERVER['DOCUMENT_ROOT']."/template/head.php"); ?>
 </head>
 
 <body>
-    <?php include("./template/connected-nav.php") ?>
+    <?php include($_SERVER['DOCUMENT_ROOT']."/template/connected-nav.php"); ?>
     <script>
         function project_click(id) {
-            console.log("project click:" + id);
-            var win = window.open("./project-edit", '_blank');
+            var win = window.open("/project/" + id, '_blank');
             win.focus();
         }
 
@@ -37,7 +36,8 @@
             $("#navProjects").addClass("active");
 
             $("#new-project").click(function() {
-
+                var win = window.open("/project/new", '_blank');
+                win.focus();
             });
 
         });

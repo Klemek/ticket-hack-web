@@ -4,11 +4,11 @@
 <head>
     <meta charset="utf-8">
     <title>Ticket'Hack</title>
-    <?php include("./template/head.php") ?>
+    <?php include($_SERVER['DOCUMENT_ROOT']."/template/head.php"); ?>
 </head>
 
 <body>
-    <?php include("./template/connected-nav.php") ?>
+    <?php include($_SERVER['DOCUMENT_ROOT']."/template/connected-nav.php"); ?>
     <script>
         var currEmail = '<?php echo $_SESSION["user"]["email"]; ?>';
 
