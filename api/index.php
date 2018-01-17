@@ -331,12 +331,14 @@ $route->get(array("/api/user/me/projects",
                   "/api/project/list"), function($id = null){
 
     $id = ($id === null) ? force_auth() : (int) $id;
-    $offset = ((int) get("offset",true)) || 0;
-    $number = ((int) get("number",true)) || 20;
+    $offset = ((int) get("offset",true)) | 0;
+    $number = ((int) get("number",true)) | 20;
 
     $list = get_projects_for_user($id, $offset, $number);
     $output = array("total" => count($list),
-                    "list"=>$list);
+                    "list"=>$list,
+                    "offset"=>$offset,
+                    "number"=>$number);
     http_success($output);
 });
 
