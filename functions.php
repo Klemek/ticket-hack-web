@@ -46,7 +46,7 @@ function user_test_mail($mail){
 
     $result = execute($req, $values);
 
-    return $result->fetchColumn() === 1;   
+    return $result->fetchColumn() === 1;
 }
 
 /** add a user
@@ -152,7 +152,7 @@ function validate_user_with_fail($email, $password){
             return array(false, "too_much_fail");
         }else{
             $req= "UPDATE connection_history SET fail_count= ? WHERE user_id = ?";
-            $values = array(($good_credentials) ? "0":"fail_count+1", $id_user);
+            $values = array(($good_credentials) ? "0":$connection["fail_count"]+1, $id_user);
             execute($req, $values);
             return $good_credentials;
         }
@@ -219,6 +219,13 @@ function get_project($id){
     }
 
     return $res;
+}
+
+function project_exists($id){
+    if (get_project($id)){
+        return true;
+    }
+    return false;
 }
 
 /*------------------------------------------------------------ PROJECTS & USER -----------------------------------------------------------*/
@@ -427,11 +434,11 @@ function get_tickets_for_project($id_project){
 }
 
 /*return all the tickets the user has access to*/
-function get_tickets_for_user($id_user, $limit, $offset){
+function get_tickets_for_user($id_user, $limit=20, $offset=0){
     $req = "SELECT * FROM tickets WHERE project_id IN (SELECT project_id FROM link_user_project WHERE user_id = :user_id AND user_access > 0 UNION SELECT id FROM projects WHERE creator_id = :user_id) LIMIT :limit OFFSET :offset;";
     $values = array(":user_id"=>$id_user,
                    ":offset"=>$offset,
-                   ":limit"=>$  $limit);
+                   ":limit"=>$limit);
     return execute($req, $values)->fetchall(PDO::FETCH_ASSOC);
 }
 

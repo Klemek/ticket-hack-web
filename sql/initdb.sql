@@ -66,7 +66,7 @@ CREATE TABLE projects(
 	edition_date timestamp,
 	name varchar(256) not null,
 	creator_id int not null,
-    editor_id int not null,
+    editor_id int,
 	ticket_prefix varchar(5) not null, /* used for tickets identification */
 	primary key (id),
 	foreign key (creator_id) references users(id),
@@ -94,7 +94,7 @@ CREATE TABLE tickets(
 	name varchar(512) not null,
 	project_id int not null,
 	creator_id int not null,
-    editor_id int not null,
+    editor_id int,
 	manager_id int,
     type smallint not null default 0,
 	priority smallint not null default 3, /* 1-lowest, 5-hightest */

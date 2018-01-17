@@ -220,7 +220,7 @@ $route->post(array("/api/user/new",
 
     $id_user = add_user($name, $email, $password);
 
-    $output = array("id_user"=>$id_user);
+    $output = array("user_id"=>$id_user);
     http_success($output);
 });
 
@@ -360,9 +360,9 @@ $route->post("/api/project/new", function(){
     $ticket_prefix = post("ticket_prefix");
     $id_user = force_auth();
 
-    $id_project = add_project($name,$id_user, $ticket_prefix);
+    $id_project = add_project($name ,$id_user, $ticket_prefix);
 
-    $output = array("id_project"=>$id_project);
+    $output = array("project_id"=>$id_project);
     http_success($output);
 });
 
@@ -374,19 +374,23 @@ $route->get("/api/project/{id}", function($id){
     $id = (int) $id;
     $project = get_project($id);
 
-    if (isset($_SESSION["user_id"])){
-        $project["user_access"] = access_level($_SESSION["user_id"], $id);
-    }else{
-        $project["user_access"] = false;
-    }
+    if ($project){
 
-    http_success($project);
+        if (isset($_SESSION["user_id"])){
+            $project["user_access"] = access_level($_SESSION["user_id"], $id);
+        }else{
+            $project["user_access"] = false;
+        }
+
+        http_success($project);
+    }else{
+        http_error(404, "project not found");
+    }
 });
 
 /*only the creator can change these parameters for now*/
 $route->post("/api/project/{id}/edit", function($id){
     $name = post("name", true);
-    $ticket_prefix = post("ticket_prefix", true);
     $id_user = force_auth();
 
     $args = array(":id"=>$id,
@@ -398,9 +402,8 @@ $route->post("/api/project/{id}/edit", function($id){
         $set[]="name = :name";
     }
 
-    if ($ticket_prefix){
-        $args[":ticket_prefix"] = $ticket_prefix;
-        $set[]="ticket_prefix = :ticket_prefix";
+    if (access_level($id_user, $id) < 4){
+        http_error(403, "You need to be an admin of this project to edit it");
     }
 
     if (count($set) >= 1){
@@ -418,7 +421,7 @@ $route->delete("/api/project/{id}/delete", function($id){
 
     if (is_admin($id_user,$id)){
         delete_project($id);
-        $output = array("delete"=>"ok");
+        $output = array("delete"=>true);
         http_success($output);
     }else{
         http_error(403, "You need to be the admin of this project to be able to delete it", array("delete"=>"fail"));
@@ -428,12 +431,16 @@ $route->delete("/api/project/{id}/delete", function($id){
 $route->post("/api/project/{id}/adduser", function($id_project){
     $id_project = (int) $id_project; 
 
-    $id_user = (int) post("id_user");
+    $id_user = (int) post("user_id");
     $access_level = (int) post("access_level");
 
     $id_current_user = force_auth();
     if (! is_admin($id_current_user, $id_project)){
         http_error(403, "Only an admin can add users to a project.");
+    }
+
+    if (access_level($id_current_user, $id_project)< $access_level){
+        http_error(403, "you cannot give higher access to someone else.");
     }
 
     add_link_user_project($id_user, $id_project, $access_level); 
@@ -459,12 +466,12 @@ $route->get("/api/project/{id}/users", function($id_project){
 **/
 $route->post("/api/project/{id}/removeuser", function($id_project){
     $id_project = (int) $id_project;
-    $id_user = (int) post("id_user");
+    $id_user = (int) post("user_id");
     $actual_user = force_auth();
 
     if ($actual_user == $id_user || (is_admin($actual_user, $id_project) && access_level($actual_user, $id_project) > access_level($id_user, $id_project))){
         delete_link_user_project($id_user, $id_project);
-        http_success(array("delete"=>"ok"));
+        http_success(array("delete"=>true));
     }else{
         http_error(403, "only an admin or the actual user can do that.");
     }
@@ -502,7 +509,7 @@ $route->get("/api/project/{id}/tickets", function($id_project){
             http_error(403, "You do not have the right to access this project or his tickets");
         }     
     }else{
-        http_error(412, "This project does not exist");
+        http_error(404, "This project does not exist");
     }
 });
 
@@ -517,13 +524,13 @@ $route->get("/api/project/{id_project}/ticket/{id_simple_ticket}", function($id_
             if ($ticket){
                 http_success($ticket);
             }else{
-                http_error(412, "This ticket does not exists within the project.");
+                http_error(404, "This ticket does not exists within the project.");
             }
         }else{
             http_error(403, "You do not have the right to access this project or his tickets");
         }     
     }else{
-        http_error(412, "This project does not exist");
+        http_error(404, "This project does not exist");
     }
 });
 
@@ -539,12 +546,16 @@ $route->get("/api/project/{id_project}/ticket/{id_simple_ticket}", function($id_
 *      user needs to be authenticated
 **/
 
-/*return the list of tickets of the connected user*/
+/**
+* return the list of tickets of the connected user
+* optional parameters : number = 20, offset = 0 by default.
+**/
 $route->get(array("/api/ticket/list",
                   "/api/tickets/list"), function(){
     $id_user = force_auth();
-
-    $tickets = get_tickets_for_user($id_user);
+    $offset = get("offset",true) || 0;
+    $number = get("number",true) || 20;
+    $tickets = get_tickets_for_user($id_user, $offset, $number);
 
     http_success($tickets);
 });
@@ -603,7 +614,7 @@ $route->post("/api/ticket/{id}/edit", function($id_ticket){
 $route->delete("/api/ticket/{id}/delete", function($id_ticket){
     if (rights_user_ticket(force_auth(), $id_ticket) >= 4){
         delete_ticket($id_ticket);
-        http_success(array("delete"=>"ok"));
+        http_success(array("delete"=>true));
     }else{
         http_error(403,"You do not have the right to do that");
     }
@@ -622,8 +633,16 @@ $route->post("/api/ticket/{id}/addcomment", function($ticket_id){
     }
 });
 
+/*test 403*/
 $route->get("/api/ticket/{id}/comments", function($id){
-    http_success(get_comments_for_ticket($id));
+    $user_id = force_auth();
+    $ticket_id = (int) $id;
+
+    if (rights_user_ticket($creator_id, $ticket_id) >= 2){
+        http_success(get_comments_for_ticket($id));
+    }else{
+        http_error(403, "you do not have the permission to access this project");
+    }
 });
 
 
@@ -658,11 +677,12 @@ $route->post("/api/comment/{id}/edit", function($comment_id){
 $route->delete("/api/comment/{id}/delete", function($comment_id){
     $comment_id = (int) $comment_id;
     $id_user = force_auth();
+
     $id_project = execute("SELECT project_id FROM tickets WHERE id IN (SELECT ticket_id FROM comments WHERE id = ?)", array($comment_id))->fetch()["project_id"];
 
     if (rights_user_comment($id_user, $comment_id) === 2){
         delete_comment($comment_id);
-        http_success(array("delete"=>"ok"));
+        http_success(array("delete"=>true));
     }else{
         http_error(403, "You cannot delete this comment as it is not yours / you are not admin");
     }    
