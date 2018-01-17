@@ -30,7 +30,7 @@
             $("#navTickets").addClass("active");
 
             var id = window.location.href.split("/ticket/")[1].toUpperCase();
-            if (id.indexOf("/") !== -1) {
+            if (id.indexOf("/") !== -1 || id.length > 4) {
                 writeCookie("notify", "warning-Invalid ticket id.", 1);
                 window.location = "./tickets";
                 return;
