@@ -235,7 +235,6 @@ $route->get("/api/user/bymail", function(){
     $mail = get("mail");
     $user = get_user_by_email($mail);
     force_auth();
-
     if ($user){ 
         http_success($user);
     }else{
@@ -246,7 +245,11 @@ $route->get("/api/user/bymail", function(){
 $route->get("/api/user/{id}", function($id){
     $id = (int) $id;
     $output = get_user($id);
-    http_success($output);
+    if ($output){
+        http_success($output);
+    }else{
+        http_error(404, "User Not Found");
+    }
 });
 
 /** edit the user info - POST

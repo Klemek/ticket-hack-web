@@ -13,28 +13,34 @@
 **/
 class Route{
 
-    private $_current_uri;
+    public $_current_uri;
     private $_route_used;
     private $_errors;
 
     /*construct the Route using an uri; */
     public function __construct(){
         $this->_routes = array();
-        
+
         $this->_current_uri = Route::getCurrentUri();
 
         $this->_route_used = null;
 
         $this->_errors = array();
-    
+
         register_shutdown_function(array($this,"on_shutdown"));
-        
+
     }
 
     public static function getCurrentUri()
     {
         $uri = $_SERVER['REQUEST_URI'];
-        return $uri;
+        
+        $re = '/([^?]*)\??.*/';
+        $str = $uri;
+        $subst = '$1';
+
+        $result = preg_replace($re, $subst, $str);
+        return $result;
     }
 
     /*function called on shutdown*/
@@ -87,14 +93,7 @@ class Route{
     /*take care of all cases
     @param $method = list containing the types authorized. keep null to authorize all*/
     public function route($path, $function, $methods = null){
-        
-        if (is_array($path)){
-            foreach($path as $p){
-                $this->route($p, $function, $methods);
-            }
-            return;
-        }
-        
+
         if ($methods !== null){
             $continue = false;
             foreach($methods as $method){
@@ -106,16 +105,23 @@ class Route{
             }
         }
 
+        if (is_array($path)){
+            foreach($path as $p){
+                $this->route($p, $function, $methods);
+            }
+            return;
+        }
+
         if (! $this->_route_used && $this->check($path)){
             $this->_route_used = $path;
 
             $args = $this->get_arguments_indexed_only($path);
             array_push($args,$this->get_arguments($path));//enable us to access directly by keyword
-            
+
             if (count($args) === 1){//no arguments on the url, there's only the list containing everything
                 $args = array();
             }
-            
+
             $function(...$args);
         }
     }
