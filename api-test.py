@@ -331,7 +331,7 @@ testGET("Users with access to the project", "/api/project/"+str(project_id)+"/us
                 
 testPOST("add user to project - good clearance", "/api/project/"+str(project_id)+"/adduser",
          {"user_id":user_id2,
-          "access_level":5},
+          "access_level":4},
          {
   "status": 200,
   "result": "ok",
@@ -339,32 +339,66 @@ testPOST("add user to project - good clearance", "/api/project/"+str(project_id)
     "link_user_project": {
       "user_id": user_id2,
       "project_id": project_id,
-      "user_access": 5
+      "user_access": 4
     }
   }
 })
 
-testGET("logout", "/api/logout",
-        {'status': 200, 'result': 'ok', 'content': {'disconnected': True}})
+testGET("Users with access to the project - x2 (1/2 chance de planter)", "/api/project/"+str(project_id)+"/users",
+        {
+  "status": 200,
+  "result": "ok",
+  "content": [
+    {
+      "id": user_id2,
+      "creation_date": -1,
+      "deletion_date": None,
+      "active": -1,
+      "name": -1,
+      "email": -1,
+      "last_connection_date": None,
+      "access_level":4
+    },
+     {
+      "id": user_id,
+      "creation_date": -1,
+      "deletion_date": None,
+      "active": -1,
+      "name": -1,
+      "email": -1,
+      "last_connection_date": -1,
+      "access_level":5
+    }
+  ]
+})
 
+testPOST("remove user from project - good clearance", "/api/project/"+str(project_id)+"/removeuser",
+         {"user_id":user_id2},
+         {
+  "status": 200,
+  "result": "ok",
+  "content": {
+    "delete":True
+  }
+})
 
-testPOST("login normal - 2nd user", "/api/user/connect",
-         {"email": email2,
-                "password": sha256(password),
-                "name": name},
-         {'status': 200, 'result': 'ok',
-          'content': {'user_id': -1}})
-
-
-testGET("logout", "/api/logout",
-        {'status': 200, 'result': 'ok', 'content': {'disconnected': True}})
-
-
-testPOST("login normal - 1st user", "/api/user/connect",
-         {"email": email,
-          "password": sha256(password)},
-         {'status': 200, 'result': 'ok',
-          'content': {'user_id': user_id}})           
+testGET("Users with access to the project - after remove", "/api/project/"+str(project_id)+"/users",
+        {
+  "status": 200,
+  "result": "ok",
+  "content": [
+    {
+      "id": user_id,
+      "creation_date": -1,
+      "deletion_date": None,
+      "active": -1,
+      "name": -1,
+      "email": -1,
+      "last_connection_date": -1,
+      "access_level":5
+    }
+  ]
+})
 
 
 
