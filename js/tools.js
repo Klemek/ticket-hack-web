@@ -281,16 +281,89 @@ function registerCustomInput(name, textarea, callback) {
         return false;
     });
     if (textarea) {
-        $("#" + name).on("change", function () {
-            $("#" + name).scroll();
-        });
-        $("#" + name).scroll(function () {
-            $("#" + name).attr("rows", 1);
-            while ($("#" + name)[0].scrollHeight > $("#" + name).innerHeight()) {
-                $("#" + name).attr("rows", parseInt($("#" + name).attr("rows")) + 1);
-            }
-        });
+        autoTextArea(name);
+    }
+}
+
+function autoTextArea(name) {
+    $("#" + name).on("change", function () {
         $("#" + name).scroll();
+    });
+    $("#" + name).scroll(function () {
+        $("#" + name).attr("rows", 1);
+        while ($("#" + name)[0].scrollHeight > $("#" + name).innerHeight()) {
+            $("#" + name).attr("rows", parseInt($("#" + name).attr("rows")) + 1);
+        }
+    });
+    $("#" + name).scroll();
+}
+
+var customDropdownValues = {};
+
+function initDropdown(name, ddtype, def, values = {}) {
+    switch (ddtype) {
+        case "status":
+            $("#" + name).html('<button class="btn btn-default dropdown-toggle" type="button" id="dropdownStatus" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></button><div id="dropdownStatusMenu" class="dropdown-menu" aria-labelledby="dropdownStatus"></div>');
+            for (var status = 0; status < 4; status++) {
+                $("#dropdownStatusMenu").append('<a class="dropdown-item" href="#" onclick="updateDropdown(\'status\',' + status + ')"><i class="fa ' + status_icons[status] + ' "></i> ' + status_titles[status] + '</a>');
+            }
+            break;
+        case "type":
+            $("#" + name).html('<button class="btn btn-default dropdown-toggle" type="button" id="dropdownType" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></button><div id="dropdownTypeMenu" class="dropdown-menu" aria-labelledby="dropdownType"></div>');
+            for (var type = 0; type < 3; type++) {
+                $("#dropdownTypeMenu").append('<a class="dropdown-item" href="#" onclick="updateDropdown(\'type\',' + type + ')"><span class="fa-stack ' + type_colors[type] + ' type">' + '<i class="fa fa-square fa-stack-2x"></i>' + '<i class="fa ' + type_icons[type] + ' fa-stack-1x fa-inverse"></i></span> ' + type_titles[type] + '</a>');
+            }
+            break;
+        case "priority":
+            $("#" + name).html('<button class="btn btn-default dropdown-toggle" type="button" id="dropdownPriority" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></button><div id="dropdownPriorityMenu" class="dropdown-menu" aria-labelledby="dropdownPriority"></div>');
+            for (var priority = 0; priority < 5; priority++) {
+                $("#dropdownPriorityMenu").append('<a class="dropdown-item" href="#" onclick="updateDropdown(\'priority\',' + priority + ')"><i class="fa fa-thermometer-' + priority + ' ' + priority_colors[priority] + '"></i> ' + priority_titles[priority] + '</a>');
+            }
+            break;
+        case "access":
+            $("#" + name).html('<button class="btn btn-default dropdown-toggle" type="button" id="dropdownAccess" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></button><div id="dropdownAccessMenu" class="dropdown-menu" aria-labelledby="dropdownAccess"></div>');
+            for (var access = 1; access < 5; access++) {
+                $("#dropdownAccessMenu").append('<a class="dropdown-item" href="#" onclick="updateDropdown(\'access\',' + access + ')">' + access_titles[access] + '</a>');
+            }
+            break;
+        default:
+            $("#" + name).html('<button class="btn btn-default dropdown-toggle" type="button" id="dropdown' + ddtype + '" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></button><div id="dropdown' + ddtype + 'Menu" class="dropdown-menu" aria-labelledby="dropdown' + ddtype + '"></div>');
+            for (key in values) {
+                $('#dropdown' + ddtype + 'Menu').append('<a class="dropdown-item" href="#" onclick="updateDropdown(\'' + ddtype + '\',' + key + ')">' + values[key] + '</a>');
+            }
+            customDropdownValues[ddtype] = values;
+            break;
+    }
+    updateDropdown(ddtype, def);
+}
+
+function updateDropdown(ddtype, val) {
+    switch (ddtype) {
+        case "status":
+            $("#dropdownStatus").html('<i class="fa ' + status_icons[val] + ' "></i> ' + status_titles[val]);
+            if (typeof changeStatus !== 'undefined')
+                changeStatus(val);
+            break;
+        case "type":
+            $("#dropdownType").html('<span class="fa-stack ' + type_colors[val] + ' type">' + '<i class="fa fa-square fa-stack-2x"></i>' + '<i class="fa ' + type_icons[val] + ' fa-stack-1x fa-inverse"></i></span> ' + type_titles[val]);
+            if (typeof changeType !== 'undefined')
+                changeType(val);
+            break;
+        case "priority":
+            $("#dropdownPriority").html('<i class="fa fa-thermometer-' + val + ' ' + priority_colors[val] + '"></i> ' + priority_titles[val]);
+            if (typeof changePriority !== 'undefined')
+                changePriority(val);
+            break;
+        case "access":
+            $("#dropdownAccess").html(access_titles[val]);
+            if (typeof changeAccess !== 'undefined')
+                changeAccess(val);
+            break;
+        default:
+            $("#dropdown" + ddtype).html(customDropdownValues[ddtype][val]);
+            if (typeof changeDropdown !== 'undefined')
+                changeDropdown(ddtype, val);
+            break;
     }
 }
 

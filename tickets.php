@@ -14,19 +14,16 @@
             initNotification(".jumbotron");
             $("#navTickets").addClass("active");
 
-            loadList();
-
             $("#new-ticket").click(function() {
                 var win = window.open("/ticket/new", '_blank');
                 win.focus();
             });
 
-        });
+            loadList();
 
-        function ticket_click(id) {
-            var win = window.open("/ticket/" + id, '_blank');
-            win.focus();
-        }
+            setInterval(loadList, 5 * 60 * 1000);
+
+        });
 
         function loadList() {
             $("#ticketList").empty();
@@ -46,6 +43,11 @@
                     removeLoading();
                 }
             });
+        }
+
+        function ticket_click(id) {
+            var win = window.open("/ticket/" + id, '_blank');
+            win.focus();
         }
 
     </script>

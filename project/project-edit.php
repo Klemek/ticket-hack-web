@@ -148,11 +148,7 @@
                 return false;
             });
 
-            for (var access = 1; access < 5; access++) {
-                $("#dropdownAccessMenu").append('<a class="dropdown-item" href="#" onclick="changeAccess(' + access + ')">' + access_titles[access] + '</a>');
-            }
-
-            changeAccess(1);
+            initDropdown("dd-access", "access", 1);
 
             $("#new-ticket").click(function() {
                 var win = window.open("/ticket/new", '_blank');
@@ -175,7 +171,6 @@
 
         function changeAccess(access) {
             selected_access = access;
-            $("#dropdownAccess").html(access_titles[access]);
         }
 
         function ticket_click(id) {
@@ -213,12 +208,8 @@
                 <div id="userList" class="row" style="margin:15px;"></div>
                 <form id="form-add" class="form-inline" style="display:none;">
                     <input id="inputEmail" class="form-control" type="email" placeholder="Enter user email" required>
-                    <div class="dropdown" style="margin-right:10px;">
-                        <button class="btn btn-default dropdown-toggle" type="button" id="dropdownAccess" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></button>
-                        <div id="dropdownAccessMenu" class="dropdown-menu" aria-labelledby="dropdownAccess"></div>
-                    </div>
+                    <div id="dd-access" class="dropdown" style="margin-right:10px;"></div>
                     <button class="btn btn-outline-success" style="cursor:pointer;" type="submit"><i class="fa fa-plus"></i> Add</button>
-
                 </form>
                 <h3>Associated tickets</h3>
                 <div id="ticketList"></div>

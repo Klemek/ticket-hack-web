@@ -32,36 +32,24 @@
             });
             registerCustomInput("ticketDesc", true, function() {
                 console.log("todo save ticketDesc");
-            });
-            
-            changeStatus(randInt(0, 3));
-            changePriority(randInt(0, 4));
-            changeType(randInt(0, 2));*/
+            });*/
 
-            for (var status = 0; status < 4; status++) {
-                $("#dropdownStatusMenu").append('<a class="dropdown-item" href="#" onclick="changeStatus(' + status + ')"><i class="fa ' + status_icons[status] + ' "></i> ' + status_titles[status] + '</a>');
-            }
-
-            for (var type = 0; type < 3; type++) {
-                $("#dropdownTypeMenu").append('<a class="dropdown-item" href="#" onclick="changeType(' + type + ')"><span class="fa-stack ' + type_colors[type] + ' type">' + '<i class="fa fa-square fa-stack-2x"></i>' + '<i class="fa ' + type_icons[type] + ' fa-stack-1x fa-inverse"></i></span> ' + type_titles[type] + '</a>');
-            }
-
-            for (var priority = 0; priority < 5; priority++) {
-                $("#dropdownPriorityMenu").append('<a class="dropdown-item" href="#" onclick="changePriority(' + priority + ')"><i class="fa fa-thermometer-' + priority + ' ' + priority_colors[priority] + '"></i> ' + priority_titles[priority] + '</a>');
-            }
+            initDropdown("dd-status", "status", 0);
+            initDropdown("dd-type", "type", 0);
+            initDropdown("dd-priority", "priority", 0);
 
         });
 
         function changeStatus(status) {
-            $("#dropdownStatus").html('<i class="fa ' + status_icons[status] + ' "></i> ' + status_titles[status]);
+
         }
 
         function changeType(type) {
-            $("#dropdownType").html('<span class="fa-stack ' + type_colors[type] + ' type">' + '<i class="fa fa-square fa-stack-2x"></i>' + '<i class="fa ' + type_icons[type] + ' fa-stack-1x fa-inverse"></i></span> ' + type_titles[type]);
+
         }
 
         function changePriority(priority) {
-            $("#dropdownPriority").html('<i class="fa fa-thermometer-' + priority + ' ' + priority_colors[priority] + '"></i> ' + priority_titles[priority]);
+
         }
 
     </script>
@@ -76,25 +64,16 @@
                 <h4 style="margin-top:-0.8em;"><small>Created the 8th January 2018 by <a href="#">John ROBERT</a> - Edited the 9th January 2018 by <a href="#">Donald CHARLES</a></small></h4>
                 <div class="row">
                     <h5 class="col-sm-3">Status :
-                        <div class="dropdown">
-                            <button class="btn btn-default dropdown-toggle" type="button" id="dropdownStatus" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></button>
-                            <div id="dropdownStatusMenu" class="dropdown-menu" aria-labelledby="dropdownStatus"></div>
-                        </div>
+                        <div class="dropdown" id="dd-status"></div>
                     </h5>
                     <h5 class="col-sm-5">Manager : <a href="#">John ROBERT</a></h5>
                 </div>
                 <div class="row">
                     <h5 class="col-sm-3">Type :
-                        <div class="dropdown">
-                            <button class="btn btn-default dropdown-toggle" type="button" id="dropdownType" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></button>
-                            <div id="dropdownTypeMenu" class="dropdown-menu" aria-labelledby="dropdownType"></div>
-                        </div>
+                        <div class="dropdown" id="dd-type"></div>
                     </h5>
                     <h5 class="col-sm-3">Priority :
-                        <div class="dropdown">
-                            <button class="btn btn-default dropdown-toggle" type="button" id="dropdownPriority" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></button>
-                            <div id="dropdownPriorityMenu" class="dropdown-menu" aria-labelledby="dropdownPriority"></div>
-                        </div>
+                        <div class="dropdown" id="dd-priority"></div>
                     </h5>
                 </div>
                 <form id="form-ticketDesc" class="form-group row form-custom">
