@@ -4,11 +4,11 @@
 <head>
     <meta charset="utf-8">
     <title>Ticket'Hack</title>
-    <?php include("./template/head.php") ?>
+    <?php include($_SERVER['DOCUMENT_ROOT']."/template/head.php"); ?>
 </head>
 
 <body>
-    <?php include("./template/anonymous-nav.php") ?>
+    <?php include($_SERVER['DOCUMENT_ROOT']."/template/anonymous-nav.php"); ?>
     <script>
         $(document).ready(function() {
             initNotification("#main-form");
@@ -39,7 +39,7 @@
                         password: hashPass
                     },
                     success: function(content) {
-                        writeCookie("notify", "success-Your account has been created successfuly !", 1)
+                        writeCookie("notify", "success-Your account has been created successfuly !", 1);
                         window.location = "./";
                     },
                     error: function(code, data) {
@@ -60,7 +60,7 @@
                 <div class="col-sm-4">
                     <input type="text" class="form-control" id="inputName" placeholder="Enter first name" required autocomplete="name"> </div>
                 <div class="col-sm-4">
-                    <input type="text" class="form-control" id="inputName2" placeholder="Enter last name" required autocomplete="family-name"> </div>
+                    <input type="text" class="form-control" id="inputName2" placeholder="Enter last name" required autocomplete="family-name" style="text-transform:uppercase"> </div>
             </div>
             <div class="form-group row">
                 <label for="inputEmail" class="col-sm-4 col-form-label">Email address</label>

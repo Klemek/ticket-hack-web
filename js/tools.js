@@ -113,6 +113,10 @@ function ajax(method, url, data, callbacksuccess, callbackerror) {
 function initNotification(divName) {
     $(divName).append('<div id="notifications"></div>');
     $("#notifications").width($(divName).width());
+
+    var notf = readAndErase("notify");
+    if (notf && notf.length > 0)
+        notify(notf);
 }
 
 function notify(msg, type) {

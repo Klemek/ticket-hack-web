@@ -4,19 +4,14 @@
 <head>
     <meta charset="utf-8">
     <title>Ticket'Hack</title>
-    <?php include("./template/head.php") ?>
+    <?php include($_SERVER['DOCUMENT_ROOT']."/template/head.php"); ?>
 </head>
 
 <body>
-    <?php include("./template/anonymous-nav.php") ?>
+    <?php include($_SERVER['DOCUMENT_ROOT']."/template/anonymous-nav.php"); ?>
     <script>
         $(document).ready(function() {
             initNotification("#main-form");
-
-            var notf = readAndErase("notify");
-            if (notf && notf.length > 0)
-                notify(notf);
-
 
             $("#main-form").submit(function() {
                 $("#btnSubmit").attr("disabled", "true");

@@ -1,0 +1,4 @@
+[17-Jan-2018 07:38:34 UTC] PHP Warning:  include(../template/head.php): failed to open stream: No such file or directory in /var/www/html/project-edit.php on line 7
+[17-Jan-2018 07:38:34 UTC] PHP Warning:  include(): Failed opening '../template/head.php' for inclusion (include_path='.:/usr/share/php') in /var/www/html/project-edit.php on line 7
+[17-Jan-2018 07:38:34 UTC] PHP Warning:  include(../template/connected-nav.php): failed to open stream: No such file or directory in /var/www/html/project-edit.php on line 11
+[17-Jan-2018 07:38:34 UTC] PHP Warning:  include(): Failed opening '../template/connected-nav.php' for inclusion (include_path='.:/usr/share/php') in /var/www/html/project-edit.php on line 11

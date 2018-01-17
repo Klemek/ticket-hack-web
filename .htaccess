@@ -1,17 +1,33 @@
 Options +FollowSymlinks -MultiViews
 
+#Error processing
+ErrorDocument 401 /error?error=401
+ErrorDocument 403 /error?error=403
+ErrorDocument 404 /error?error=404
+ErrorDocument 500 /error?error=500
+
 RewriteEngine On
 
+#Remove .php from file
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond /%{REQUEST_FILENAME}.php -f
 RewriteRule (.*) $1.php [L]
 
-RewriteRule ^(api/) api/index.php [L]
-RewriteRule "^template/(.*)" / [R]
-RewriteRule "^sql/(.*)" / [R]
+#Forbid access to some folders
+RewriteRule ^template/(.*) /error?error=404 [L]
+RewriteRule ^sql/(.*) /error?error=404 [L]
+RewriteRule ^doc/(.*) /error?error=404 [L]
 
-ErrorDocument 401 /error?error=401
-ErrorDocument 403 /error?error=403
-ErrorDocument 404 /error?error=404
+#API processing
+RewriteRule ^api/(.*) api/index.php [L]
+
+#Application processing
+
+RewriteRule ^ticket/new$ ticket/ticket-new.php [END]
+RewriteRule ^ticket/(?!new)(.*) ticket/ticket-edit.php [L]
+RewriteRule ^project/new$ project/project-new.php [END]
+RewriteRule ^project/(.*)$ project/project-edit.php [L]
+
+
 
