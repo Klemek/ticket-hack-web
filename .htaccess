@@ -17,6 +17,7 @@ RewriteRule (.*) $1.php [L]
 #Forbid access to some folders
 RewriteRule ^template/(.*) /error?error=404 [L]
 RewriteRule ^sql/(.*) /error?error=404 [L]
+RewriteRule ^doc/(.*) /error?error=404 [L]
 
 #API processing
 RewriteRule ^api/(.*) api/index.php [L]
