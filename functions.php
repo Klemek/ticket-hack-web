@@ -286,7 +286,6 @@ function get_projects_for_user($id_user, $offset=0, $limit=20){
     } 
     return $res;
 }
-die(json_encode(get_projects_for_user(86250417)));
 
 /**
 * get all the users for the project
