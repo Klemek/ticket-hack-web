@@ -464,9 +464,36 @@ $route->post("/api/project/{id}/adduser", function($id_project){
         http_error(403, "you cannot give higher access to someone else.");
     }
 
+    if (get_link_user_project($id_user, $id_project) !== false){
+        http_error(400, "link already exists - use /api/project/{id}/edituser to edit a user");
+    }
+
     add_link_user_project($id_user, $id_project, $access_level); 
 
     http_success(array("link_user_project"=>get_link_user_project($id_user, $id_project)));
+});
+
+$route->post("/api/project/{id}/edituser", function($id_project){
+    $id_project = (int) $id_project; 
+
+    $id_user = (int) post("user_id");
+    $access_level = (int) post("access_level");
+
+    $id_current_user = force_auth();
+    if (! is_admin($id_current_user, $id_project)){
+        http_error(403, "Only an admin can add users to a project.");
+    }
+
+    if (access_level($id_current_user, $id_project)< $access_level){
+        http_error(403, "you cannot give higher access to someone else.");
+    }
+
+    if (get_link_user_project($id_user, $id_project) !== false){
+        edit_link_user_project($id_user, $id_project, $access_level);
+        http_success(array("link_user_project"=>get_link_user_project($id_user, $id_project)));
+    }else{
+        http_error(403, "link doesn't exist");
+    }
 });
 
 /*return the users on the project*/
@@ -580,7 +607,7 @@ $route->get(array("/api/ticket/list",
     $offset = get("offset",true) || 0;
     $number = get("number",true) || 20;
     $tickets = get_tickets_for_user($id_user, $offset, $number);
-    
+
     http_success($tickets);
 });
 
