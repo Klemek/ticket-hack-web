@@ -57,7 +57,7 @@
                                 },
                                 success: function(content) {
                                     writeCookie("notify", "success-Project created successfuly !", 1);
-                                    window.location = "./project/" + prefix;
+                                    window.location = "/project/" + prefix;
                                 },
                                 error: function(code, data) {
                                     $("#btnSubmit").removeAttr("disabled");

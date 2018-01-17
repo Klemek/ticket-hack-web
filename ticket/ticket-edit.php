@@ -10,20 +10,6 @@
 <body>
     <?php include($_SERVER['DOCUMENT_ROOT']."/template/connected-nav.php"); ?>
     <script>
-        function changeStatus(status) {
-            $("#dropdownStatus").html('<i class="fa ' + status_icons[status] + ' "></i> ' + status_titles[status]);
-        }
-
-        function changeType(type) {
-            $("#dropdownType").html('<span class="fa-stack ' + type_colors[type] + ' type">' + '<i class="fa fa-square fa-stack-2x"></i>' + '<i class="fa ' + type_icons[type] + ' fa-stack-1x fa-inverse"></i></span> ' + type_titles[type]);
-        }
-
-        function changePriority(priority) {
-            $("#dropdownPriority").html('<i class="fa fa-thermometer-' + priority + ' ' + priority_colors[priority] + '"></i> ' + priority_titles[priority]);
-        }
-
-
-
         $(document).ready(function() {
 
             initNotification(".jumbotron");
@@ -32,7 +18,7 @@
             var id = window.location.href.split("/ticket/")[1].toUpperCase();
             if (id.indexOf("/") !== -1 || id.length > 4) {
                 writeCookie("notify", "warning-Invalid ticket id.", 1);
-                window.location = "./tickets";
+                window.location = "/tickets";
                 return;
             }
 
@@ -50,7 +36,7 @@
             
             changeStatus(randInt(0, 3));
             changePriority(randInt(0, 4));
-            changeType(randInt(0, 2));
+            changeType(randInt(0, 2));*/
 
             for (var status = 0; status < 4; status++) {
                 $("#dropdownStatusMenu").append('<a class="dropdown-item" href="#" onclick="changeStatus(' + status + ')"><i class="fa ' + status_icons[status] + ' "></i> ' + status_titles[status] + '</a>');
@@ -62,9 +48,21 @@
 
             for (var priority = 0; priority < 5; priority++) {
                 $("#dropdownPriorityMenu").append('<a class="dropdown-item" href="#" onclick="changePriority(' + priority + ')"><i class="fa fa-thermometer-' + priority + ' ' + priority_colors[priority] + '"></i> ' + priority_titles[priority] + '</a>');
-            }*/
+            }
 
         });
+
+        function changeStatus(status) {
+            $("#dropdownStatus").html('<i class="fa ' + status_icons[status] + ' "></i> ' + status_titles[status]);
+        }
+
+        function changeType(type) {
+            $("#dropdownType").html('<span class="fa-stack ' + type_colors[type] + ' type">' + '<i class="fa fa-square fa-stack-2x"></i>' + '<i class="fa ' + type_icons[type] + ' fa-stack-1x fa-inverse"></i></span> ' + type_titles[type]);
+        }
+
+        function changePriority(priority) {
+            $("#dropdownPriority").html('<i class="fa fa-thermometer-' + priority + ' ' + priority_colors[priority] + '"></i> ' + priority_titles[priority]);
+        }
 
     </script>
     <div class="container">

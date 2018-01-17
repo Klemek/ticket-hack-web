@@ -10,12 +10,13 @@
 <body>
     <?php include($_SERVER['DOCUMENT_ROOT']."/template/connected-nav.php"); ?>
     <script>
-        function project_click(id) {
-            var win = window.open("/project/" + id, '_blank');
+        function project_click(id, simple_id) {
+            writeCookie("project_id", id, 1);
+            var win = window.open("/project/" + simple_id, '_blank');
             win.focus();
         }
 
-        function loadList() {
+        function load_list() {
             $("#projectList").empty();
             $("#new-project").css("display", "none");
             addLoading("#projectList");
@@ -24,6 +25,9 @@
                 success: function(content) {
                     $("#new-project").css("display", "block");
                     removeLoading();
+                    content.list.forEach(function(project) {
+                        addProject(project.id, project.ticket_prefix, project.name);
+                    });
                 },
                 error: function(code, data) {
                     removeLoading();
@@ -39,6 +43,8 @@
                 var win = window.open("/project/new", '_blank');
                 win.focus();
             });
+
+            load_list();
 
         });
 

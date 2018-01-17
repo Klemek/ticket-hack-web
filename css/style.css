@@ -3,14 +3,39 @@ body {
 }
 
 .jumbotron {
-    margin-top: 10px;
     background-color: #00000000;
+}
+
+.container {
+    margin-top: 10px;
+}
+
+@media only screen and (max-width: 600px) {
+    .container {
+        margin-top: 30px;
+    }
 }
 
 #notifications {
     position: fixed;
-    top: 0.1em;
+    top: 4em;
     z-index: 2000;
+    width: 25%;
+    left: 37.5%;
+}
+
+@media only screen and (max-width: 1024px) {
+    #notifications {
+        width: 50%;
+        left: 25%;
+    }
+}
+
+@media only screen and (max-width: 600px) {
+    #notifications {
+        width: 100%;
+        left: 0%;
+    }
 }
 
 #load-div {
@@ -143,6 +168,27 @@ body {
 
 .dropdown {
     display: inline-block;
+}
+
+.user {
+    border: 1px solid #9E9E9E;
+    border-radius: 5px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin: 2px;
+    cursor: pointer;
+}
+
+.user .fa {
+    float: right;
+    margin-top: 0.25em;
+    color: #fff;
+}
+
+.user:hover {
+    background-color: #9E9E9E;
+    color: #fff;
 }
 
 
