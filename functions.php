@@ -265,8 +265,8 @@ function get_link_user_project($id_user, $id_project){
 function get_projects_for_user($id_user, $offset=0, $limit=20){
     $req = "SELECT * FROM projects WHERE id IN (SELECT project_id FROM link_user_project WHERE user_id = :user_id) OR creator_id = :user_id OFFSET :offset LIMIT :limit;";
     $values = array(":user_id"=>$id_user,
-                   ":offset"=>(int) $offset,
-                   ":limit"=>(int) $limit);
+                    ":offset"=>(int) $offset,
+                    ":limit"=>(int) $limit);
 
     $sth = execute($req, $values);
 
@@ -302,6 +302,14 @@ function get_users_for_project($id_project){
         unset($result[$i]["password"]);
         $result[$i]["access_level"] = access_level((int) $result[$i]["id"], $id_project);
     }
+
+    /*reorder the list by access level*/
+    uasort($result, function($a, $b){
+        if ($a["access_level"] === $b["access_level"]){
+            return 0;
+        }
+        return $a["access_level"] > $b["access_level"] ? 1 : -1;
+    });
 
     return $result;
 }
@@ -364,9 +372,9 @@ function access_level($id_user, $id_project){
 * return the id of the row inserted
 **/
 function add_ticket($title, $project_id, $creator_id, $manager_id ,$priority, $description, $due_date){
-    
+
     $simple_id = count(get_tickets_for_project($project_id));
-    
+
     $values = array(
         ":simple_id" => $simple_id,
         ":name" => $title,
@@ -376,14 +384,14 @@ function add_ticket($title, $project_id, $creator_id, $manager_id ,$priority, $d
         ":description" => $description,
         ":due_date" => $due_date
     );
-    
+
     if ($manager_id){
         $values[":manager_id"] = $manager_id;
         $req = "INSERT INTO tickets(simple_id, name, project_id, creator_id, manager_id, priority, description, due_date) VALUES (:simple_id, :name, :project_id, :creator_id, :manager_id, :priority, :description, :due_date) RETURNING id;";
     }else{
         $req = "INSERT INTO tickets(simple_id, name, project_id, creator_id, priority, description, due_date) VALUES (:simple_id, :name, :project_id, :creator_id, :priority, :description, :due_date) RETURNING id;";
     }
-    
+
 
     $sth = execute($req, $values);
     return $sth->fetch()["id"];
@@ -455,8 +463,8 @@ function get_tickets_for_project($id_project){
 function get_tickets_for_user($id_user, $limit=20, $offset=0){
     $req = "SELECT * FROM tickets WHERE project_id IN (SELECT project_id FROM link_user_project WHERE user_id = :user_id AND user_access > 0 UNION SELECT id FROM projects WHERE creator_id = :user_id) OFFSET :offset LIMIT :limit;";
     $values = array(":user_id"=>$id_user,
-                   ":offset"=>$offset,
-                   ":limit"=>$limit);
+                    ":offset"=>$offset,
+                    ":limit"=>$limit);
     return execute($req, $values)->fetchall(PDO::FETCH_ASSOC);
 }
 

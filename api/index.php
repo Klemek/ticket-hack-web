@@ -580,7 +580,7 @@ $route->get(array("/api/ticket/list",
     $offset = get("offset",true) || 0;
     $number = get("number",true) || 20;
     $tickets = get_tickets_for_user($id_user, $offset, $number);
-
+    
     http_success($tickets);
 });
 
