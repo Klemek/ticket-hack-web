@@ -2,6 +2,32 @@
     window[p] = Math[p];
 });
 
+
+//GENERAL
+
+function randInt(min, max) {
+    return floor((random() * (max + 1)) + min);
+}
+
+function randString(list) {
+    return list[randInt(0, list.length - 1)];
+}
+
+function pad(num, size) {
+    var s = num + "";
+    while (s.length < size) s = "0" + s;
+    return s;
+}
+
+function validJSON(text) {
+    return /^[\],:{}\s]*$/.test(text.replace(/\\["\\\/bfnrtu]/g, '@').replace(/"[^"\\\n\r]*"|true|false|null|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?/g, ']').replace(/(?:^|:|,)(?:\s*\[)+/g, ''));
+}
+
+function prettyDate(timestamp) {
+    var date = new Date(timestamp);
+    return date.toGMTString();
+}
+
 //COOKIES
 
 function writeCookie(cname, cvalue, exdays) {
@@ -37,35 +63,7 @@ function eraseCookie(name) {
     writeCookie(name, "", -1);
 }
 
-//OTHER
-
-function randInt(min, max) {
-    return floor((random() * (max + 1)) + min);
-}
-
-function randString(list) {
-    return list[randInt(0, list.length - 1)];
-}
-
-function pad(num, size) {
-    var s = num + "";
-    while (s.length < size) s = "0" + s;
-    return s;
-}
-
-function validJSON(text) {
-    return /^[\],:{}\s]*$/.test(text.replace(/\\["\\\/bfnrtu]/g, '@').replace(/"[^"\\\n\r]*"|true|false|null|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?/g, ']').replace(/(?:^|:|,)(?:\s*\[)+/g, ''));
-}
-
 //AJAX
-
-function ajax_get(request) {
-    ajax('GET', request['url'], request['data'], request['success'], request['error']);
-}
-
-function ajax_post(request) {
-    ajax('POST', request['url'], request['data'], request['success'], request['error']);
-}
 
 function ajax(method, url, data, callbacksuccess, callbackerror) {
     $.ajax({
@@ -80,6 +78,7 @@ function ajax(method, url, data, callbacksuccess, callbackerror) {
             }
 
             if (data.result == "ok") {
+                //console.log(data);
                 if (callbacksuccess)
                     callbacksuccess(data.content);
             } else {
@@ -90,7 +89,7 @@ function ajax(method, url, data, callbacksuccess, callbackerror) {
 
         },
         error: function (result) {
-            if (result.status == 0 || result.status == 404) {
+            if (result.status == 0) {
                 notify("<b>Error</b> internal error", "danger");
                 console.log("unreachable url : " + url);
             } else {
@@ -108,11 +107,23 @@ function ajax(method, url, data, callbacksuccess, callbackerror) {
     });
 }
 
+function ajax_get(request) {
+    ajax('GET', request['url'], request['data'], request['success'], request['error']);
+}
+
+function ajax_post(request) {
+    ajax('POST', request['url'], request['data'], request['success'], request['error']);
+}
+
+function ajax_delete(request) {
+    ajax('DELETE', request['url'], request['data'], request['success'], request['error']);
+}
+
 //NOTIFICATIONS
 
 function initNotification(divName) {
     $(divName).append('<div id="notifications"></div>');
-    $("#notifications").width($(divName).width());
+    //$("#notifications").width($(divName).width());
 
     var notf = readAndErase("notify");
     if (notf && notf.length > 0)
@@ -128,8 +139,16 @@ function notify(msg, type) {
             msg = spl[1];
         }
 
+        var id = randInt(0, 9999999);
 
-        $("#notifications").append('<div class="alert alert-' + type + ' alert-dismissable"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>' + msg + '</div>')
+        $("#notifications").append('<div id="notify-' + id + '" class="alert alert-' + type + ' alert-dismissable"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>' + msg + '</div>');
+
+        $("#notify-" + id).css("opacity", 0);
+        $("#notify-" + id).animate({
+            opacity: 1
+        }, 500, function () {
+            $("#notify-" + id).css("opacity", "default");
+        });
     }
 }
 
@@ -138,6 +157,8 @@ function clearNotification() {
         $("#notifications").html("");
     }
 }
+
+// LOADING
 
 function addLoading(divName) {
     $(divName).append('<div id="load-div" class="text-center"><i class="fa fa-spinner fa-spin fa-3x fa-fw"></i><span class="sr-only">Loading...</span></div>');
@@ -191,6 +212,13 @@ var type_titles = {
         1: "fa-cogs",
         2: "fa-eye",
         3: "fa-check-circle"
+    },
+    access_titles = {
+        1: "Reader",
+        2: "Commenter",
+        3: "Editor",
+        4: "Admin",
+        5: "Creator"
     };
 
 
@@ -244,11 +272,11 @@ function registerCustomInput(name, textarea, callback) {
     });
     $("#form-" + name).submit(function () {
         if ($("#" + name).val().length > 0) {
-            $("#" + name).blur();
             if ($("#" + name).val() !== customInputInfos[name]) {
                 customInputInfos[name] = $("#" + name).val();
                 if (callback) callback(customInputInfos[name]);
             }
+            $("#" + name).blur();
         }
         return false;
     });
@@ -266,8 +294,31 @@ function registerCustomInput(name, textarea, callback) {
     }
 }
 
+//VIEWS
 
-//DESIGN FAKE
+function addProject(id, simple_id, name) {
+    if ($("#projectList").length > 0) {
+        var html = '<div class="project" onclick="project_click(' + id + ',\'' + simple_id + '\')">' + '<h4>' + simple_id + ' <small>' + name + '</small></h4></div>';
+        $("#projectList").append(html);
+    }
+}
+
+function addTicket(name, desc, type, priority, status, user) {
+    if ($("#ticketList").length > 0) {
+        if (user.length > 0) user = '<h5 class="text-primary">' + user + '</h5>';
+        var html = '<div class="ticket" onclick="ticket_click(\'' + name + '\')">' + '<span title="' + type_titles[type] + '" class="fa-stack ' + type_colors[type] + ' type">' + '<i class="fa fa-square fa-stack-2x"></i>' + '<i class="fa ' + type_icons[type] + ' fa-stack-1x fa-inverse"></i></span>' + '<i class="fa ' + status_icons[status] + ' status" title="status : ' + status_titles[status] + '"></i><i class="fa fa-thermometer-' + priority + ' ' + priority_colors[priority] + ' priority" title="priority : ' + priority_titles[priority] + '"></i>' + user + '<h4>' + name + ' <small>' + desc + '</small></h4></div>';
+        $("#ticketList").append(html);
+    }
+}
+
+function addUser(id, user_access, name, del) {
+    if ($("#userList").length > 0) {
+        var html = '<div id="user-' + id + '" class="user col-md-3 col-sm-6" ' + (del ? 'onclick="delete_user(' + id + ')"' : 'style="cursor:default;"') + '><b>' + access_titles[user_access] + '</b> ' + name + '<i class="fa fa-times"></i></div>';
+        $("#userList").append(html);
+    }
+}
+
+//DESIGN FAKE VIEWS
 
 var fakeProjectNames = ['TEST', 'RAND', 'EX', 'ABC', 'SAMP'],
     fakeProjectDesc = ['Sample project', 'Example project', 'Some project', 'Rule the world'],
@@ -279,40 +330,22 @@ var fakeProjectNames = ['TEST', 'RAND', 'EX', 'ABC', 'SAMP'],
 ];
 
 function addFakeTicket(project) {
+    if (!project)
+        project = randString(fakeProjectNames)
 
-    if ($("#ticketList").length > 0) {
-        if (!project)
-            project = randString(fakeProjectNames)
+    var name = project + "-" + pad(randInt(1, 999), 3),
+        desc = randString(fakeTicketDesc),
+        type = randInt(0, 2),
+        priority = randInt(0, 4),
+        status = randInt(0, 3),
+        user = randString(fakeUserNames);
 
-        var name = project + "-" + pad(randInt(1, 999), 3),
-            desc = randString(fakeTicketDesc),
-            type = randInt(0, 2),
-            priority = randInt(0, 4),
-            status = randInt(0, 3),
-            user = randString(fakeUserNames);
+    if (randInt(0, 2) == 0)
+        user = "";
 
-        if (randInt(0, 2) == 0)
-            user = "";
-
-        addTicket(name, desc, type, priority, status, user);
-    }
-}
-
-function addTicket(name, desc, type, priority, status, user) {
-
-    if ($("#ticketList").length > 0) {
-        if (user.length > 0) user = '<h5 class="text-primary">' + user + '</h5>';
-        var html = '<div class="ticket" onclick="ticket_click(\'' + name + '\')">' + '<span title="' + type_titles[type] + '" class="fa-stack ' + type_colors[type] + ' type">' + '<i class="fa fa-square fa-stack-2x"></i>' + '<i class="fa ' + type_icons[type] + ' fa-stack-1x fa-inverse"></i></span>' + '<i class="fa ' + status_icons[status] + ' status" title="status : ' + status_titles[status] + '"></i><i class="fa fa-thermometer-' + priority + ' ' + priority_colors[priority] + ' priority" title="priority : ' + priority_titles[priority] + '"></i>' + user + '<h4>' + name + ' <small>' + desc + '</small></h4></div>';
-        $("#ticketList").append(html);
-    }
+    addTicket(name, desc, type, priority, status, user);
 }
 
 function addFakeProject() {
-    if ($("#projectList").length > 0) {
-        var name = randString(fakeProjectNames),
-            desc = randString(fakeProjectDesc);
-        var html = '<div class="project" onclick="project_click(\'' + name + '\')">' + '<h4>' + name + ' <small>' + desc + '</small></h4></div>';
-        $("#projectList").append(html);
-    }
-
+    addProject(0, randString(fakeProjectNames), randString(fakeProjectDesc));
 }

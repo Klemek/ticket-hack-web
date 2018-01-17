@@ -216,6 +216,11 @@ function get_project($id){
 
     if ($res){
         $res["creator"] = get_user($res["creator_id"]);
+        if ($res["editor_id"]){
+            $res["editor"] = get_user($res["editor_id"]);
+        }else{
+            $res["editor"] = null;
+        }
     }
 
     return $res;
@@ -258,10 +263,10 @@ function get_link_user_project($id_user, $id_project){
 * add a access_level field to each project
 **/
 function get_projects_for_user($id_user, $offset=0, $limit=20){
-    $req = "SELECT * FROM projects WHERE id IN (SELECT project_id FROM link_user_project WHERE user_id = :user_id) OR creator_id = :user_id LIMIT :limit OFFSET :offset;";
+    $req = "SELECT * FROM projects WHERE id IN (SELECT project_id FROM link_user_project WHERE user_id = :user_id) OR creator_id = :user_id OFFSET :offset LIMIT :limit;";
     $values = array(":user_id"=>$id_user,
-                   ":offset"=>(int) $offset,
-                   ":limit"=>(int) $limit);
+                    ":offset"=>(int) $offset,
+                    ":limit"=>(int) $limit);
 
     $sth = execute($req, $values);
 
@@ -270,20 +275,25 @@ function get_projects_for_user($id_user, $offset=0, $limit=20){
     if ($res){
         for ($i = 0; $i < count($res); $i++){
             $res[$i]["creator"] = get_user($res[$i]["creator_id"]);
+            if ($res[$i]["editor_id"]){
+                $res[$i]["editor"] = get_user($res[$i]["editor_id"]);
+            }else{
+                $res[$i]["editor"] = null;
+            }
             $res[$i]["access_level"] = access_level($id_user, $res[$i]["id"]);
         }
 
     } 
     return $res;
-}   
+}
 
 /**
 * get all the users for the project
 * add a access_level to each user
 */
 function get_users_for_project($id_project){
-    $req = "SELECT * FROM users WHERE id IN (SELECT user_id FROM link_user_project WHERE project_id = ? UNION SELECT creator_id FROM projects WHERE id=?);";
-    $values = array($id_project,$id_project);
+    $req = "SELECT * FROM users WHERE id IN (SELECT user_id FROM link_user_project WHERE project_id = :project_id UNION SELECT creator_id FROM projects WHERE id=:project_id);";
+    $values = array(":project_id"=>$id_project);
 
     $sth = execute($req, $values);
 
@@ -292,6 +302,14 @@ function get_users_for_project($id_project){
         unset($result[$i]["password"]);
         $result[$i]["access_level"] = access_level((int) $result[$i]["id"], $id_project);
     }
+
+    /*reorder the list by access level*/
+    usort($result, function($a, $b){
+        if ($a["access_level"] === $b["access_level"]){
+            return 0;
+        }
+        return $a["access_level"] > $b["access_level"] ? -1 : +1; // ordre décroissant
+    });
 
     return $result;
 }
@@ -354,7 +372,6 @@ function access_level($id_user, $id_project){
 * return the id of the row inserted
 **/
 function add_ticket($title, $project_id, $creator_id, $manager_id ,$priority, $description, $due_date){
-    $req = "INSERT INTO tickets(simple_id, name, project_id, creator_id, manager_id, priority, description, due_date) VALUES (:simple_id, :name, :project_id, :creator_id, :manager_id, :priority, :description, :due_date) RETURNING id;";
 
     $simple_id = count(get_tickets_for_project($project_id));
 
@@ -363,11 +380,18 @@ function add_ticket($title, $project_id, $creator_id, $manager_id ,$priority, $d
         ":name" => $title,
         ":project_id" => $project_id,
         ":creator_id" => $creator_id,
-        ":manager_id" => $manager_id,
         ":priority" => $priority,
         ":description" => $description,
         ":due_date" => $due_date
     );
+
+    if ($manager_id){
+        $values[":manager_id"] = $manager_id;
+        $req = "INSERT INTO tickets(simple_id, name, project_id, creator_id, manager_id, priority, description, due_date) VALUES (:simple_id, :name, :project_id, :creator_id, :manager_id, :priority, :description, :due_date) RETURNING id;";
+    }else{
+        $req = "INSERT INTO tickets(simple_id, name, project_id, creator_id, priority, description, due_date) VALUES (:simple_id, :name, :project_id, :creator_id, :priority, :description, :due_date) RETURNING id;";
+    }
+
 
     $sth = execute($req, $values);
     return $sth->fetch()["id"];
@@ -396,6 +420,8 @@ function get_ticket($id){
 }
 
 function get_ticket_simple($id_project, $id_simple){
+    $id_project = (int) $id_project;
+    $id_simple = (int) $id_simple;
     $req = "SELECT * FROM tickets WHERE project_id=? AND simple_id=? ;";
     $values = array($id_project, $id_simple);
 
@@ -435,10 +461,10 @@ function get_tickets_for_project($id_project){
 
 /*return all the tickets the user has access to*/
 function get_tickets_for_user($id_user, $limit=20, $offset=0){
-    $req = "SELECT * FROM tickets WHERE project_id IN (SELECT project_id FROM link_user_project WHERE user_id = :user_id AND user_access > 0 UNION SELECT id FROM projects WHERE creator_id = :user_id) LIMIT :limit OFFSET :offset;";
+    $req = "SELECT * FROM tickets WHERE project_id IN (SELECT project_id FROM link_user_project WHERE user_id = :user_id AND user_access > 0 UNION SELECT id FROM projects WHERE creator_id = :user_id) OFFSET :offset LIMIT :limit;";
     $values = array(":user_id"=>$id_user,
-                   ":offset"=>$offset,
-                   ":limit"=>$limit);
+                    ":offset"=>$offset,
+                    ":limit"=>$limit);
     return execute($req, $values)->fetchall(PDO::FETCH_ASSOC);
 }
 

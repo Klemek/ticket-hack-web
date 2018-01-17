@@ -231,10 +231,25 @@ $route->route("/api/user/me", function(){
     http_success($output);
 });
 
+$route->get("/api/user/bymail", function(){
+    $mail = get("mail");
+    $user = get_user_by_email($mail);
+    force_auth();
+    if ($user){ 
+        http_success($user);
+    }else{
+        http_error(404, "No user possess this mail");
+    }
+});
+
 $route->get("/api/user/{id}", function($id){
     $id = (int) $id;
     $output = get_user($id);
-    http_success($output);
+    if ($output){
+        http_success($output);
+    }else{
+        http_error(404, "User Not Found");
+    }
 });
 
 /** edit the user info - POST
@@ -316,12 +331,14 @@ $route->get(array("/api/user/me/projects",
                   "/api/project/list"), function($id = null){
 
     $id = ($id === null) ? force_auth() : (int) $id;
-    $offset = get("offset",true) || 0;
-    $number = get("number",true) || 20;
+    $offset = ((int) get("offset",true)) | 0;
+    $number = ((int) get("number",true)) | 20;
 
     $list = get_projects_for_user($id, $offset, $number);
     $output = array("total" => count($list),
-                    "list"=>$list);
+                    "list"=>$list,
+                    "offset"=>$offset,
+                    "number"=>$number);
     http_success($output);
 });
 
@@ -373,14 +390,15 @@ $route->post("/api/project/new", function(){
 $route->get("/api/project/{id}", function($id){
     $id = (int) $id;
     $project = get_project($id);
+    $id_user = force_auth();
 
     if ($project){
-
-        if (isset($_SESSION["user_id"])){
-            $project["user_access"] = access_level($_SESSION["user_id"], $id);
-        }else{
-            $project["user_access"] = false;
+        $access = access_level($id_user, $id);
+        if ($access==0){
+            http_error(403,"You do not have the permission to access this project");
         }
+
+        $project["user_access"] = $access;
 
         http_success($project);
     }else{
@@ -400,6 +418,11 @@ $route->post("/api/project/{id}/edit", function($id){
     if ($name){
         $args[":name"] = $name;
         $set[]="name = :name";
+
+        $args[":editor_id"] = $id_user;
+        $set[]="editor_id = :editor_id";
+
+        $set[]="edition_date = NOW()";
     }
 
     if (access_level($id_user, $id) < 4){
@@ -443,9 +466,36 @@ $route->post("/api/project/{id}/adduser", function($id_project){
         http_error(403, "you cannot give higher access to someone else.");
     }
 
+    if (get_link_user_project($id_user, $id_project) !== false){
+        http_error(400, "link already exists - use /api/project/{id}/edituser to edit a user");
+    }
+
     add_link_user_project($id_user, $id_project, $access_level); 
 
     http_success(array("link_user_project"=>get_link_user_project($id_user, $id_project)));
+});
+
+$route->post("/api/project/{id}/edituser", function($id_project){
+    $id_project = (int) $id_project; 
+
+    $id_user = (int) post("user_id");
+    $access_level = (int) post("access_level");
+
+    $id_current_user = force_auth();
+    if (! is_admin($id_current_user, $id_project)){
+        http_error(403, "Only an admin can add users to a project.");
+    }
+
+    if (access_level($id_current_user, $id_project)< $access_level){
+        http_error(403, "you cannot give higher access to someone else.");
+    }
+
+    if (get_link_user_project($id_user, $id_project) !== false){
+        edit_link_user_project($id_user, $id_project, $access_level);
+        http_success(array("link_user_project"=>get_link_user_project($id_user, $id_project)));
+    }else{
+        http_error(403, "link doesn't exist");
+    }
 });
 
 /*return the users on the project*/
@@ -453,8 +503,12 @@ $route->get("/api/project/{id}/users", function($id_project){
     $id_project = (int) $id_project;
     $id_user = force_auth();
 
+    if (! project_exists($id_project)){
+        http_error(404, "Project Not Found");
+    }
+
     if (access_level($id_user, $id_project) > 0){
-        http_success(get_users_for_project($id));
+        http_success(get_users_for_project($id_project));
     }else{
         http_error(403, "You cannot see the users of a project you are not a part of.");
     }
@@ -502,7 +556,7 @@ $route->get("/api/project/{id}/tickets", function($id_project){
     $id_project = (int) $id_project;
     $current_user = force_auth();
 
-    if (get_project(get_project)){ 
+    if (project_exists($id_project)){ 
         if (access_level($current_user, $id_project) >= 1){
             http_success(get_tickets_for_project($id_project));
         }else{
@@ -517,9 +571,8 @@ $route->get("/api/project/{id_project}/ticket/{id_simple_ticket}", function($id_
     $id_project = (int) $id_project;
     $current_user = force_auth();
 
-    if (get_project(get_project)){ 
+    if (project_exists($id_project)){ 
         if (access_level($current_user, $id_project) >= 1){
-            http_success(get_tickets_for_project($id_project));
             $ticket = get_ticket_simple($id_project, $id_simple_ticket);
             if ($ticket){
                 http_success($ticket);

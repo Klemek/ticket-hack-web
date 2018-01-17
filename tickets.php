@@ -14,7 +14,7 @@
             initNotification(".jumbotron");
             $("#navTickets").addClass("active");
 
-            //loadList();
+            loadList();
 
             $("#new-ticket").click(function() {
                 var win = window.open("/ticket/new", '_blank');
@@ -35,8 +35,12 @@
             ajax_get({
                 url: "/api/ticket/list",
                 success: function(content) {
+                    content.forEach(function(ticket) {
+                        addTicket(ticket.simple_id, ticket.name, ticket.type, ticket.priority, ticket.state, ticket.manager_id);
+                    });
                     $("#new-ticket").css("display", "block");
                     removeLoading();
+
                 },
                 error: function(code, data) {
                     removeLoading();

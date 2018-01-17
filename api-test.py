@@ -7,7 +7,6 @@ import ssl
 import json
 import sys
 
-
 def request(req_type, url, params):
     global cookie
     request = Request(
@@ -106,80 +105,81 @@ def testGET(name, url, expected):
 def testDELETE(name, url, expected):
     return testRequest('DELETE', name, url, {}, expected)
 
+def executeTests():
+    global server, cookie, context
+    context = ssl._create_unverified_context()
+    print("Ticket'Hack API test")
+    server = input("Enter the server ip : ")
+    if not(server.startswith("https")):
+        server = "https://" + server
 
-print("Ticket'Hack API test")
-server = "http://192.168.56.101"#input("Enter the server ip : ")
-#if not(server.startswith("https")):
-#    server = "https://" + server
+    print("EXECUTING TESTS ON "+server)
 
-print("RESULT \t{:6} {:^25} CODE    TEST EXECUTED".format("METHOD", "URL"))
-print("{:=<75}".format(""))
+    print("RESULT \t{:6} {:^25} CODE    TEST EXECUTED".format("METHOD", "URL"))
+    print("{:=<75}".format(""))
 
-context = ssl._create_unverified_context()
-cookie = None
+    tests = []
 
-uniqueid = randint(0, sys.maxsize)
-email = "test-email-" + str(uniqueid) + "@test.fr"
-name = "test-name-" + str(uniqueid)
-password = "test-password-" + str(uniqueid)
+    for glob in globals():
+        if callable(globals()[glob]) and glob.startswith("test_"):
+            tests += [glob]
+    for test in tests:    
+        print("{:+^75}".format(test))
+        cookie = None
+        globals()[test]()
 
-user_id = None
-project_id = None
+def test_loul():
+    uniqueid = randint(0, sys.maxsize)
+    email = "test-email-" + str(uniqueid) + "@test.fr"
+    email2 = "test-email-" + str(randint(0, sys.maxsize)) + "@test.fr"
+    name = "test-name-" + str(uniqueid)
+    password = "test-password-" + str(uniqueid)
 
-#-------------------- USER RELATED FUNCTIONS --------------------
+    user_id = None
+    project_id = None
+    user_id2 = None
 
-testGET("project list no session", "/api/project/list",
-        {'status': 401})
+    #-------------------- USER RELATED FUNCTIONS --------------------
 
-res = testPOST("normal register", "/api/user/new",
-               {"email": email,
-                "password": sha256(password),
-                "name": name},
-               {'status': 200, 'result': 'ok',
-                   'content': {'user_id': -1}})
+    testGET("project list no session", "/api/project/list",
+            {'status': 401})
 
-if res:
-    user_id = res["content"]["user_id"]
+    res = testPOST("normal register", "/api/user/new",
+                   {"email": email,
+                    "password": sha256(password),
+                    "name": name},
+                   {'status': 200, 'result': 'ok',
+                       'content': {'user_id': -1}})
 
-testPOST("register with same mail", "/api/user/new",
-         {"email": email,
-          "password": sha256(password),
-          "name": name},
-         {'status': 405})
+    if res:
+        user_id = res["content"]["user_id"]
 
-testPOST("login normal", "/api/user/connect",
-         {"email": email,
-          "password": sha256(password)},
-         {'status': 200, 'result': 'ok',
-          'content': {'user_id': user_id}})
+    # 2nd user
+    res = testPOST("normal register - 2nd user", "/api/user/new",
+                   {"email": email2,
+                    "password": sha256(password),
+                    "name": name},
+                   {'status': 200, 'result': 'ok',
+                       'content': {'user_id': -1}})
 
-testGET("information about current user", "/api/user/me",
-        {'status': 200, 'result': 'ok',
-         'content': {"id": user_id,
-                     "creation_date": -1,
-                     "name": name,
-                     "email": email,
-                     "last_connection_date": -1,
-                     "active": -1,
-                     "deletion_date": None}})
+    if res:
+        user_id2 = res["content"]["user_id"]
 
-testGET("information user with id", "/api/user/" + str(user_id),
-        {'status': 200, 'result': 'ok',
-         'content': {"id": user_id,
-                     "creation_date": -1,
-                     "name": name,
-                     "email": email,
-                     "last_connection_date": -1,
-                     "active": -1,
-                     "deletion_date": None}})
 
-name += str(randint(0, 10))
-password += str(randint(0, 10))
+    testPOST("register with same mail", "/api/user/new",
+             {"email": email,
+              "password": sha256(password),
+              "name": name},
+             {'status': 405})
 
-testPOST("change user information", "/api/user/me/edit",
-         {"name": name,
-          "password": sha256(password)},
-         {'status': 200, 'result': 'ok',
+    testPOST("login normal", "/api/user/connect",
+             {"email": email,
+              "password": sha256(password)},
+             {'status': 200, 'result': 'ok',
+              'content': {'user_id': user_id}})
+
+    testGET("information about current user", "/api/user/me",
+            {'status': 200, 'result': 'ok',
              'content': {"id": user_id,
                          "creation_date": -1,
                          "name": name,
@@ -188,120 +188,246 @@ testPOST("change user information", "/api/user/me/edit",
                          "active": -1,
                          "deletion_date": None}})
 
-testGET("check information change", "/api/user/me",
-        {'status': 200, 'result': 'ok',
-         'content': {"id": user_id,
-                     "creation_date": -1,
-                     "name": name,
-                     "email": email,
-                     "last_connection_date": -1,
-                     "active": -1,
-                     "deletion_date": None}})
+    testGET("information user with id", "/api/user/" + str(user_id),
+            {'status': 200, 'result': 'ok',
+             'content': {"id": user_id,
+                         "creation_date": -1,
+                         "name": name,
+                         "email": email,
+                         "last_connection_date": -1,
+                         "active": -1,
+                         "deletion_date": None}})
 
-testGET("logout", "/api/logout",
-        {'status': 200, 'result': 'ok', 'content': {'disconnected': True}})
+    name += str(randint(0, 10))
+    password += str(randint(0, 10))
 
-testGET("project list no session", "/api/project/list",
-        {'status': 401})
+    testPOST("change user information", "/api/user/me/edit",
+             {"name": name,
+              "password": sha256(password)},
+             {'status': 200, 'result': 'ok',
+                 'content': {"id": user_id,
+                             "creation_date": -1,
+                             "name": name,
+                             "email": email,
+                             "last_connection_date": -1,
+                             "active": -1,
+                             "deletion_date": None}})
 
-testPOST("login normal", "/api/user/connect",
-         {"email": email,
-          "password": sha256(password)},
-         {'status': 200, 'result': 'ok',
-          'content': {'user_id': user_id}})
+    testGET("check information change", "/api/user/me",
+            {'status': 200, 'result': 'ok',
+             'content': {"id": user_id,
+                         "creation_date": -1,
+                         "name": name,
+                         "email": email,
+                         "last_connection_date": -1,
+                         "active": -1,
+                         "deletion_date": None}})
 
-#---------------------------- Project related tests -----------------------
-testPOST("login normal", "/api/user/connect",
-         {"email": email,
-          "password": sha256(password)},
-         {'status': 200, 'result': 'ok',
-          'content': {'user_id': user_id}})
+    testGET("logout", "/api/logout",
+            {'status': 200, 'result': 'ok', 'content': {'disconnected': True}})
 
-# logged in tests
-testGET("project list empty", "/api/project/list",
-        {'status': 200, 'result': 'ok',
-         'content': {'total': 0, 'list': []}})
+    testGET("project list no session", "/api/project/list",
+            {'status': 401})
 
-res = testPOST("create new project", "/api/project/new",
-               {"name": "test_project",
-                "ticket_prefix": "TEST"},
-               {'status': 200, 'result': 'ok',
-                   'content': {'project_id': -1}})
+    testPOST("login normal", "/api/user/connect",
+             {"email": email,
+              "password": sha256(password)},
+             {'status': 200, 'result': 'ok',
+              'content': {'user_id': user_id}})
 
-if res:
-    project_id = res['content']['project_id']
+    #---------------------------- Project related tests -----------------------
+    testPOST("login normal", "/api/user/connect",
+             {"email": email,
+              "password": sha256(password)},
+             {'status': 200, 'result': 'ok',
+              'content': {'user_id': user_id}})
 
-testGET("get project information", "/api/project/" + str(project_id),
-        {'status': 200, 'result': 'ok',
-         'content': {}})
-    
-testGET("project list one result", "/api/project/list",
-        {'status': 200, 'result': 'ok',
-         'content': {'total': 1, 'list': [
-                 {
-    "id": project_id,
-    "creation_date": -1,
-    "edition_date": None,
-    "name": "test_project",
-    "editor_id": None,
-    "creator_id": -1,
-    "ticket_prefix": "TEST"
-  }
-                 ]}})
+    # logged in tests
+    testGET("project list empty", "/api/project/list",
+            {'status': 200, 'result': 'ok',
+             'content': {'total': 0, 'list': []}})
+
+    res = testPOST("create new project", "/api/project/new",
+                   {"name": "test_project",
+                    "ticket_prefix": "TEST"},
+                   {'status': 200, 'result': 'ok',
+                       'content': {'project_id': -1}})
+
+    if res:
+        project_id = res['content']['project_id']
+
+    testGET("get project information", "/api/project/" + str(project_id),
+            {'status': 200, 'result': 'ok',
+             'content': {}})
+        
+    testGET("project list one result", "/api/project/list",
+            {'status': 200, 'result': 'ok',
+             'content': {'total': 1, 'list': [
+                     {
+        "id": project_id,
+        "creation_date": -1,
+        "edition_date": None,
+        "name": "test_project",
+        "editor_id": None,
+        "creator_id": -1,
+        "ticket_prefix": "TEST"
+      }
+                     ]}})
 
 
 
 
-testGET("get existing project while connected", "/api/project/"+str(project_id),
+    testGET("get existing project while connected", "/api/project/"+str(project_id),
+            {
+      "status": 200,
+      "result": "ok",
+      "content": {
+        "id": project_id,
+        "creation_date": -1,
+        "edition_date": None,
+        "name": "test_project",
+        "editor_id": None,
+        "creator_id": -1,
+        "ticket_prefix": "TEST",
+        "user_access":-1
+      }
+    })
+                    
+    testGET("get user project ", "/api/user/"+str(user_id)+"/projects",
+            {'status': 200, 'result': 'ok',
+             'content': {'total': 1, 'list': [
+                     {
+        "id": project_id,
+        "creation_date": -1,
+        "edition_date": None,
+        "name": "test_project",
+        "editor_id": None,
+        "creator_id": -1,
+        "ticket_prefix": "TEST"
+      }
+    ]}})
+
+    testPOST("edit project", "/api/project/"+str(project_id)+"/edit",
+             {"name":"Name Edited myman"},
+             {'status': 200, 'result': 'ok',
+             'content': {
+        "id": project_id,
+        "creation_date": -1,
+        "edition_date": -1,
+        "name": "Name Edited myman",
+        "editor_id": -1,
+        "creator_id": -1,
+        "ticket_prefix": "TEST"
+      }
+    })
+                    
+    testGET("Users with access to the project", "/api/project/"+str(project_id)+"/users",
+            {
+      "status": 200,
+      "result": "ok",
+      "content": [
         {
-  "status": 200,
-  "result": "ok",
-  "content": {
-    "id": project_id,
-    "creation_date": -1,
-    "edition_date": None,
-    "name": "test_project",
-    "editor_id": None,
-    "creator_id": -1,
-    "ticket_prefix": "TEST",
-    "user_access":-1
-  }
-})
-                
-testGET("get user project ", "/api/user/"+str(user_id)+"/projects",
-        {'status': 200, 'result': 'ok',
-         'content': {'total': 1, 'list': [
-                 {
-    "id": project_id,
-    "creation_date": -1,
-    "edition_date": None,
-    "name": "test_project",
-    "editor_id": None,
-    "creator_id": -1,
-    "ticket_prefix": "TEST"
-  }
-]}})
+          "id": user_id,
+          "creation_date": -1,
+          "deletion_date": None,
+          "active": -1,
+          "name": -1,
+          "email": -1,
+          "last_connection_date": -1
+        }
+      ]
+    })
+                    
+    testPOST("add user to project - good clearance", "/api/project/"+str(project_id)+"/adduser",
+             {"user_id":user_id2,
+              "access_level":4},
+             {
+      "status": 200,
+      "result": "ok",
+      "content": {
+        "link_user_project": {
+          "user_id": user_id2,
+          "project_id": project_id,
+          "user_access": 4
+        }
+      }
+    })
 
-testPOST("edit project", "/api/project/"+str(project_id)+"/edit",
-         {"name":"Name Edited myman"},
+    testGET("Users with access to the project - x2 (1/2 chance de planter)", "/api/project/"+str(project_id)+"/users",
+            {
+      "status": 200,
+      "result": "ok",
+      "content": [
+        {
+          "id": user_id2,
+          "creation_date": -1,
+          "deletion_date": None,
+          "active": -1,
+          "name": -1,
+          "email": -1,
+          "last_connection_date": None,
+          "access_level":4
+        },
          {
-    "id": project_id,
-    "creation_date": -1,
-    "edition_date": -1,
-    "name": "Name Edited myman",
-    "editor_id": -1,
-    "creator_id": -1,
-    "ticket_prefix": "TEST"
-  }
-         )
+          "id": user_id,
+          "creation_date": -1,
+          "deletion_date": None,
+          "active": -1,
+          "name": -1,
+          "email": -1,
+          "last_connection_date": -1,
+          "access_level":5
+        }
+      ]
+    })
+
+    testPOST("remove user from project - good clearance", "/api/project/"+str(project_id)+"/removeuser",
+             {"user_id":user_id2},
+             {
+      "status": 200,
+      "result": "ok",
+      "content": {
+        "delete":True
+      }
+    })
+
+    testGET("Users with access to the project - after remove", "/api/project/"+str(project_id)+"/users",
+            {
+      "status": 200,
+      "result": "ok",
+      "content": [
+        {
+          "id": user_id,
+          "creation_date": -1,
+          "deletion_date": None,
+          "active": -1,
+          "name": -1,
+          "email": -1,
+          "last_connection_date": -1,
+          "access_level":5
+        }
+      ]
+    })
 
 
-#---------------------------- Delete functions --------------------------
-testDELETE("delete user", "/api/user/me/delete",
-           {'status': 200, 'result': 'ok',
-            'content': {'delete': True}})
 
-testPOST("login user deleted", "/api/user/connect",
-         {"email": email,
-          "password": sha256(password)},
-         {'status': 401})
+    #---------------------------- Delete functions --------------------------
+    #on project
+    testDELETE("delete project","/api/project/"+str(project_id)+"/delete",
+               {'status': 200, 'result': 'ok',
+                'content': {'delete': True}}
+               )
+
+    #on user
+    testDELETE("delete user", "/api/user/me/delete",
+               {'status': 200, 'result': 'ok',
+                'content': {'delete': True}})
+
+    testPOST("login user deleted", "/api/user/connect",
+             {"email": email,
+              "password": sha256(password)},
+             {'status': 401})
+
+
+
+executeTests()
