@@ -304,7 +304,7 @@ function get_users_for_project($id_project){
     }
 
     /*reorder the list by access level*/
-    uasort($result, function($a, $b){
+    usort($result, function($a, $b){
         if ($a["access_level"] === $b["access_level"]){
             return 0;
         }
