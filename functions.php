@@ -102,11 +102,11 @@ function get_user_by_email($email){
 function validate_user($email, $password){
     global $db;
 
-    $req = "SELECT count(email) FROM users WHERE email=? AND password=? AND deletion_date IS NULL";
+    $req = "SELECT count(email) AS c FROM users WHERE email=? AND password=? AND deletion_date IS NULL";
     $values = array($email, hash_passwd($password));
 
     $result = execute($req, $values);
-    return $result->fetchColumn() === 1; 
+    return $result->fetch()["c"] >= 1; 
 }
 
 /*test this function*/
@@ -127,6 +127,10 @@ function validate_user_with_fail($email, $password){
             execute($req, $values);
         }
     }while((! $connection) && $i-- > 0);
+    
+    if ($i==0){//db error - pass to simple login
+        return validate_user($email, $password);
+    }
 
     $first_request_time = $connection["first_request_date"] ? get_date($connection["first_request_date"]) : get_date();
 
