@@ -270,6 +270,11 @@ function get_projects_for_user($id_user, $offset=0, $limit=20){
     if ($res){
         for ($i = 0; $i < count($res); $i++){
             $res[$i]["creator"] = get_user($res[$i]["creator_id"]);
+            if ($res[$i]["editor_id"]){
+                $res[$i]["editor"] = get_user($res[$i]["editor_id"]);
+            }else{
+                $res[$i]["editor"] = null;
+            }
             $res[$i]["access_level"] = access_level($id_user, $res[$i]["id"]);
         }
 
@@ -354,20 +359,25 @@ function access_level($id_user, $id_project){
 * return the id of the row inserted
 **/
 function add_ticket($title, $project_id, $creator_id, $manager_id ,$priority, $description, $due_date){
-    $req = "INSERT INTO tickets(simple_id, name, project_id, creator_id, manager_id, priority, description, due_date) VALUES (:simple_id, :name, :project_id, :creator_id, :manager_id, :priority, :description, :due_date) RETURNING id;";
-
-    $simple_id = count(get_tickets_for_project($project_id));
-
+    
     $values = array(
         ":simple_id" => $simple_id,
         ":name" => $title,
         ":project_id" => $project_id,
         ":creator_id" => $creator_id,
-        ":manager_id" => $manager_id,
         ":priority" => $priority,
         ":description" => $description,
         ":due_date" => $due_date
     );
+    
+    if ($manager_id){
+        $values[":manager_id"] = $manager_id;
+        $req = "INSERT INTO tickets(simple_id, name, project_id, creator_id, manager_id, priority, description, due_date) VALUES (:simple_id, :name, :project_id, :creator_id, :manager_id, :priority, :description, :due_date) RETURNING id;";
+    }else{
+        $req = "INSERT INTO tickets(simple_id, name, project_id, creator_id, priority, description, due_date) VALUES (:simple_id, :name, :project_id, :creator_id, :priority, :description, :due_date) RETURNING id;";
+    }
+    
+    $simple_id = count(get_tickets_for_project($project_id));
 
     $sth = execute($req, $values);
     return $sth->fetch()["id"];
