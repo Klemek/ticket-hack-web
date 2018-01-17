@@ -469,7 +469,14 @@ function get_tickets_for_user($id_user, $limit=20, $offset=0){
     $values = array(":user_id"=>$id_user,
                     ":offset"=>$offset,
                     ":limit"=>$limit);
-    return execute($req, $values)->fetchall(PDO::FETCH_ASSOC);
+    
+    $output = execute($req, $values)->fetchall(PDO::FETCH_ASSOC);
+    
+    for ($i = 0; $i < count($output); $i++){
+        //$output[$i]["project"] = get_project($output[$i]);
+    }
+    
+    return $output;
 }
 
 /*delete a ticket from the database (!= ticket passed to achieved) */
@@ -557,7 +564,7 @@ function get_comment($id){
         $res["ticket"] = get_ticket($res["ticket_id"]);
     }
 
-    return res;
+    return $res;
 }
 
 /**
@@ -591,7 +598,7 @@ function rights_user_comment($user_id, $comment_id){
     $ticket = get_ticket((int) $comment["ticket_id"]);
 
     if ($ticket === false){
-        return false;
+        return 0;
     }
 
     $ticket_id = $comment["ticket_id"];

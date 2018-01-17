@@ -109,9 +109,7 @@ def executeTests():
     global server, cookie, context
     context = ssl._create_unverified_context()
     print("Ticket'Hack API test")
-    server = input("Enter the server ip : ")
-    if not(server.startswith("https")):
-        server = "https://" + server
+    server = "http://192.168.56.101"
 
     print("EXECUTING TESTS ON "+server)
 
@@ -179,6 +177,16 @@ def test_loul():
               'content': {'user_id': user_id}})
 
     testGET("information about current user", "/api/user/me",
+            {'status': 200, 'result': 'ok',
+             'content': {"id": user_id,
+                         "creation_date": -1,
+                         "name": name,
+                         "email": email,
+                         "last_connection_date": -1,
+                         "active": -1,
+                         "deletion_date": None}})
+    
+    testGET("information about user by mail", "/api/user/bymail?mail="+email,
             {'status': 200, 'result': 'ok',
              'content': {"id": user_id,
                          "creation_date": -1,
@@ -274,9 +282,6 @@ def test_loul():
       }
                      ]}})
 
-
-
-
     testGET("get existing project while connected", "/api/project/"+str(project_id),
             {
       "status": 200,
@@ -359,16 +364,6 @@ def test_loul():
       "result": "ok",
       "content": [
         {
-          "id": user_id2,
-          "creation_date": -1,
-          "deletion_date": None,
-          "active": -1,
-          "name": -1,
-          "email": -1,
-          "last_connection_date": None,
-          "access_level":4
-        },
-         {
           "id": user_id,
           "creation_date": -1,
           "deletion_date": None,
@@ -377,6 +372,16 @@ def test_loul():
           "email": -1,
           "last_connection_date": -1,
           "access_level":5
+        },
+         {
+          "id": user_id2,
+          "creation_date": -1,
+          "deletion_date": None,
+          "active": -1,
+          "name": -1,
+          "email": -1,
+          "last_connection_date": None,
+          "access_level":4
         }
       ]
     })
@@ -409,9 +414,241 @@ def test_loul():
       ]
     })
 
+    testPOST("add ticket to project", "/api/project/"+str(project_id)+"/addticket",
+         {"name":"New Ticket",
+          "priority":4,
+          "description":"sum ticket",
+          "due_date":"2018-05-15 17:45:52"},
+         {
+      "status": 200,
+      "result": "ok",
+      "content": {
+        "id_ticket": -1
+      }
+    })
 
+    testPOST("add ticket to project", "/api/project/"+str(project_id)+"/addticket",
+             {"name":"New Ticket 2",
+              "priority":2,
+              "description":"sum ticket 2",
+              "due_date":"2018-05-15 17:45:52"},
+             {
+      "status": 200,
+      "result": "ok",
+      "content": {
+        "id_ticket": -1
+      }
+    })
+    
+    testGET("Tickets on the project", "/api/project/"+str(project_id)+"/tickets",
+            {
+      "status": 200,
+      "result": "ok",
+      "content": [
+        {
+      "id": -1,
+      "creation_date": -1,
+      "edition_date": None,
+      "due_date": -1,
+      "simple_id": -1,
+      "name": -1,
+      "project_id": -1,
+      "editor_id": None,
+      "creator_id": -1,
+      "manager_id": None,
+      "type": -1,
+      "priority": -1,
+      "state": -1,
+      "description": -1
+    },
+                {
+      "id": -1,
+      "creation_date": -1,
+      "edition_date": None,
+      "due_date": -1,
+      "simple_id": -1,
+      "name": -1,
+      "project_id": -1,
+      "editor_id": None,
+      "creator_id": -1,
+      "manager_id": None,
+      "type": -1,
+      "priority": -1,
+      "state": -1,
+      "description": -1
+    }
+      ]
+    })
+    
+    res = testGET("Tickets on the project - simple id", "/api/project/"+str(project_id)+"/ticket/001",
+            {
+      "status": 200,
+      "result": "ok",
+      "content": 
+        {
+      "id": -1,
+      "creation_date": -1,
+      "edition_date": None,
+      "due_date": -1,
+      "simple_id": -1,
+      "name": -1,
+      "project_id": -1,
+      "project":-1,
+      "editor_id": None,
+      "creator_id": -1,
+      "manager_id": None,
+      "type": -1,
+      "priority": -1,
+      "state": -1,
+      "description": -1
+    }})
+        
+    ticket_id = res["content"]["id"]
+        
+    testGET("Tickets for the user", "/api/ticket/list",
+            {
+      "status": 200,
+      "result": "ok",
+      "content": 
+        [{
+      "id": -1,
+      "creation_date": -1,
+      "edition_date": None,
+      "due_date": -1,
+      "simple_id": -1,
+      "name": -1,
+      "project_id": -1,
+      "editor_id": None,
+      "creator_id": -1,
+      "manager_id": None,
+      "type": -1,
+      "priority": -1,
+      "state": -1,
+      "description": -1
+    },{
+      "id": -1,
+      "creation_date": -1,
+      "edition_date": None,
+      "due_date": -1,
+      "simple_id": -1,
+      "name": -1,
+      "project_id": -1,
+      "editor_id": None,
+      "creator_id": -1,
+      "manager_id": None,
+      "type": -1,
+      "priority": -1,
+      "state": -1,
+      "description": -1
+    }]})
+        
+    testGET("get ticket", "/api/ticket/"+str(ticket_id),
+            {
+      "status": 200,
+      "result": "ok",
+      "content": 
+        {
+      "id": -1,
+      "creation_date": -1,
+      "edition_date": None,
+      "due_date": -1,
+      "simple_id": -1,
+      "name": -1,
+      "project_id": -1,
+      "project":-1,
+      "editor_id": None,
+      "creator_id": -1,
+      "creator":-1,
+      "manager_id": None,
+      "manager":-1,
+      "type": -1,
+      "priority": -1,
+      "state": -1,
+      "description": -1
+    }})
+        
+    testPOST("edit ticket", "/api/ticket/"+str(ticket_id)+"/edit",
+             {"name":"edited",
+              "priority":4,
+              "description":"myman"},
+             {
+      "status": 200,
+      "result": "ok",
+      "content": {
+          "id": -1,
+          "creation_date": -1,
+          "edition_date": -1,
+          "due_date": -1,
+          "simple_id": -1,
+          "name": "edited",
+          "project_id": -1,
+          "project":-1,
+          "editor_id": -1,
+          "creator_id": -1,
+          "creator":-1,
+          "manager_id": None,
+          "manager":-1,
+          "type": -1,
+          "priority": -1,
+          "state": -1,
+          "description": -1
+    }
+    })
+
+    
+    
+        
+    res = testPOST("add comment to ticket", "/api/ticket/"+str(ticket_id)+"/addcomment",
+             {"comment":"Un tout pitit comment"},
+             {
+      "status": 200,
+      "result": "ok",
+      "content": {
+        "id_comment": -1
+      }
+    })
+        
+    comment_id = res["content"]["id_comment"]
+    
+    testGET("get tickets comment", "/api/ticket/"+str(ticket_id)+"/comments",
+            {
+                 "status": 200,
+      "result": "ok",
+      "content": [
+        {
+          "id": -1,
+          "creation_date": -1,
+          "edition_date": None,
+          "comment": "Un tout pitit comment",
+          "ticket_id": ticket_id,
+          "creator_id": user_id
+        }
+  ]
+      })
+    
+    testPOST("edit comment","/api/comment/"+str(comment_id)+"/edit",
+             {
+                     "comment":"comment edited"},
+                     {
+                            "status": 200,
+                            "result": "ok",
+                            "content": 
+                                    {
+                                            "id": -1,
+                                            "creation_date": -1,
+                                            "edition_date": -1,
+                                            "comment": "comment edited",
+                                            "ticket_id": ticket_id,
+                                            "creator_id": user_id,
+                                            "creator":-1,
+                                            "ticket":-1
+                                            }
+                                    
+                            }
+            )
 
     #---------------------------- Delete functions --------------------------
+    return
     #on project
     testDELETE("delete project","/api/project/"+str(project_id)+"/delete",
                {'status': 200, 'result': 'ok',
