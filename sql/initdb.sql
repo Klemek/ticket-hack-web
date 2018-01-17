@@ -152,15 +152,3 @@ GRANT SELECT ON ALL TABLES IN SCHEMA public TO php;
 GRANT INSERT ON ALL TABLES IN SCHEMA public TO php;
 GRANT UPDATE ON ALL TABLES IN SCHEMA public TO php;
 GRANT DELETE ON ALL TABLES IN SCHEMA public TO php;
-
-/*
-
-pg_hba.conf :
-
-# TYPE  DATABASE        USER            ADDRESS                 METHOD
-local   all             all                                     trust
-host    all             all             127.0.0.1/32            trust
-host    all             all             ::1/128                 trust
-host    all             php             0.0.0.0/0               reject
-
-*/
