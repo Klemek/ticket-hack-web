@@ -373,14 +373,15 @@ $route->post("/api/project/new", function(){
 $route->get("/api/project/{id}", function($id){
     $id = (int) $id;
     $project = get_project($id);
+    $id_user = force_auth();
 
     if ($project){
-
-        if (isset($_SESSION["user_id"])){
-            $project["user_access"] = access_level($_SESSION["user_id"], $id);
-        }else{
-            $project["user_access"] = false;
+        $access = access_level($id_user, $id);
+        if ($access==0){
+            http_error(403,"You do not have the permission to access this project");
         }
+        
+        $project["user_access"] = $access;
 
         http_success($project);
     }else{
@@ -400,6 +401,11 @@ $route->post("/api/project/{id}/edit", function($id){
     if ($name){
         $args[":name"] = $name;
         $set[]="name = :name";
+        
+        $args[":editor_id"] = $id_user;
+        $set[]="editor_id = :editor_id";
+        
+        $set[]="edition_date = NOW()";
     }
 
     if (access_level($id_user, $id) < 4){
@@ -453,8 +459,12 @@ $route->get("/api/project/{id}/users", function($id_project){
     $id_project = (int) $id_project;
     $id_user = force_auth();
 
+    if (! project_exists($id_project)){
+        http_error(404, "Project Not Found");
+    }
+    
     if (access_level($id_user, $id_project) > 0){
-        http_success(get_users_for_project($id));
+        http_success(get_users_for_project($id_project));
     }else{
         http_error(403, "You cannot see the users of a project you are not a part of.");
     }

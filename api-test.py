@@ -112,6 +112,8 @@ server = "http://192.168.56.101"#input("Enter the server ip : ")
 #if not(server.startswith("https")):
 #    server = "https://" + server
 
+print("EXECUTING TESTS ON "+server)
+
 print("RESULT \t{:6} {:^25} CODE    TEST EXECUTED".format("METHOD", "URL"))
 print("{:=<75}".format(""))
 
@@ -120,11 +122,13 @@ cookie = None
 
 uniqueid = randint(0, sys.maxsize)
 email = "test-email-" + str(uniqueid) + "@test.fr"
+email2 = "test-email-" + str(randint(0, sys.maxsize)) + "@test.fr"
 name = "test-name-" + str(uniqueid)
 password = "test-password-" + str(uniqueid)
 
 user_id = None
 project_id = None
+user_id2 = None
 
 #-------------------- USER RELATED FUNCTIONS --------------------
 
@@ -140,6 +144,18 @@ res = testPOST("normal register", "/api/user/new",
 
 if res:
     user_id = res["content"]["user_id"]
+
+# 2nd user
+res = testPOST("normal register - 2nd user", "/api/user/new",
+               {"email": email2,
+                "password": sha256(password),
+                "name": name},
+               {'status': 200, 'result': 'ok',
+                   'content': {'user_id': -1}})
+
+if res:
+    user_id2 = res["content"]["user_id"]
+
 
 testPOST("register with same mail", "/api/user/new",
          {"email": email,
@@ -284,7 +300,8 @@ testGET("get user project ", "/api/user/"+str(user_id)+"/projects",
 
 testPOST("edit project", "/api/project/"+str(project_id)+"/edit",
          {"name":"Name Edited myman"},
-         {
+         {'status': 200, 'result': 'ok',
+         'content': {
     "id": project_id,
     "creation_date": -1,
     "edition_date": -1,
@@ -293,10 +310,72 @@ testPOST("edit project", "/api/project/"+str(project_id)+"/edit",
     "creator_id": -1,
     "ticket_prefix": "TEST"
   }
-         )
+})
+                
+testGET("Users with access to the project", "/api/project/"+str(project_id)+"/users",
+        {
+  "status": 200,
+  "result": "ok",
+  "content": [
+    {
+      "id": user_id,
+      "creation_date": -1,
+      "deletion_date": None,
+      "active": -1,
+      "name": -1,
+      "email": -1,
+      "last_connection_date": -1
+    }
+  ]
+})
+                
+testPOST("add user to project - good clearance", "/api/project/"+str(project_id)+"/adduser",
+         {"user_id":user_id2,
+          "access_level":5},
+         {
+  "status": 200,
+  "result": "ok",
+  "content": {
+    "link_user_project": {
+      "user_id": user_id2,
+      "project_id": project_id,
+      "user_access": 5
+    }
+  }
+})
+
+testGET("logout", "/api/logout",
+        {'status': 200, 'result': 'ok', 'content': {'disconnected': True}})
+
+
+testPOST("login normal - 2nd user", "/api/user/connect",
+         {"email": email2,
+                "password": sha256(password),
+                "name": name},
+         {'status': 200, 'result': 'ok',
+          'content': {'user_id': -1}})
+
+
+testGET("logout", "/api/logout",
+        {'status': 200, 'result': 'ok', 'content': {'disconnected': True}})
+
+
+testPOST("login normal - 1st user", "/api/user/connect",
+         {"email": email,
+          "password": sha256(password)},
+         {'status': 200, 'result': 'ok',
+          'content': {'user_id': user_id}})           
+
 
 
 #---------------------------- Delete functions --------------------------
+#on project
+testDELETE("delete project","/api/project/"+str(project_id)+"/delete",
+           {'status': 200, 'result': 'ok',
+            'content': {'delete': True}}
+           )
+
+#on user
 testDELETE("delete user", "/api/user/me/delete",
            {'status': 200, 'result': 'ok',
             'content': {'delete': True}})
@@ -305,3 +384,4 @@ testPOST("login user deleted", "/api/user/connect",
          {"email": email,
           "password": sha256(password)},
          {'status': 401})
+

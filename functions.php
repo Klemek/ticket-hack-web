@@ -258,7 +258,7 @@ function get_link_user_project($id_user, $id_project){
 * add a access_level field to each project
 **/
 function get_projects_for_user($id_user, $offset=0, $limit=20){
-    $req = "SELECT * FROM projects WHERE id IN (SELECT project_id FROM link_user_project WHERE user_id = :user_id) OR creator_id = :user_id LIMIT :limit OFFSET :offset;";
+    $req = "SELECT * FROM projects WHERE id IN (SELECT project_id FROM link_user_project WHERE user_id = :user_id) OR creator_id = :user_id OFFSET :offset LIMIT :limit;";
     $values = array(":user_id"=>$id_user,
                    ":offset"=>(int) $offset,
                    ":limit"=>(int) $limit);
@@ -282,8 +282,8 @@ function get_projects_for_user($id_user, $offset=0, $limit=20){
 * add a access_level to each user
 */
 function get_users_for_project($id_project){
-    $req = "SELECT * FROM users WHERE id IN (SELECT user_id FROM link_user_project WHERE project_id = ? UNION SELECT creator_id FROM projects WHERE id=?);";
-    $values = array($id_project,$id_project);
+    $req = "SELECT * FROM users WHERE id IN (SELECT user_id FROM link_user_project WHERE project_id = :project_id UNION SELECT creator_id FROM projects WHERE id=:project_id);";
+    $values = array(":project_id"=>$id_project);
 
     $sth = execute($req, $values);
 
@@ -435,7 +435,7 @@ function get_tickets_for_project($id_project){
 
 /*return all the tickets the user has access to*/
 function get_tickets_for_user($id_user, $limit=20, $offset=0){
-    $req = "SELECT * FROM tickets WHERE project_id IN (SELECT project_id FROM link_user_project WHERE user_id = :user_id AND user_access > 0 UNION SELECT id FROM projects WHERE creator_id = :user_id) LIMIT :limit OFFSET :offset;";
+    $req = "SELECT * FROM tickets WHERE project_id IN (SELECT project_id FROM link_user_project WHERE user_id = :user_id AND user_access > 0 UNION SELECT id FROM projects WHERE creator_id = :user_id) OFFSET :offset LIMIT :limit;";
     $values = array(":user_id"=>$id_user,
                    ":offset"=>$offset,
                    ":limit"=>$limit);
