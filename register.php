@@ -39,7 +39,7 @@
                         password: hashPass
                     },
                     success: function(content) {
-                        writeCookie("notify", "success-Your account has been created successfuly !", 1)
+                        writeCookie("notify", "success-Your account has been created successfuly !", 1);
                         window.location = "./";
                     },
                     error: function(code, data) {

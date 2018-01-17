@@ -13,11 +13,6 @@
         $(document).ready(function() {
             initNotification("#main-form");
 
-            var notf = readAndErase("notify");
-            if (notf && notf.length > 0)
-                notify(notf);
-
-
             $("#main-form").submit(function() {
                 $("#btnSubmit").attr("disabled", "true");
                 clearNotification();
