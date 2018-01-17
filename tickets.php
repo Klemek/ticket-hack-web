@@ -4,15 +4,27 @@
 <head>
     <meta charset="utf-8">
     <title>Ticket'Hack</title>
-    <?php include("./template/head.php") ?>
+    <?php include($_SERVER['DOCUMENT_ROOT']."/template/head.php"); ?>
 </head>
 
 <body>
-    <?php include("./template/connected-nav.php") ?>
+    <?php include($_SERVER['DOCUMENT_ROOT']."/template/connected-nav.php"); ?>
     <script>
+        $(document).ready(function() {
+            initNotification(".jumbotron");
+            $("#navTickets").addClass("active");
+
+            //loadList();
+
+            $("#new-ticket").click(function() {
+                var win = window.open("/ticket/new", '_blank');
+                win.focus();
+            });
+
+        });
+
         function ticket_click(id) {
-            console.log("ticket-click:" + id);
-            var win = window.open("./ticket-edit", '_blank');
+            var win = window.open("/ticket/" + id, '_blank');
             win.focus();
         }
 
@@ -31,18 +43,6 @@
                 }
             });
         }
-
-        $(document).ready(function() {
-            initNotification(".jumbotron");
-            $("#navTickets").addClass("active");
-
-            loadList();
-
-            $("#new-ticket").click(function() {
-
-            });
-
-        });
 
     </script>
     <div class="container">
