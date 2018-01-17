@@ -402,7 +402,7 @@ $route->post("/api/project/{id}/edit", function($id){
         $set[]="name = :name";
     }
 
-    if (user_access($id_user, $id) < 4){
+    if (access_level($id_user, $id) < 4){
         http_error(403, "You need to be an admin of this project to edit it");
     }
 

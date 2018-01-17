@@ -108,9 +108,9 @@ def testDELETE(name, url, expected):
 
 
 print("Ticket'Hack API test")
-server = input("Enter the server ip : ")
-if not(server.startswith("https")):
-    server = "https://" + server
+server = "http://192.168.56.101"#input("Enter the server ip : ")
+#if not(server.startswith("https")):
+#    server = "https://" + server
 
 print("RESULT \t{:6} {:^25} CODE    TEST EXECUTED".format("METHOD", "URL"))
 print("{:=<75}".format(""))
@@ -126,6 +126,8 @@ password = "test-password-" + str(uniqueid)
 user_id = None
 project_id = None
 
+#-------------------- USER RELATED FUNCTIONS --------------------
+
 testGET("project list no session", "/api/project/list",
         {'status': 401})
 
@@ -134,10 +136,10 @@ res = testPOST("normal register", "/api/user/new",
                 "password": sha256(password),
                 "name": name},
                {'status': 200, 'result': 'ok',
-                   'content': {'id_user': -1}})
+                   'content': {'user_id': -1}})
 
 if res:
-    user_id = res["content"]["id_user"]
+    user_id = res["content"]["user_id"]
 
 testPOST("register with same mail", "/api/user/new",
          {"email": email,
@@ -208,6 +210,14 @@ testPOST("login normal", "/api/user/connect",
          {'status': 200, 'result': 'ok',
           'content': {'user_id': user_id}})
 
+#---------------------------- Project related tests -----------------------
+testPOST("login normal", "/api/user/connect",
+         {"email": email,
+          "password": sha256(password)},
+         {'status': 200, 'result': 'ok',
+          'content': {'user_id': user_id}})
+
+# logged in tests
 testGET("project list empty", "/api/project/list",
         {'status': 200, 'result': 'ok',
          'content': {'total': 0, 'list': []}})
@@ -216,15 +226,77 @@ res = testPOST("create new project", "/api/project/new",
                {"name": "test_project",
                 "ticket_prefix": "TEST"},
                {'status': 200, 'result': 'ok',
-                   'content': {'id_project': -1}})
+                   'content': {'project_id': -1}})
 
 if res:
-    project_id = res['content']['id_project']
+    project_id = res['content']['project_id']
 
 testGET("get project information", "/api/project/" + str(project_id),
         {'status': 200, 'result': 'ok',
          'content': {}})
+    
+testGET("project list one result", "/api/project/list",
+        {'status': 200, 'result': 'ok',
+         'content': {'total': 1, 'list': [
+                 {
+    "id": project_id,
+    "creation_date": -1,
+    "edition_date": None,
+    "name": "test_project",
+    "editor_id": None,
+    "creator_id": -1,
+    "ticket_prefix": "TEST"
+  }
+                 ]}})
 
+
+
+
+testGET("get existing project while connected", "/api/project/"+str(project_id),
+        {
+  "status": 200,
+  "result": "ok",
+  "content": {
+    "id": project_id,
+    "creation_date": -1,
+    "edition_date": None,
+    "name": "test_project",
+    "editor_id": None,
+    "creator_id": -1,
+    "ticket_prefix": "TEST",
+    "user_access":-1
+  }
+})
+                
+testGET("get user project ", "/api/user/"+str(user_id)+"/projects",
+        {'status': 200, 'result': 'ok',
+         'content': {'total': 1, 'list': [
+                 {
+    "id": project_id,
+    "creation_date": -1,
+    "edition_date": None,
+    "name": "test_project",
+    "editor_id": None,
+    "creator_id": -1,
+    "ticket_prefix": "TEST"
+  }
+]}})
+
+testPOST("edit project", "/api/project/"+str(project_id)+"/edit",
+         {"name":"Name Edited myman"},
+         {
+    "id": project_id,
+    "creation_date": -1,
+    "edition_date": -1,
+    "name": "Name Edited myman",
+    "editor_id": -1,
+    "creator_id": -1,
+    "ticket_prefix": "TEST"
+  }
+         )
+
+
+#---------------------------- Delete functions --------------------------
 testDELETE("delete user", "/api/user/me/delete",
            {'status': 200, 'result': 'ok',
             'content': {'delete': True}})
