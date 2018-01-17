@@ -308,7 +308,7 @@ function get_users_for_project($id_project){
         if ($a["access_level"] === $b["access_level"]){
             return 0;
         }
-        return $a["access_level"] > $b["access_level"] ? 1 : -1;
+        return $a["access_level"] > $b["access_level"] ? -1 : +1; // ordre décroissant
     });
 
     return $result;
