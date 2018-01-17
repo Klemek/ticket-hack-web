@@ -216,6 +216,11 @@ function get_project($id){
 
     if ($res){
         $res["creator"] = get_user($res["creator_id"]);
+        if ($res["editor_id"]){
+            $res["editor"] = get_user($res["editor_id"]);
+        }else{
+            $res["editor"] = null;
+        }
     }
 
     return $res;
@@ -360,6 +365,8 @@ function access_level($id_user, $id_project){
 **/
 function add_ticket($title, $project_id, $creator_id, $manager_id ,$priority, $description, $due_date){
     
+    $simple_id = count(get_tickets_for_project($project_id));
+    
     $values = array(
         ":simple_id" => $simple_id,
         ":name" => $title,
@@ -377,7 +384,6 @@ function add_ticket($title, $project_id, $creator_id, $manager_id ,$priority, $d
         $req = "INSERT INTO tickets(simple_id, name, project_id, creator_id, priority, description, due_date) VALUES (:simple_id, :name, :project_id, :creator_id, :priority, :description, :due_date) RETURNING id;";
     }
     
-    $simple_id = count(get_tickets_for_project($project_id));
 
     $sth = execute($req, $values);
     return $sth->fetch()["id"];
@@ -406,6 +412,8 @@ function get_ticket($id){
 }
 
 function get_ticket_simple($id_project, $id_simple){
+    $id_project = (int) $id_project;
+    $id_simple = (int) $id_simple;
     $req = "SELECT * FROM tickets WHERE project_id=? AND simple_id=? ;";
     $values = array($id_project, $id_simple);
 

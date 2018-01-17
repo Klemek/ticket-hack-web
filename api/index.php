@@ -231,6 +231,18 @@ $route->route("/api/user/me", function(){
     http_success($output);
 });
 
+$route->get("/api/user/bymail", function(){
+    $mail = get("mail");
+    $user = get_user_by_email($mail);
+    force_auth();
+
+    if ($user){ 
+        http_success($user);
+    }else{
+        http_error(404, "No user possess this mail");
+    }
+});
+
 $route->get("/api/user/{id}", function($id){
     $id = (int) $id;
     $output = get_user($id);
@@ -380,7 +392,7 @@ $route->get("/api/project/{id}", function($id){
         if ($access==0){
             http_error(403,"You do not have the permission to access this project");
         }
-        
+
         $project["user_access"] = $access;
 
         http_success($project);
@@ -401,10 +413,10 @@ $route->post("/api/project/{id}/edit", function($id){
     if ($name){
         $args[":name"] = $name;
         $set[]="name = :name";
-        
+
         $args[":editor_id"] = $id_user;
         $set[]="editor_id = :editor_id";
-        
+
         $set[]="edition_date = NOW()";
     }
 
@@ -462,7 +474,7 @@ $route->get("/api/project/{id}/users", function($id_project){
     if (! project_exists($id_project)){
         http_error(404, "Project Not Found");
     }
-    
+
     if (access_level($id_user, $id_project) > 0){
         http_success(get_users_for_project($id_project));
     }else{
@@ -512,7 +524,7 @@ $route->get("/api/project/{id}/tickets", function($id_project){
     $id_project = (int) $id_project;
     $current_user = force_auth();
 
-    if (get_project(get_project)){ 
+    if (project_exists($id_project)){ 
         if (access_level($current_user, $id_project) >= 1){
             http_success(get_tickets_for_project($id_project));
         }else{
@@ -527,9 +539,8 @@ $route->get("/api/project/{id_project}/ticket/{id_simple_ticket}", function($id_
     $id_project = (int) $id_project;
     $current_user = force_auth();
 
-    if (get_project(get_project)){ 
+    if (project_exists($id_project)){ 
         if (access_level($current_user, $id_project) >= 1){
-            http_success(get_tickets_for_project($id_project));
             $ticket = get_ticket_simple($id_project, $id_simple_ticket);
             if ($ticket){
                 http_success($ticket);
