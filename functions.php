@@ -127,7 +127,7 @@ function validate_user_with_fail($email, $password){
             execute($req, $values);
         }
     }while((! $connection) && $i-- > 0);
-    
+
     if ($i==0){//db error - pass to simple login
         return validate_user($email, $password);
     }
@@ -391,10 +391,10 @@ function add_ticket($title, $project_id, $creator_id, $manager_id ,$priority, $d
         ":state" => $state,
         ":type"=> $type
     );
-    
+
     $a = array();
     $b = array();
-    
+
     foreach($values as $key=>$v){
         if ($v !== null){
             $a[] = substr($key, 1);
@@ -402,7 +402,7 @@ function add_ticket($title, $project_id, $creator_id, $manager_id ,$priority, $d
             $c[$key] = $v;
         }
     }
-    
+
     $req = "INSERT INTO tickets(".join(", ", $a).") VALUES (".join(", ",$b).") RETURNING id";
 
     /*if ($manager_id){
@@ -432,7 +432,10 @@ function get_ticket($id){
     if (count($res)){
         $res["creator"] = get_user($res["creator_id"]);
         $res["manager"] = get_user($res["manager_id"]);
-        $res["project"] = get_project($res["project_id"]);
+
+        $project = get_project($res["project_id"]);
+        $res["project"] = $project;
+        $res["ticket_prefix"] = $project["ticket_prefix"];
         return $res;
     }
 
@@ -451,7 +454,10 @@ function get_ticket_simple($id_project, $id_simple){
     if ($res){
         $res["creator"] = get_user($res["creator_id"]);
         $res["manager"] = get_user($res["manager_id"]);
-        $res["project"] = get_project($res["project_id"]);
+
+        $project = get_project($res["project_id"]);
+        $res["project"] = $project;
+        $res["ticket_prefix"] = $project["ticket_prefix"];
         return $res;
     }
     return false;
@@ -468,12 +474,15 @@ function get_tickets_for_project($id_project){
 
     $req = "SELECT * FROM tickets WHERE project_id = ".(int) $id_project." ORDER BY simple_id ASC";
     $res = $db->query($req)->fetchall(PDO::FETCH_ASSOC);
-
+    $project = get_project($id_project);
     for ($i = 0; $i < count($res); $i++){
         $res[$i]["creator"] = get_user($res[$i]["creator_id"]);
         if ($res[$i]["manager_id"]){
             $res[$i]["manager"] = get_user($res[$i]["manager_id"]);
         }
+
+        //$res[$i]["project"] = $project;
+        $res[$i]["ticket_prefix"] = $project["ticket_prefix"];
     }
 
     return $res;
@@ -485,13 +494,15 @@ function get_tickets_for_user($id_user, $limit=20, $offset=0){
     $values = array(":user_id"=>$id_user,
                     ":offset"=>$offset,
                     ":limit"=>$limit);
-    
+
     $output = execute($req, $values)->fetchall(PDO::FETCH_ASSOC);
-    
+
     for ($i = 0; $i < count($output); $i++){
-        //$output[$i]["project"] = get_project($output[$i]);
+        $project = get_project($output[$i]["project_id"]);
+        //$output[$i]["project"] = $project;
+        $output[$i]["ticket_prefix"] = $project["ticket_prefix"];
     }
-    
+
     return $output;
 }
 
