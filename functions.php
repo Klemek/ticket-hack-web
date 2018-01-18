@@ -174,6 +174,70 @@ function validate_user_with_fail($email, $password){
 
 }
 
+/**
+* verify if the user has the right to access the API with an anti-DDOS like system
+* return true if the user can continue, false if he should be disconnected.
+* v1 : use cookies to verify the user. 
+* 
+**/
+//todo : add verification by ip with fail2ban
+function verify_user_ddos(){
+
+    $max_requests = 100;
+    $period = 60;//1 minute
+
+    if (! isset($_SESSION["user_id"])){
+        if (! isset($_SESSION["user_login"])){
+            $_SESSION["user_login"] = array("last_connection"=>time(),
+                                            "number_tries"=>1);
+            return true;
+        }else{
+            if (time() - $_SESSION["user_login"]["last_connection"] > $period){
+                $_SESSION["user_login"]["last_connection"] = time();
+                $_SESSION["user_login"]["number_tries"] = 0;
+            }
+            $_SESSION["user_login"]["number_tries"]++; 
+
+            return  $_SESSION["user_login"]["number_tries"] < $max_requests;
+        }
+    }else{
+        $id_user = $_SESSION["user_id"];
+        $i = 3;
+        do{
+            $req = "SELECT * FROM connection_history WHERE user_id = ?";
+            $values = array($id_user);
+
+            $connection = execute($req, $values)->fetch();
+
+            if (! $connection){
+                $req= "INSERT INTO connection_history(user_id) VALUES (?)";
+                $values = array($id_user);
+                execute($req, $values);
+            }
+        }while((! $connection) && $i-- > 0);
+
+        if ($i==0){
+            return true;
+        }
+
+        $first_request_time = $connection["first_request_date"] ? get_date($connection["first_request_date"]) : get_date();
+
+        if (get_date()- $first_request_time< $period){
+            $req= "UPDATE connection_history SET request_count= request_count+1 WHERE user_id = ?";
+            $values = array($id_user);
+            execute($req, $values);
+
+            return $connection["request_count"] < $max_requests;
+        }else{
+            $req= "UPDATE connection_history SET request_count=1, first_request_date=? WHERE user_id = ?";
+            $values = array(get_date_string(), $id_user);
+            execute($req, $values);
+            return true;
+        }
+    }
+}
+
+
 function update_last_connection_user($id){
     $req = "UPDATE users SET last_connection_date = ? WHERE id = ?";
     $values = array(get_date_string(), $id);
@@ -266,8 +330,8 @@ function get_link_user_project($id_user, $id_project){
 * get all the projects for a user
 * add a access_level field to each project
 **/
-function get_projects_for_user($id_user, $offset=0, $limit=20){
-    $req = "SELECT * FROM projects WHERE id IN (SELECT project_id FROM link_user_project WHERE user_id = :user_id) OR creator_id = :user_id OFFSET :offset LIMIT :limit;";
+function get_projects_for_user($id_user, $limit=20, $offset=0){
+    $req = "SELECT * FROM projects WHERE id IN (SELECT project_id FROM link_user_project WHERE user_id = :user_id) OR creator_id = :user_id ORDER BY name OFFSET :offset LIMIT :limit;";
     $values = array(":user_id"=>$id_user,
                     ":offset"=>(int) $offset,
                     ":limit"=>(int) $limit);
@@ -291,12 +355,26 @@ function get_projects_for_user($id_user, $offset=0, $limit=20){
     return $res;
 }
 
+
+/*return the number of project the user has access to*/
+function get_number_projects_for_user($id_user){
+    $req = "SELECT COUNT(*) AS c FROM projects WHERE id IN (SELECT project_id FROM link_user_project WHERE user_id = :user_id) OR creator_id = :user_id;";
+    $values = array(":user_id"=>$id_user);
+
+    $sth = execute($req, $values);
+
+    $res = $sth->fetch(PDO::FETCH_ASSOC);
+    
+    return (int) $res["c"];
+}
+
 /**
 * get all the users for the project
 * add a access_level to each user
 */
-function get_users_for_project($id_project){
-    $req = "SELECT * FROM users WHERE id IN (SELECT user_id FROM link_user_project WHERE project_id = :project_id UNION SELECT creator_id FROM projects WHERE id=:project_id);";
+function get_users_for_project($id_project, $limit=20, $offset=0){
+    $req = "SELECT * FROM users WHERE id IN (SELECT user_id FROM link_user_project WHERE project_id = :project_id UNION".
+        " SELECT creator_id FROM projects WHERE id=:project_id)";
     $values = array(":project_id"=>$id_project);
 
     $sth = execute($req, $values);
@@ -314,6 +392,25 @@ function get_users_for_project($id_project){
         }
         return $a["access_level"] > $b["access_level"] ? -1 : +1; // ordre décroissant
     });
+
+    //offset and limit have to be manually used to preserve the order
+    $output = array();
+    for ($i = $offset; $i < min($offset + $limit, count($result)); $i++){
+        $output[] = $result[$i];
+    }
+
+    return $output;
+}
+
+/*get the number of users on a project*/
+function get_number_users_for_project($id_project){
+    $req = "SELECT COUNT(*) AS c FROM users WHERE id IN (SELECT user_id FROM link_user_project WHERE project_id = :project_id UNION".
+        " SELECT creator_id FROM projects WHERE id=:project_id)";
+    $values = array(":project_id"=>$id_project);
+
+    $sth = execute($req, $values);
+
+    $result = $sth->fetch(PDO::FETCH_ASSOC)["c"];
 
     return $result;
 }
@@ -473,11 +570,17 @@ function get_ticket_simple($id_project, $id_simple){
 * add a manager field
 *
 **/
-function get_tickets_for_project($id_project){
-    global $db;
+function get_tickets_for_project($id_project, $limit=20, $offset=0){
 
-    $req = "SELECT * FROM tickets WHERE project_id = ".(int) $id_project." ORDER BY simple_id ASC";
-    $res = $db->query($req)->fetchall(PDO::FETCH_ASSOC);
+    $req = "SELECT * FROM tickets WHERE project_id = :project_id ORDER BY simple_id ASC OFFSET :offset LIMIT :limit;";
+    $values = array(
+        ":project_id"=>$id_project,
+        ":offset"=>$offset,
+        ":limit"=>$limit
+    );
+
+    $res = execute($req, $values)->fetchall(PDO::FETCH_ASSOC);
+
     $project = get_project($id_project);
     for ($i = 0; $i < count($res); $i++){
         $res[$i]["creator"] = get_user($res[$i]["creator_id"]);
@@ -490,6 +593,18 @@ function get_tickets_for_project($id_project){
     }
 
     return $res;
+}
+
+/*return the number of tickets a project possess*/
+function get_number_tickets_for_project($id_project){
+    $req = "SELECT COUNT(*) AS c FROM tickets WHERE project_id = :project_id;";
+    $values = array(
+        ":project_id"=>$id_project
+    );
+
+    $res = execute($req, $values)->fetch(PDO::FETCH_ASSOC);
+
+    return $res["c"];
 }
 
 /*return all the tickets the user has access to*/
@@ -505,7 +620,22 @@ function get_tickets_for_user($id_user, $limit=20, $offset=0){
         $project = get_project($output[$i]["project_id"]);
         //$output[$i]["project"] = $project;
         $output[$i]["ticket_prefix"] = $project["ticket_prefix"];
+        if ($output[$i]["manager_id"]){
+            $output[$i]["manager"] = get_user($output[$i]["manager_id"]);
+        }else{
+            $output[$i]["manager"] = null;
+        }
+        $output[$i]["creator"] = get_user($output[$i]["creator_id"]);
     }
+    return $output;
+}
+
+/*return the number of tickets a user has access to*/
+function get_number_tickets_for_user($id_user){
+    $req = "SELECT COUNT(*) AS c FROM tickets WHERE project_id IN (SELECT project_id FROM link_user_project WHERE user_id = :user_id AND user_access > 0 UNION SELECT id FROM projects WHERE creator_id = :user_id);";
+    $values = array(":user_id"=>$id_user);
+
+    $output = execute($req, $values)->fetch(PDO::FETCH_ASSOC)["c"];
 
     return $output;
 }
@@ -582,7 +712,6 @@ function delete_comment($id){
 * add a creator field
 * add a ticket field
 **/
-/*todo : test*/
 function get_comment($id){
     $req = "SELECT * FROM comments WHERE id = ? LIMIT 1;";
     $values= array($id);
@@ -602,10 +731,11 @@ function get_comment($id){
 * return the comment
 * add a creator field
 **/
-/*todo : test*/
-function get_comments_for_ticket($id_ticket){
-    $req = "SELECT * FROM comments WHERE ticket_id = ?";
-    $values= array($id_ticket);
+function get_comments_for_ticket($id_ticket, $limit=20, $offset=0){
+    $req = "SELECT * FROM comments WHERE ticket_id = :ticket_id ORDER BY creation_date OFFSET :offset LIMIT :limit;";
+    $values= array(":ticket_id" =>$id_ticket,
+                   ":offset"=>$offset,
+                   ":limit"=>$limit);
 
     $sth = execute($req, $values);
     $res = $sth->fetchall(PDO::FETCH_ASSOC);
@@ -615,6 +745,16 @@ function get_comments_for_ticket($id_ticket){
     }
 
     return $res;
+}
+
+/*return the number of comments on the ticket*/
+function get_number_comments_ticket($id_ticket){
+    $req = "SELECT COUNT(*) AS c FROM comments WHERE ticket_id = :ticket_id;";
+    $values= array(":ticket_id" =>$id_ticket);
+    $sth = execute($req, $values);
+    $res = $sth->fetch(PDO::FETCH_ASSOC);
+
+    return $res["c"];
 }
 
 /** return the rights of the user on the ticket
@@ -732,4 +872,5 @@ function get_tickets_for_category($id_category){
 
     return $sth->fetchall(PDO::FETCH_ASSOC);
 }
-?>
+
+//php file : do not put "? >" at the end to the risk of having a whitespace included 

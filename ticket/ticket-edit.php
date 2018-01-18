@@ -72,10 +72,6 @@
 
         }
 
-        function loadManagers() {
-
-        }
-
         function saveInfo(data) {
             if (!cancel_save && ticket_id) {
                 ajax_post({
@@ -219,7 +215,7 @@
         <div class="jumbotron primary">
             <form id="form-ticketTitle" class="form-group row form-custom" style="font-size:2em;">
                 <label id="ticket-id" class="col-form-label" style="margin-left:0.4em"></label>
-                <div class="col-sm-6">
+                <div class="col-6">
                     <input id="ticketTitle" class="form-control form-control-lg form-control-plaintext" readonly type="text" placeholder="Title" required autocomplete="off"> </div>
             </form>
             <div id="informations" style="display:none;">
@@ -227,28 +223,28 @@
 
 
                 <div class="row">
-                    <h5 class="col-sm-4">Status :
+                    <h5 class="col-md-4">Status :
                         <div class="dropdown" id="dd-status"></div>
                     </h5>
-                    <h5 class="col-sm-4">Manager :
+                    <h5 class="col-md-4">Manager :
                         <div class="dropdown" id="dd-manager"></div>
                     </h5>
-                    <h5 class="col-sm-4">Type :
+                    <h5 class="col-md-4">Type :
                         <div class="dropdown" id="dd-type"></div>
                     </h5>
                 </div>
                 <div class="form-group row">
-                    <h5 class="col-sm-4">Priority :
+                    <h5 class="col-md-4">Priority :
                         <div class="dropdown" id="dd-priority"></div>
                     </h5>
                     <label class="h5 col-form-label" for="datetimepicker" style="margin-left:15px;">Due date :</label>
-                    <div class="input-group date col-sm-2" data-date-format="mm/dd/yyyy" data-provide="datepicker" id="datetimepicker">
+                    <div class="input-group date col-md-3 col-8" data-date-format="mm/dd/yyyy" data-provide="datepicker" id="datetimepicker">
                         <input type="text" readonly class="form-control" placeholder="No date">
                         <div class="input-group-addon">
                             <span class="fa fa-calendar"></span>
                         </div>
                     </div>
-                    <button id="btnDelete" class="btn btn-outline-danger col-sm-1 offset-sm-1" style="cursor:pointer;display:none;"><i class="fa fa-trash"></i> Delete</button>
+                    <button id="btnDelete" class="btn btn-outline-danger offset-md-1" style="cursor:pointer;display:none;height:3em;"><i class="fa fa-trash"></i> Delete</button>
 
                 </div>
                 <form id="form-ticketDesc" class="form-group row form-custom">

@@ -71,7 +71,8 @@ def testJSON(ref, obj):
                 "at '{}' expected not null value but was deceived".format(key)]
     for key in obj.keys():
         if key not in ref:
-            warns += ["key '" + key + "' not found in reference"]
+            #warns += ["key '" + key + "' not found in reference"]
+            pass
     return errors, warns
 
 
@@ -88,7 +89,7 @@ def testRequest(req_type, name, url, params, expected):
         print("ERROR : {:6} {:25} {} <= {}".format(
             req_type, url, result["status"], name), file=sys.stderr)
         #print("   Expected :\t" + str(expected), file=sys.stderr)
-        #print("   Result :\t" + str(result), file=sys.stderr)
+        print("   Result :\t" + str(result), file=sys.stderr)
         for error in errors:
             print("\tError : " + error, file=sys.stderr)
         return False
@@ -126,7 +127,7 @@ def executeTests():
         cookie = None
         globals()[test]()
 
-def test_loul():
+def test_all():
     uniqueid = randint(0, sys.maxsize)
     email = "test-email-" + str(uniqueid) + "@test.fr"
     email2 = "test-email-" + str(randint(0, sys.maxsize)) + "@test.fr"
@@ -330,7 +331,9 @@ def test_loul():
             {
       "status": 200,
       "result": "ok",
-      "content": [
+      "content": {
+              "total":1,
+              "list":[
         {
           "id": user_id,
           "creation_date": -1,
@@ -341,6 +344,7 @@ def test_loul():
           "last_connection_date": -1
         }
       ]
+                }
     })
                     
     testPOST("add user to project - good clearance", "/api/project/"+str(project_id)+"/adduser",
@@ -358,11 +362,13 @@ def test_loul():
       }
     })
 
-    testGET("Users with access to the project - x2 (1/2 chance de planter)", "/api/project/"+str(project_id)+"/users",
+    testGET("Users with access to the project - x2", "/api/project/"+str(project_id)+"/users",
             {
       "status": 200,
       "result": "ok",
-      "content": [
+      "content": {
+              "total":2,
+              "list":[
         {
           "id": user_id,
           "creation_date": -1,
@@ -383,7 +389,7 @@ def test_loul():
           "last_connection_date": None,
           "access_level":4
         }
-      ]
+      ]}
     })
 
     testPOST("remove user from project - good clearance", "/api/project/"+str(project_id)+"/removeuser",
@@ -400,7 +406,9 @@ def test_loul():
             {
       "status": 200,
       "result": "ok",
-      "content": [
+      "content": {
+              "total":1,
+              "list":[
         {
           "id": user_id,
           "creation_date": -1,
@@ -412,6 +420,7 @@ def test_loul():
           "access_level":5
         }
       ]
+              }
     })
 
     testPOST("add ticket to project", "/api/project/"+str(project_id)+"/addticket",
@@ -447,7 +456,9 @@ def test_loul():
             {
       "status": 200,
       "result": "ok",
-      "content": [
+      "content": {
+              "total":2,
+              "list":[
         {
       "id": -1,
       "creation_date": -1,
@@ -480,7 +491,7 @@ def test_loul():
       "state": -1,
       "description": "sum ticket 2"
     }
-      ]
+      ]}
     })
     
     res = testGET("Tickets on the project - simple id", "/api/project/"+str(project_id)+"/ticket/001",
@@ -516,7 +527,8 @@ def test_loul():
       "status": 200,
       "result": "ok",
       "content": 
-        [{
+        {"total":2,
+         "list":[{
       "id": -1,
       "creation_date": -1,
       "edition_date": None,
@@ -546,7 +558,8 @@ def test_loul():
       "priority": -1,
       "state": -1,
       "description": -1
-    }]})
+    }
+        ]}})
         
     testGET("get ticket", "/api/ticket/"+str(ticket_id),
             {
@@ -624,7 +637,8 @@ def test_loul():
             {
                  "status": 200,
       "result": "ok",
-      "content": [
+      "content": {"total":1,
+                  "list":[
         {
           "id": -1,
           "creation_date": -1,
@@ -633,7 +647,7 @@ def test_loul():
           "ticket_id": ticket_id,
           "creator_id": user_id
         }
-  ]
+  ]}
       })
     
     testPOST("edit comment","/api/comment/"+str(comment_id)+"/edit",

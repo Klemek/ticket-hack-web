@@ -12,6 +12,8 @@
     <script>
         var project_id, user_access, selectedAccess, users = [],
             current_user = <?php echo $_SESSION["user_id"]; ?>;
+        var page = 1,
+            page_number = 5;
 
         function loadInfos() {
             $("#informations").css("display", "none");
@@ -41,23 +43,15 @@
                     users = [];
                     ajax_get({
                         url: "/api/project/" + project_id + "/users",
-                        success: function(list) {
-                            list.forEach(function(user) {
+                        success: function(content) {
+                            content.list.forEach(function(user) {
                                 addUser(user.id, user.access_level, user.name, user_access >= 4 && user.id != current_user);
                                 users.push(user.id);
                             });
                         }
                     });
 
-                    $("#ticketList").html("");
-                    ajax_get({
-                        url: "/api/project/" + project_id + "/tickets",
-                        success: function(list) {
-                            list.forEach(function(ticket) {
-                                addTicket(getTicketName(ticket), ticket.name, ticket.type, ticket.priority, ticket.state, ticket.manager ? ticket.manager.name : "");
-                            });
-                        }
-                    });
+                    loadList();
 
                     removeLoading();
                     $("#informations").css("display", "block");
@@ -68,11 +62,41 @@
             });
         }
 
+        function loadList() {
+            $("#ticketList").html("");
+            ajax_get({
+                url: "/api/project/" + project_id + "/tickets",
+                data: {
+                    number: page_number,
+                    offset: (page - 1) * page_number
+                },
+                success: function(content) {
+                    content.list.forEach(function(ticket) {
+                        addTicket(getTicketName(ticket), ticket.name, ticket.type, ticket.priority, ticket.state, ticket.manager ? ticket.manager.name : "");
+                    });
+
+                    var maxpage = content.total / page_number;
+                    if (floor(maxpage) !== maxpage)
+                        maxpage = floor(maxpage) + 1;
+
+                    $('#pagination').pagination({
+                        pages: maxpage,
+                        currentPage: page,
+                        cssStyle: 'light-theme',
+                        onPageClick: function(num) {
+                            page = num;
+                            loadList();
+                        }
+                    });
+                }
+            });
+        }
+
         $(document).ready(function() {
             initNotification(".jumbotron");
             $("#navProjects").addClass("active");
 
-            var simple_id = window.location.href.split("/project/")[1].toUpperCase();
+            var simple_id = window.location.href.split("/project/")[1].toUpperCase().split("#")[0];
             if (simple_id.indexOf("/") !== -1) {
                 writeCookie("notify", "warning-Invalid project id.", 1);
                 window.location = "/projects";
@@ -202,7 +226,7 @@
         <div class="jumbotron primary">
             <form id="form-projectTitle" class="form-group row form-custom" style="font-size:2em;">
                 <label id="project-id" class="col-form-label" style="margin-left:0.4em;"></label>
-                <div class="col-sm-6">
+                <div class="col-6">
                     <input id="projectTitle" class="form-control form-control-lg form-control-plaintext" readonly type="text" placeholder="Title" required autocomplete="off">
                 </div>
             </form>
@@ -224,6 +248,9 @@
                   <i class="fa fa-plus fa-stack-1x fa-inverse"></i>
                 </span>
                     <h4>Open a new ticket</h4>
+                </div>
+                <div class="row" style="margin-top:10px;">
+                    <div id="pagination" class="col-12 text-center"></div>
                 </div>
             </div>
         </div>
