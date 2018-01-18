@@ -422,7 +422,7 @@ function addTicket(name, desc, type, priority, status, user) {
 
 function addUser(id, user_access, name, del) {
     if ($("#userList").length > 0) {
-        var html = '<div id="user-' + id + '" class="user col-md-3 col-sm-6" ' + (del ? 'onclick="delete_user(' + id + ')"' : 'style="cursor:default;"') + '><b>' + access_titles[user_access] + '</b> ' + name + '<i class="fa fa-times"></i></div>';
+        var html = '<div id="user-' + id + '" class="user col-lg-3 col-6" ' + (del ? 'onclick="delete_user(' + id + ')"' : 'style="cursor:default;"') + '><b>' + access_titles[user_access] + '</b> ' + name + '<i class="fa fa-times"></i></div>';
         $("#userList").append(html);
     }
 }

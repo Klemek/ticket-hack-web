@@ -202,7 +202,7 @@
         <div class="jumbotron primary">
             <form id="form-projectTitle" class="form-group row form-custom" style="font-size:2em;">
                 <label id="project-id" class="col-form-label" style="margin-left:0.4em;"></label>
-                <div class="col-sm-6">
+                <div class="col-6">
                     <input id="projectTitle" class="form-control form-control-lg form-control-plaintext" readonly type="text" placeholder="Title" required autocomplete="off">
                 </div>
             </form>
