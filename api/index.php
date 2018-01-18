@@ -536,14 +536,16 @@ $route->post("/api/project/{id}/addticket", function($id_project){
     $title = post("name");
     $priority = post("priority");
     $description = post("description");
-    $due_date = post("due_date");
-    $manager_id = post("manager_id", true) || null;
+    $state= post("state");
+    $type = post("type");
+    $due_date = post("due_date", true);
+    $manager_id = post("manager_id", true);
 
     $creator_id = force_auth();
 
     /*verify the user has the right to create tickets*/
     if (access_level($creator_id, $id_project) >= 3){
-        $id = add_ticket($title, $id_project, $creator_id, $manager_id, $priority, $description, $due_date);
+        $id = add_ticket($title, $id_project, $creator_id, $manager_id, $priority, $description, $due_date, $state, $type);
         $output = array("id_ticket" => $id);
         http_success($output); 
     }else{
@@ -632,7 +634,9 @@ $route->post("/api/ticket/{id}/edit", function($id_ticket){
         "priority"=>post("priority", true),
         "description"=>post("description", true),
         "due_date"=>post("due_date", true),
-        "manager_id"=>post("manager_id", true)
+        "manager_id"=>post("manager_id", true),
+        "state"=>post("state",true),
+        "type"=>post("type",true)
     );
 
     $access_level = rights_user_ticket(force_auth(), $id_ticket);

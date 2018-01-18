@@ -87,8 +87,8 @@ def testRequest(req_type, name, url, params, expected):
     else:
         print("ERROR : {:6} {:25} {} <= {}".format(
             req_type, url, result["status"], name), file=sys.stderr)
-        print("   Expected :\t" + str(expected), file=sys.stderr)
-        print("   Result :\t" + str(result), file=sys.stderr)
+        #print("   Expected :\t" + str(expected), file=sys.stderr)
+        #print("   Result :\t" + str(result), file=sys.stderr)
         for error in errors:
             print("\tError : " + error, file=sys.stderr)
         return False
@@ -418,7 +418,9 @@ def test_loul():
          {"name":"New Ticket",
           "priority":4,
           "description":"sum ticket",
-          "due_date":"2018-05-15 17:45:52"},
+          "due_date":"2018-05-15 17:45:52",
+          "state":1,
+          "type":4},
          {
       "status": 200,
       "result": "ok",
@@ -427,11 +429,12 @@ def test_loul():
       }
     })
 
-    testPOST("add ticket to project", "/api/project/"+str(project_id)+"/addticket",
+    testPOST("add ticket to project - due date non obligatoire", "/api/project/"+str(project_id)+"/addticket",
              {"name":"New Ticket 2",
               "priority":2,
               "description":"sum ticket 2",
-              "due_date":"2018-05-15 17:45:52"},
+              "state":0,
+              "type":0},
              {
       "status": 200,
       "result": "ok",
@@ -450,23 +453,23 @@ def test_loul():
       "creation_date": -1,
       "edition_date": None,
       "due_date": -1,
-      "simple_id": -1,
+      "simple_id": "0",
       "name": -1,
       "project_id": -1,
       "editor_id": None,
       "creator_id": -1,
       "manager_id": None,
-      "type": -1,
+      "type": 4,
       "priority": -1,
-      "state": -1,
+      "state": 1,
       "description": -1
     },
                 {
       "id": -1,
       "creation_date": -1,
       "edition_date": None,
-      "due_date": -1,
-      "simple_id": -1,
+      "due_date": None,
+      "simple_id": "1",
       "name": -1,
       "project_id": -1,
       "editor_id": None,
@@ -475,7 +478,7 @@ def test_loul():
       "type": -1,
       "priority": -1,
       "state": -1,
-      "description": -1
+      "description": "sum ticket 2"
     }
       ]
     })
@@ -489,7 +492,7 @@ def test_loul():
       "id": -1,
       "creation_date": -1,
       "edition_date": None,
-      "due_date": -1,
+      "due_date": None,
       "simple_id": -1,
       "name": -1,
       "project_id": -1,
@@ -502,9 +505,12 @@ def test_loul():
       "state": -1,
       "description": -1
     }})
-        
-    ticket_id = res["content"]["id"]
-        
+    
+    if res:
+        ticket_id = res["content"]["id"]
+    else:
+        return
+    
     testGET("Tickets for the user", "/api/ticket/list",
             {
       "status": 200,
@@ -515,21 +521,21 @@ def test_loul():
       "creation_date": -1,
       "edition_date": None,
       "due_date": -1,
-      "simple_id": -1,
+      "simple_id": "0",
       "name": -1,
       "project_id": -1,
       "editor_id": None,
       "creator_id": -1,
       "manager_id": None,
-      "type": -1,
+      "type": 4,
       "priority": -1,
-      "state": -1,
+      "state": 1,
       "description": -1
     },{
       "id": -1,
       "creation_date": -1,
       "edition_date": None,
-      "due_date": -1,
+      "due_date": None,
       "simple_id": -1,
       "name": -1,
       "project_id": -1,
@@ -551,7 +557,7 @@ def test_loul():
       "id": -1,
       "creation_date": -1,
       "edition_date": None,
-      "due_date": -1,
+      "due_date": None,
       "simple_id": -1,
       "name": -1,
       "project_id": -1,
@@ -578,7 +584,7 @@ def test_loul():
           "id": -1,
           "creation_date": -1,
           "edition_date": -1,
-          "due_date": -1,
+          "due_date": None,
           "simple_id": -1,
           "name": "edited",
           "project_id": -1,
@@ -607,8 +613,12 @@ def test_loul():
         "id_comment": -1
       }
     })
-        
-    comment_id = res["content"]["id_comment"]
+    
+    
+    if res:    
+        comment_id = res["content"]["id_comment"]
+    else:
+        return
     
     testGET("get tickets comment", "/api/ticket/"+str(ticket_id)+"/comments",
             {
