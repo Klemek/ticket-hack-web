@@ -183,7 +183,8 @@ $route->post(array("/api/login",
         if (gettype($validation)=="array"){
             http_error(403, "login denied : ".$validation[1].". try again in 5 minutes.");
         }
-        http_error(401, "login failed");
+
+        http_error(401, "login failed", $output);
     }
 });
 
@@ -334,7 +335,7 @@ $route->get(array("/api/user/me/projects",
     $offset = ((int) get("offset",true)) | 0;
     $number = ((int) get("number",true)) | 20;
 
-    $list = get_projects_for_user($id, $offset, $number);
+    $list = get_projects_for_user($id, $number, $offset);
     $output = array("total" => count($list),
                     "list"=>$list,
                     "offset"=>$offset,
@@ -503,12 +504,15 @@ $route->get("/api/project/{id}/users", function($id_project){
     $id_project = (int) $id_project;
     $id_user = force_auth();
 
+    $offset = ((int) get("offset",true)) | 0;
+    $number = ((int) get("number",true)) | 20;
+
     if (! project_exists($id_project)){
         http_error(404, "Project Not Found");
     }
 
     if (access_level($id_user, $id_project) > 0){
-        http_success(get_users_for_project($id_project));
+        http_success(get_users_for_project($id_project, $number, $offset));
     }else{
         http_error(403, "You cannot see the users of a project you are not a part of.");
     }
@@ -559,9 +563,12 @@ $route->get("/api/project/{id}/tickets", function($id_project){
     $id_project = (int) $id_project;
     $current_user = force_auth();
 
+    $offset = ((int) get("offset",true)) | 0;
+    $number = ((int) get("number",true)) | 20;
+
     if (project_exists($id_project)){ 
         if (access_level($current_user, $id_project) >= 1){
-            http_success(get_tickets_for_project($id_project));
+            http_success(get_tickets_for_project($id_project, $number, $offset));
         }else{
             http_error(403, "You do not have the right to access this project or his tickets");
         }     
@@ -612,7 +619,7 @@ $route->get(array("/api/ticket/list",
     $offset = ((int) get("offset",true)) | 0;
     $number = ((int) get("number",true)) | 20;
     $tickets = get_tickets_for_user($id_user, $number, $offset);
-
+    $max_tickets = count(get_tickets_for_user($id_user, 150000000, 0));
     http_success($tickets);
 });
 
@@ -659,8 +666,8 @@ $route->post("/api/ticket/{id}/edit", function($id_ticket){
         if (count($set) >= 1){
             $set[] = "editor_id = :editor_id";
             $args[":editor_id"] = force_auth();
-            
-            
+
+
             $req = "UPDATE tickets SET ".join(",",$set).", edition_date=NOW() WHERE id=:ticket_id;";
             execute($req, $args);
         }
@@ -695,18 +702,19 @@ $route->post("/api/ticket/{id}/addcomment", function($ticket_id){
     }
 });
 
-/*test 403*/
 $route->get("/api/ticket/{id}/comments", function($id){
     $user_id = force_auth();
     $ticket_id = (int) $id;
 
+    $offset = ((int) get("offset",true)) | 0;
+    $number = ((int) get("number",true)) | 20;
+
     if (rights_user_ticket($user_id, $ticket_id) >= 1){
-        http_success(get_comments_for_ticket($id));
+        http_success(get_comments_for_ticket($id, $number, $offset));
     }else{
         http_error(403, "you do not have the permission to access this project");
     }
 });
-
 
 /**
 * COMMENTS

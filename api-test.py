@@ -71,7 +71,8 @@ def testJSON(ref, obj):
                 "at '{}' expected not null value but was deceived".format(key)]
     for key in obj.keys():
         if key not in ref:
-            warns += ["key '" + key + "' not found in reference"]
+            #warns += ["key '" + key + "' not found in reference"]
+            pass
     return errors, warns
 
 

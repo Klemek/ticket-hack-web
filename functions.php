@@ -266,7 +266,7 @@ function get_link_user_project($id_user, $id_project){
 * get all the projects for a user
 * add a access_level field to each project
 **/
-function get_projects_for_user($id_user, $offset=0, $limit=20){
+function get_projects_for_user($id_user, $limit=20, $offset=0){
     $req = "SELECT * FROM projects WHERE id IN (SELECT project_id FROM link_user_project WHERE user_id = :user_id) OR creator_id = :user_id OFFSET :offset LIMIT :limit;";
     $values = array(":user_id"=>$id_user,
                     ":offset"=>(int) $offset,
@@ -295,8 +295,9 @@ function get_projects_for_user($id_user, $offset=0, $limit=20){
 * get all the users for the project
 * add a access_level to each user
 */
-function get_users_for_project($id_project){
-    $req = "SELECT * FROM users WHERE id IN (SELECT user_id FROM link_user_project WHERE project_id = :project_id UNION SELECT creator_id FROM projects WHERE id=:project_id);";
+function get_users_for_project($id_project, $limit=20, $offset=0){
+    $req = "SELECT * FROM users WHERE id IN (SELECT user_id FROM link_user_project WHERE project_id = :project_id UNION".
+        " SELECT creator_id FROM projects WHERE id=:project_id)";
     $values = array(":project_id"=>$id_project);
 
     $sth = execute($req, $values);
@@ -315,7 +316,13 @@ function get_users_for_project($id_project){
         return $a["access_level"] > $b["access_level"] ? -1 : +1; // ordre décroissant
     });
 
-    return $result;
+    //offset and limit have to be manually used to preserve the order
+    $output = array();
+    for ($i = $offset; $i < min($offset + $limit, count($result)); $i++){
+        $output[] = $result[$i];
+    }
+
+    return $output;
 }
 
 /*modify the level on the (id_user, id_project) link*/
@@ -473,11 +480,18 @@ function get_ticket_simple($id_project, $id_simple){
 * add a manager field
 *
 **/
-function get_tickets_for_project($id_project){
+function get_tickets_for_project($id_project, $limit=20, $offset=0){
     global $db;
 
-    $req = "SELECT * FROM tickets WHERE project_id = ".(int) $id_project." ORDER BY simple_id ASC";
-    $res = $db->query($req)->fetchall(PDO::FETCH_ASSOC);
+    $req = "SELECT * FROM tickets WHERE project_id = :project_id ORDER BY simple_id ASC OFFSET :offset LIMIT :limit;";
+    $values = array(
+        ":project_id"=>$id_project,
+        ":offset"=>$offset,
+        ":limit"=>$limit
+    );
+
+    $res = execute($req, $values)->fetchall(PDO::FETCH_ASSOC);
+
     $project = get_project($id_project);
     for ($i = 0; $i < count($res); $i++){
         $res[$i]["creator"] = get_user($res[$i]["creator_id"]);
@@ -505,8 +519,13 @@ function get_tickets_for_user($id_user, $limit=20, $offset=0){
         $project = get_project($output[$i]["project_id"]);
         //$output[$i]["project"] = $project;
         $output[$i]["ticket_prefix"] = $project["ticket_prefix"];
+        if ($output[$i]["manager_id"]){
+            $output[$i]["manager"] = get_user($output[$i]["manager_id"]);
+        }else{
+            $output[$i]["manager"] = null;
+        }
+        $output[$i]["creator"] = get_user($output[$i]["creator"]);
     }
-
     return $output;
 }
 
@@ -582,7 +601,6 @@ function delete_comment($id){
 * add a creator field
 * add a ticket field
 **/
-/*todo : test*/
 function get_comment($id){
     $req = "SELECT * FROM comments WHERE id = ? LIMIT 1;";
     $values= array($id);
@@ -602,10 +620,11 @@ function get_comment($id){
 * return the comment
 * add a creator field
 **/
-/*todo : test*/
-function get_comments_for_ticket($id_ticket){
-    $req = "SELECT * FROM comments WHERE ticket_id = ?";
-    $values= array($id_ticket);
+function get_comments_for_ticket($id_ticket, $limit=20, $offset=0){
+    $req = "SELECT * FROM comments WHERE ticket_id = :ticket_id OFFSET :offset LIMIT :limit;";
+    $values= array(":ticket_id" =>$id_ticket,
+                   ":offset"=>$offset,
+                   ":limit"=>$limit);
 
     $sth = execute($req, $values);
     $res = $sth->fetchall(PDO::FETCH_ASSOC);
