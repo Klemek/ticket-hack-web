@@ -9,6 +9,6 @@ if (isset($_SESSION["user_id"])){
 }
 ?>
 
-    <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+    <nav class="navbar navbar-expand-md navbar-dark fixed-top">
         <a class="navbar-brand" href="/"><i class="fa fa-ticket"></i> Ticket'Hack</a> </nav>
     <div class="container">
