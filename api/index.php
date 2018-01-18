@@ -617,7 +617,7 @@ $route->get(array("/api/ticket/list",
                   "/api/tickets/list"), function(){
     $id_user = force_auth();
     $offset = ((int) get("offset",true)) | 0;
-    $number = ((int) get("number",true)) | 20;
+    $number = ((int) get("number",true)) | 150000000;
     $tickets = get_tickets_for_user($id_user, $number, $offset);
     $max_tickets = count(get_tickets_for_user($id_user, 150000000, 0));
     http_success($tickets);
