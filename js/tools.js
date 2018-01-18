@@ -90,7 +90,7 @@ function ajax(method, url, data, callbacksuccess, callbackerror) {
             }
 
             if (data.result == "ok") {
-                //console.log(data);
+                console.log(data);
                 if (callbacksuccess)
                     callbacksuccess(data.content);
             } else {
@@ -414,7 +414,7 @@ function addProject(id, simple_id, name) {
 
 function addTicket(name, desc, type, priority, status, user) {
     if ($("#ticketList").length > 0) {
-        if (user.length > 0) user = '<h5 class="text-primary">' + user + '</h5>';
+        if (user && user.length > 0) user = '<h5 class="text-primary">' + user + '</h5>';
         var html = '<div class="ticket" onclick="ticket_click(\'' + name + '\')">' + '<span title="' + type_titles[type] + '" class="fa-stack ' + type_colors[type] + ' type">' + '<i class="fa fa-square fa-stack-2x"></i>' + '<i class="fa ' + type_icons[type] + ' fa-stack-1x fa-inverse"></i></span>' + '<i class="fa ' + status_icons[status] + ' status" title="status : ' + status_titles[status] + '"></i><i class="fa fa-thermometer-' + priority + ' ' + priority_colors[priority] + ' priority" title="priority : ' + priority_titles[priority] + '"></i>' + user + '<h4>' + name + ' <small>' + desc + '</small></h4></div>';
         $("#ticketList").append(html);
     }
@@ -422,7 +422,7 @@ function addTicket(name, desc, type, priority, status, user) {
 
 function addUser(id, user_access, name, del) {
     if ($("#userList").length > 0) {
-        var html = '<div id="user-' + id + '" class="user col-lg-3 col-6" ' + (del ? 'onclick="delete_user(' + id + ')"' : 'style="cursor:default;"') + '><b>' + access_titles[user_access] + '</b> ' + name + '<i class="fa fa-times"></i></div>';
+        var html = '<div id="user-' + id + '" class="user col-lg-3 col-6" ' + (del ? 'onclick="delete_user(' + id + ')"' : 'style="cursor:default;"') + '><b>' + access_titles[user_access] + '</b> ' + name + (del ? '<i class="fa fa-times"></i>' : '') + '</div>';
         $("#userList").append(html);
     }
 }
