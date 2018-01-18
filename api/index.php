@@ -597,22 +597,10 @@ $route->get("/api/project/{id_project}/ticket/{id_simple_ticket}", function($id_
     }
 });
 
-
 /**
-* TICKETS
-*   /ticket/{id} return the ticket information IF the user has access to the project
-                 equivalent to /project/{id}/ticket/{id_simple_ticket}. all the following can be used on both path
-*   /ticket/{id}/comments get the comments of the ticket
-*      -comment
-*   /ticket/{id}/addcomment POST
-*      -comment
-*      user needs to be authenticated
+* ------------------ TICKETS ---------------------------------------------------------------------------------------------------
 **/
 
-/**
-* return the list of tickets of the connected user
-* optional parameters : number = 20, offset = 0 by default.
-**/
 $route->get(array("/api/ticket/list",
                   "/api/tickets/list"), function(){
     $id_user = force_auth();
@@ -622,7 +610,6 @@ $route->get(array("/api/ticket/list",
     $max_tickets = count(get_tickets_for_user($id_user, 150000000, 0));
     http_success($tickets);
 });
-
 
 $route->get("/api/ticket/{id}", function($id){
     $access_level = rights_user_ticket(force_auth(), $id);
@@ -695,7 +682,8 @@ $route->post("/api/ticket/{id}/addcomment", function($ticket_id){
     $creator_id = force_auth();
     if (rights_user_ticket($creator_id, $ticket_id) >= 2){
         $id = add_comment($ticket_id, $creator_id, $comment);
-        $output = array("id_comment"=>$id);
+        $output = array("id_comment"=>$id,
+                       "comment"=>get_comment($id));
         http_success($output);
     }else{
         http_error(403, "You do not have the permission to comment");
@@ -717,12 +705,7 @@ $route->get("/api/ticket/{id}/comments", function($id){
 });
 
 /**
-* COMMENTS
-* GET /api/comment/{id}
-* POST /api/comment/{id}/edit
-*    -comment
-* DELETE /api/comment/{id}/delete
-*
+* ------------------ COMMENTS ---------------------------------------------------------------------------------------------------
 **/
 $route->get("/api/comment/{id_comment}", function($id_comment){
     if (rights_user_comment(force_auth(), $id_comment) > 0){
@@ -759,8 +742,7 @@ $route->delete("/api/comment/{id}/delete", function($comment_id){
 });
 
 /**
-* Error Handling
-* put it in the end for clarity, it works in all the cases.
+* ------------------ ERRORS ---------------------------------------------------------------------------------------------------
 **/
 $route->error_404(function(){
     http_error(404, "Error 404 - The server cannot find a page corresponding to your request. please check your url and method. do note this does NOT correspond to missing parameters.");

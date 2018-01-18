@@ -174,6 +174,37 @@ function validate_user_with_fail($email, $password){
 
 }
 
+/**
+* verify if the user has the right to access the API with an anti-DDOS like system
+* return true if the user can continue, false if he should be disconnected.
+* v1 : use cookies to verify the user. 
+* 
+**/
+//todo : add verification by ip with fail2ban
+function verify_user_ddos(){
+    
+    $max_requests = 100;
+    $period = 60;//1 minute
+    
+    if (! isset($_SESSION["user_id"])){
+        if (! isset($_SESSION["user_login"])){
+            $_SESSION["user_login"] = array("last_connection"=>time(),
+                                           "number_tries"=>1);
+        }else{
+            if (time() - $_SESSION["user_login"]["last_connection"] > $period + $_SESSION["user_login"]["number_tries"]/$max_requests ){
+                $_SESSION["user_login"]["last_connection"] = time();
+                $_SESSION["user_login"]["number_tries"] = 0;
+            }
+            $_SESSION["user_login"]["number_tries"]++; 
+            
+            return  $_SESSION["user_login"]["number_tries"] < $max_requests;
+        }
+    }else{
+        
+    }
+}
+
+
 function update_last_connection_user($id){
     $req = "UPDATE users SET last_connection_date = ? WHERE id = ?";
     $values = array(get_date_string(), $id);
@@ -524,7 +555,7 @@ function get_tickets_for_user($id_user, $limit=20, $offset=0){
         }else{
             $output[$i]["manager"] = null;
         }
-        $output[$i]["creator"] = get_user($output[$i]["creator"]);
+        $output[$i]["creator"] = get_user($output[$i]["creator_id"]);
     }
     return $output;
 }

@@ -127,7 +127,7 @@ def executeTests():
         cookie = None
         globals()[test]()
 
-def test_loul():
+def test_all():
     uniqueid = randint(0, sys.maxsize)
     email = "test-email-" + str(uniqueid) + "@test.fr"
     email2 = "test-email-" + str(randint(0, sys.maxsize)) + "@test.fr"
