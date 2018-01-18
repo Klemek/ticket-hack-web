@@ -546,7 +546,8 @@ $route->post("/api/project/{id}/addticket", function($id_project){
     /*verify the user has the right to create tickets*/
     if (access_level($creator_id, $id_project) >= 3){
         $id = add_ticket($title, $id_project, $creator_id, $manager_id, $priority, $description, $due_date, $state, $type);
-        $output = array("id_ticket" => $id);
+        $output = get_ticket($id);
+        $output["id_ticket"] = $id;
         http_success($output); 
     }else{
         http_error(403, "You do not have the permission to create a ticket on this project");
