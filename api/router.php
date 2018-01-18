@@ -201,4 +201,4 @@ class Route{
         return $path_regexed;
     }
 }
-?>
+//php file : do not put "? >" at the end to the risk of having a whitespace included 

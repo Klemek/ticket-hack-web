@@ -769,4 +769,5 @@ $route->delete("/api/comment/{id}/delete", function($comment_id){
 $route->error_404(function(){
     http_error(404, "Error 404 - The server cannot find a page corresponding to your request. please check your url and method. do note this does NOT correspond to missing parameters.");
 });
-?>
+
+//php file : do not put "? >" at the end to the risk of having a whitespace included 

@@ -331,7 +331,7 @@ function get_link_user_project($id_user, $id_project){
 * add a access_level field to each project
 **/
 function get_projects_for_user($id_user, $limit=20, $offset=0){
-    $req = "SELECT * FROM projects WHERE id IN (SELECT project_id FROM link_user_project WHERE user_id = :user_id) OR creator_id = :user_id OFFSET :offset LIMIT :limit;";
+    $req = "SELECT * FROM projects WHERE id IN (SELECT project_id FROM link_user_project WHERE user_id = :user_id) OR creator_id = :user_id ORDER BY name OFFSET :offset LIMIT :limit;";
     $values = array(":user_id"=>$id_user,
                     ":offset"=>(int) $offset,
                     ":limit"=>(int) $limit);
@@ -732,7 +732,7 @@ function get_comment($id){
 * add a creator field
 **/
 function get_comments_for_ticket($id_ticket, $limit=20, $offset=0){
-    $req = "SELECT * FROM comments WHERE ticket_id = :ticket_id OFFSET :offset LIMIT :limit;";
+    $req = "SELECT * FROM comments WHERE ticket_id = :ticket_id ORDER BY creation_date OFFSET :offset LIMIT :limit;";
     $values= array(":ticket_id" =>$id_ticket,
                    ":offset"=>$offset,
                    ":limit"=>$limit);
@@ -872,4 +872,5 @@ function get_tickets_for_category($id_category){
 
     return $sth->fetchall(PDO::FETCH_ASSOC);
 }
-?>
+
+//php file : do not put "? >" at the end to the risk of having a whitespace included 
