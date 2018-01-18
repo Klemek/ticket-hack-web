@@ -154,6 +154,11 @@ function force_auth(){
 
 $route = new Route();
 
+/* anti ddos handmade */
+if (verify_user_ddos() == false){
+    http_error(403, "Too many requests in less than a minute. please wait a little");
+}
+
 /*-----------------------------------------------------------------------------------------------------------------------------------------*/
 
 /** GENERAL

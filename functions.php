@@ -182,25 +182,58 @@ function validate_user_with_fail($email, $password){
 **/
 //todo : add verification by ip with fail2ban
 function verify_user_ddos(){
-    
+
     $max_requests = 100;
     $period = 60;//1 minute
-    
+
     if (! isset($_SESSION["user_id"])){
         if (! isset($_SESSION["user_login"])){
             $_SESSION["user_login"] = array("last_connection"=>time(),
-                                           "number_tries"=>1);
+                                            "number_tries"=>1);
+            return true;
         }else{
-            if (time() - $_SESSION["user_login"]["last_connection"] > $period + $_SESSION["user_login"]["number_tries"]/$max_requests ){
+            if (time() - $_SESSION["user_login"]["last_connection"] > $period){
                 $_SESSION["user_login"]["last_connection"] = time();
                 $_SESSION["user_login"]["number_tries"] = 0;
             }
             $_SESSION["user_login"]["number_tries"]++; 
-            
+
             return  $_SESSION["user_login"]["number_tries"] < $max_requests;
         }
     }else{
-        
+        $id_user = $_SESSION["user_id"];
+        $i = 3;
+        do{
+            $req = "SELECT * FROM connection_history WHERE user_id = ?";
+            $values = array($id_user);
+
+            $connection = execute($req, $values)->fetch();
+
+            if (! $connection){
+                $req= "INSERT INTO connection_history(user_id) VALUES (?)";
+                $values = array($id_user);
+                execute($req, $values);
+            }
+        }while((! $connection) && $i-- > 0);
+
+        if ($i==0){
+            return true;
+        }
+
+        $first_request_time = $connection["first_request_date"] ? get_date($connection["first_request_date"]) : get_date();
+
+        if (get_date()- $first_request_time< $period){
+            $req= "UPDATE connection_history SET request_count= request_count+1 WHERE user_id = ?";
+            $values = array($id_user);
+            execute($req, $values);
+            
+            return $connection["request_count"] < $max_requests;
+        }else{
+            $req= "UPDATE connection_history SET request_count=1, first_request_date=? WHERE user_id = ?";
+            $values = array(get_date_string(), $id_user);
+            execute($req, $values);
+            return true;
+        }
     }
 }
 
