@@ -431,7 +431,11 @@ function get_ticket($id){
     $res = $db->query($req)->fetch(PDO::FETCH_ASSOC);
     if (count($res)){
         $res["creator"] = get_user($res["creator_id"]);
-        $res["manager"] = get_user($res["manager_id"]);
+        if ($res["manager_id"]){
+            $res["manager"] = get_user($res["manager_id"]);
+        }else{
+            $res["manager"] = null;
+        }
 
         $project = get_project($res["project_id"]);
         $res["project"] = $project;
