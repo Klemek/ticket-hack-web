@@ -536,15 +536,18 @@ $route->post("/api/project/{id}/addticket", function($id_project){
     $title = post("name");
     $priority = post("priority");
     $description = post("description");
-    $due_date = post("due_date");
-    $manager_id = post("manager_id", true) || null;
+    $state= post("state");
+    $type = post("type");
+    $due_date = post("due_date", true);
+    $manager_id = post("manager_id", true);
 
     $creator_id = force_auth();
 
     /*verify the user has the right to create tickets*/
     if (access_level($creator_id, $id_project) >= 3){
-        $id = add_ticket($title, $id_project, $creator_id, $manager_id, $priority, $description, $due_date);
-        $output = array("id_ticket" => $id);
+        $id = add_ticket($title, $id_project, $creator_id, $manager_id, $priority, $description, $due_date, $state, $type);
+        $output = get_ticket($id);
+        $output["id_ticket"] = $id;
         http_success($output); 
     }else{
         http_error(403, "You do not have the permission to create a ticket on this project");
@@ -606,9 +609,9 @@ $route->get("/api/project/{id_project}/ticket/{id_simple_ticket}", function($id_
 $route->get(array("/api/ticket/list",
                   "/api/tickets/list"), function(){
     $id_user = force_auth();
-    $offset = get("offset",true) || 0;
-    $number = get("number",true) || 20;
-    $tickets = get_tickets_for_user($id_user, $offset, $number);
+    $offset = ((int) get("offset",true)) | 0;
+    $number = ((int) get("number",true)) | 20;
+    $tickets = get_tickets_for_user($id_user, $number, $offset);
 
     http_success($tickets);
 });
@@ -632,7 +635,9 @@ $route->post("/api/ticket/{id}/edit", function($id_ticket){
         "priority"=>post("priority", true),
         "description"=>post("description", true),
         "due_date"=>post("due_date", true),
-        "manager_id"=>post("manager_id", true)
+        "manager_id"=>post("manager_id", true),
+        "state"=>post("state",true),
+        "type"=>post("type",true)
     );
 
     $access_level = rights_user_ticket(force_auth(), $id_ticket);
@@ -652,7 +657,11 @@ $route->post("/api/ticket/{id}/edit", function($id_ticket){
         }
 
         if (count($set) >= 1){
-            $req = "UPDATE tickets SET ".join(",",$set)." WHERE id=:ticket_id;";
+            $set[] = "editor_id = :editor_id";
+            $args[":editor_id"] = force_auth();
+            
+            
+            $req = "UPDATE tickets SET ".join(",",$set).", edition_date=NOW() WHERE id=:ticket_id;";
             execute($req, $args);
         }
 
@@ -691,7 +700,7 @@ $route->get("/api/ticket/{id}/comments", function($id){
     $user_id = force_auth();
     $ticket_id = (int) $id;
 
-    if (rights_user_ticket($creator_id, $ticket_id) >= 2){
+    if (rights_user_ticket($user_id, $ticket_id) >= 1){
         http_success(get_comments_for_ticket($id));
     }else{
         http_error(403, "you do not have the permission to access this project");
@@ -719,7 +728,7 @@ $route->post("/api/comment/{id}/edit", function($comment_id){
     $comment = post("comment");
     $user = force_auth();
 
-    if (rights_user_comment($user, $comment_id) !== 2){
+    if (rights_user_comment($user, (int) $comment_id) !== 2){
         http_error(403,"You cannot modify this comment");
     }else{
         $id = edit_comment($comment_id, $comment);

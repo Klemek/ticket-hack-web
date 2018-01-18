@@ -31,6 +31,10 @@ class Route{
 
     }
 
+    /**
+    * return the current URI
+    * ex : https://my_website.com/path/to/folder?arg1&arg2 => path/to/folder
+    **/
     public static function getCurrentUri()
     {
         $uri = $_SERVER['REQUEST_URI'];

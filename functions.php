@@ -127,7 +127,7 @@ function validate_user_with_fail($email, $password){
             execute($req, $values);
         }
     }while((! $connection) && $i-- > 0);
-    
+
     if ($i==0){//db error - pass to simple login
         return validate_user($email, $password);
     }
@@ -375,7 +375,7 @@ function access_level($id_user, $id_project){
 /** add a ticket
 * return the id of the row inserted
 **/
-function add_ticket($title, $project_id, $creator_id, $manager_id ,$priority, $description, $due_date){
+function add_ticket($title, $project_id, $creator_id, $manager_id ,$priority, $description, $due_date , $state, $type){
 
     $simple_id = count(get_tickets_for_project($project_id));
 
@@ -384,20 +384,36 @@ function add_ticket($title, $project_id, $creator_id, $manager_id ,$priority, $d
         ":name" => $title,
         ":project_id" => $project_id,
         ":creator_id" => $creator_id,
+        ":manager_id"=>$manager_id,
         ":priority" => $priority,
         ":description" => $description,
-        ":due_date" => $due_date
+        ":due_date" => $due_date,
+        ":state" => $state,
+        ":type"=> $type
     );
 
-    if ($manager_id){
+    $a = array();
+    $b = array();
+
+    foreach($values as $key=>$v){
+        if ($v !== null){
+            $a[] = substr($key, 1);
+            $b[] = $key;
+            $c[$key] = $v;
+        }
+    }
+
+    $req = "INSERT INTO tickets(".join(", ", $a).") VALUES (".join(", ",$b).") RETURNING id";
+
+    /*if ($manager_id){
         $values[":manager_id"] = $manager_id;
         $req = "INSERT INTO tickets(simple_id, name, project_id, creator_id, manager_id, priority, description, due_date) VALUES (:simple_id, :name, :project_id, :creator_id, :manager_id, :priority, :description, :due_date) RETURNING id;";
     }else{
         $req = "INSERT INTO tickets(simple_id, name, project_id, creator_id, priority, description, due_date) VALUES (:simple_id, :name, :project_id, :creator_id, :priority, :description, :due_date) RETURNING id;";
     }
-
-
-    $sth = execute($req, $values);
+*/
+    //return $req;
+    $sth = execute($req, $c);
     return $sth->fetch()["id"];
 }
 
@@ -415,8 +431,15 @@ function get_ticket($id){
     $res = $db->query($req)->fetch(PDO::FETCH_ASSOC);
     if (count($res)){
         $res["creator"] = get_user($res["creator_id"]);
-        $res["manager"] = get_user($res["manager_id"]);
-        $res["project"] = get_project($res["project_id"]);
+        if ($res["manager_id"]){
+            $res["manager"] = get_user($res["manager_id"]);
+        }else{
+            $res["manager"] = null;
+        }
+
+        $project = get_project($res["project_id"]);
+        $res["project"] = $project;
+        $res["ticket_prefix"] = $project["ticket_prefix"];
         return $res;
     }
 
@@ -435,7 +458,10 @@ function get_ticket_simple($id_project, $id_simple){
     if ($res){
         $res["creator"] = get_user($res["creator_id"]);
         $res["manager"] = get_user($res["manager_id"]);
-        $res["project"] = get_project($res["project_id"]);
+
+        $project = get_project($res["project_id"]);
+        $res["project"] = $project;
+        $res["ticket_prefix"] = $project["ticket_prefix"];
         return $res;
     }
     return false;
@@ -450,14 +476,17 @@ function get_ticket_simple($id_project, $id_simple){
 function get_tickets_for_project($id_project){
     global $db;
 
-    $req = "SELECT * FROM tickets WHERE project_id = ".(int) $id_project;
+    $req = "SELECT * FROM tickets WHERE project_id = ".(int) $id_project." ORDER BY simple_id ASC";
     $res = $db->query($req)->fetchall(PDO::FETCH_ASSOC);
-
+    $project = get_project($id_project);
     for ($i = 0; $i < count($res); $i++){
         $res[$i]["creator"] = get_user($res[$i]["creator_id"]);
         if ($res[$i]["manager_id"]){
             $res[$i]["manager"] = get_user($res[$i]["manager_id"]);
         }
+
+        //$res[$i]["project"] = $project;
+        $res[$i]["ticket_prefix"] = $project["ticket_prefix"];
     }
 
     return $res;
@@ -465,11 +494,20 @@ function get_tickets_for_project($id_project){
 
 /*return all the tickets the user has access to*/
 function get_tickets_for_user($id_user, $limit=20, $offset=0){
-    $req = "SELECT * FROM tickets WHERE project_id IN (SELECT project_id FROM link_user_project WHERE user_id = :user_id AND user_access > 0 UNION SELECT id FROM projects WHERE creator_id = :user_id) OFFSET :offset LIMIT :limit;";
+    $req = "SELECT * FROM tickets WHERE project_id IN (SELECT project_id FROM link_user_project WHERE user_id = :user_id AND user_access > 0 UNION SELECT id FROM projects WHERE creator_id = :user_id) ORDER BY project_id, simple_id OFFSET :offset LIMIT :limit;";
     $values = array(":user_id"=>$id_user,
                     ":offset"=>$offset,
                     ":limit"=>$limit);
-    return execute($req, $values)->fetchall(PDO::FETCH_ASSOC);
+
+    $output = execute($req, $values)->fetchall(PDO::FETCH_ASSOC);
+
+    for ($i = 0; $i < count($output); $i++){
+        $project = get_project($output[$i]["project_id"]);
+        //$output[$i]["project"] = $project;
+        $output[$i]["ticket_prefix"] = $project["ticket_prefix"];
+    }
+
+    return $output;
 }
 
 /*delete a ticket from the database (!= ticket passed to achieved) */
@@ -557,7 +595,7 @@ function get_comment($id){
         $res["ticket"] = get_ticket($res["ticket_id"]);
     }
 
-    return res;
+    return $res;
 }
 
 /**
@@ -591,7 +629,7 @@ function rights_user_comment($user_id, $comment_id){
     $ticket = get_ticket((int) $comment["ticket_id"]);
 
     if ($ticket === false){
-        return false;
+        return 0;
     }
 
     $ticket_id = $comment["ticket_id"];

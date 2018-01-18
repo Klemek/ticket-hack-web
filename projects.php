@@ -10,13 +10,22 @@
 <body>
     <?php include($_SERVER['DOCUMENT_ROOT']."/template/connected-nav.php"); ?>
     <script>
-        function project_click(id, simple_id) {
-            writeCookie("project_id", id, 1);
-            var win = window.open("/project/" + simple_id, '_blank');
-            win.focus();
-        }
+        $(document).ready(function() {
+            initNotification(".jumbotron");
+            $("#navProjects").addClass("active");
 
-        function load_list() {
+            $("#new-project").click(function() {
+                var win = window.open("/project/new", '_blank');
+                win.focus();
+            });
+
+            loadList();
+
+            setInterval(loadList, 5 * 60 * 1000);
+
+        });
+
+        function loadList() {
             $("#projectList").empty();
             $("#new-project").css("display", "none");
             addLoading("#projectList");
@@ -35,18 +44,11 @@
             });
         }
 
-        $(document).ready(function() {
-            initNotification(".jumbotron");
-            $("#navProjects").addClass("active");
-
-            $("#new-project").click(function() {
-                var win = window.open("/project/new", '_blank');
-                win.focus();
-            });
-
-            load_list();
-
-        });
+        function project_click(id, simple_id) {
+            writeCookie("project_id", id, 1);
+            var win = window.open("/project/" + simple_id, '_blank');
+            win.focus();
+        }
 
     </script>
     <div class="container">

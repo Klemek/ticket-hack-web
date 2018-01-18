@@ -28,6 +28,18 @@ function prettyDate(timestamp) {
     return date.toGMTString();
 }
 
+function isNumeric(n) {
+    return !isNaN(parseFloat(n)) && isFinite(n);
+}
+
+function getTicketName(ticket) {
+    return ticket.ticket_prefix + "-" + pad(parseInt(ticket.simple_id), 3);
+}
+
+function getGTMDate(date) {
+    return new Date(date.valueOf() - date.getTimezoneOffset() * 60000);
+}
+
 //COOKIES
 
 function writeCookie(cname, cvalue, exdays) {
@@ -149,6 +161,16 @@ function notify(msg, type) {
         }, 500, function () {
             $("#notify-" + id).css("opacity", "default");
         });
+
+        setTimeout(function () {
+            if ($("#notify-" + id).length > 0) {
+                $("#notify-" + id).animate({
+                    opacity: 0
+                }, 1000, function () {
+                    $("#notify-" + id).remove();
+                });
+            }
+        }, 1000);
     }
 }
 
@@ -160,12 +182,12 @@ function clearNotification() {
 
 // LOADING
 
-function addLoading(divName) {
-    $(divName).append('<div id="load-div" class="text-center"><i class="fa fa-spinner fa-spin fa-3x fa-fw"></i><span class="sr-only">Loading...</span></div>');
+function addLoading(divName, size = 3) {
+    $(divName).append('<div id="load-div" class="text-center"><i class="fa fa-spinner fa-spin fa-' + size + 'x fa-fw"></i><span class="sr-only">Loading...</span></div>');
 }
 
 function removeLoading() {
-    if ($("#load-div").length > 0) {
+    while ($("#load-div").length > 0) {
         $("#load-div").remove();
     }
 }
@@ -232,7 +254,7 @@ function getHashAndClean(inputName) {
 
 var customInputInfos = {};
 
-function registerCustomInput(name, textarea, callback) {
+function registerCustomInput(name, textarea, callback, autoscroll = true) {
     $("#form-" + name).append('<label id="' + name + 'Edit" style="display: none;" class="col-form-label"><i id="' + name + 'Confirm" class="fa fa-check"></i><i id="' + name + 'Cancel" class="fa fa-times" style="margin-left: 10px;"></i></label><label id="' + name + 'EditHint" style="display: none;" class="col-form-label"><i class="fa fa-pencil"></i></label>');
     $("#" + name).click(function () {
         if ($("#" + name).attr("readonly")) {
@@ -281,17 +303,104 @@ function registerCustomInput(name, textarea, callback) {
         return false;
     });
     if (textarea) {
-        $("#" + name).on("change", function () {
+        autoTextArea(name);
+        if (autoscroll)
             $("#" + name).scroll();
-        });
-        $("#" + name).scroll(function () {
-            $("#" + name).attr("rows", 1);
-            while ($("#" + name)[0].scrollHeight > $("#" + name).innerHeight()) {
-                $("#" + name).attr("rows", parseInt($("#" + name).attr("rows")) + 1);
-            }
-        });
-        $("#" + name).scroll();
     }
+}
+
+function autoTextArea(name) {
+    $("#" + name).on("change", function () {
+        $("#" + name).scroll();
+    });
+    $("#" + name).scroll(function () {
+        console.log("yay" + randInt(0, 999));
+        $("#" + name).attr("rows", 1);
+        while ($("#" + name)[0].scrollHeight > $("#" + name).innerHeight()) {
+            $("#" + name).attr("rows", parseInt($("#" + name).attr("rows")) + 1);
+        }
+    });
+}
+
+var customDropdownValues = {};
+
+function initDropdown(name, ddtype, def, values = {}, readonly = false) {
+    switch (ddtype) {
+        case "status":
+            if (readonly) {
+                $("#" + name).html('<div class="dropdown-toggle-readonly" id="dropdownStatus"></div>');
+            } else {
+                $("#" + name).html('<button class="btn btn-default dropdown-toggle" type="button" id="dropdownStatus" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></button><div id="dropdownStatusMenu" class="dropdown-menu" aria-labelledby="dropdownStatus"></div>');
+                for (var status = 0; status < 4; status++) {
+                    $("#dropdownStatusMenu").append('<a class="dropdown-item" href="#" onclick="updateDropdown(\'status\',' + status + ')"><i class="fa ' + status_icons[status] + ' "></i> ' + status_titles[status] + '</a>');
+                }
+            }
+            break;
+        case "type":
+            if (readonly) {
+                $("#" + name).html('<div class="dropdown-toggle-readonly" id="dropdownType"></div>');
+            } else {
+                $("#" + name).html('<button class="btn btn-default dropdown-toggle" type="button" id="dropdownType" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></button><div id="dropdownTypeMenu" class="dropdown-menu" aria-labelledby="dropdownType"></div>');
+                for (var type = 0; type < 3; type++) {
+                    $("#dropdownTypeMenu").append('<a class="dropdown-item" href="#" onclick="updateDropdown(\'type\',' + type + ')"><span class="fa-stack ' + type_colors[type] + ' type">' + '<i class="fa fa-square fa-stack-2x"></i>' + '<i class="fa ' + type_icons[type] + ' fa-stack-1x fa-inverse"></i></span> ' + type_titles[type] + '</a>');
+                }
+            }
+            break;
+        case "priority":
+            if (readonly) {
+                $("#" + name).html('<div class="dropdown-toggle-readonly" id="dropdownPriority"></div>');
+            } else {
+                $("#" + name).html('<button class="btn btn-default dropdown-toggle" type="button" id="dropdownPriority" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></button><div id="dropdownPriorityMenu" class="dropdown-menu" aria-labelledby="dropdownPriority"></div>');
+                for (var priority = 0; priority < 5; priority++) {
+                    $("#dropdownPriorityMenu").append('<a class="dropdown-item" href="#" onclick="updateDropdown(\'priority\',' + priority + ')"><i class="fa fa-thermometer-' + priority + ' ' + priority_colors[priority] + '"></i> ' + priority_titles[priority] + '</a>');
+                }
+            }
+            break;
+        case "access":
+            if (readonly) {
+                $("#" + name).html('<div class="dropdown-toggle-readonly" id="dropdownAccess"></div>');
+            } else {
+                $("#" + name).html('<button class="btn btn-default dropdown-toggle" type="button" id="dropdownAccess" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></button><div id="dropdownAccessMenu" class="dropdown-menu" aria-labelledby="dropdownAccess"></div>');
+                for (var access = 1; access < 5; access++) {
+                    $("#dropdownAccessMenu").append('<a class="dropdown-item" href="#" onclick="updateDropdown(\'access\',' + access + ')">' + access_titles[access] + '</a>');
+                }
+            }
+            break;
+        default:
+            if (readonly) {
+                $("#" + name).html('<div class="dropdown-toggle-readonly" id="dropdown' + ddtype + '"></div>');
+            } else {
+                $("#" + name).html('<button class="btn btn-default dropdown-toggle" type="button" id="dropdown' + ddtype + '" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></button><div id="dropdown' + ddtype + 'Menu" class="dropdown-menu" aria-labelledby="dropdown' + ddtype + '"></div>');
+                for (key in values) {
+                    $('#dropdown' + ddtype + 'Menu').append('<a class="dropdown-item" href="#" onclick="updateDropdown(\'' + ddtype + '\',' + key + ')">' + values[key] + '</a>');
+                }
+            }
+            customDropdownValues[ddtype] = values;
+            break;
+    }
+    updateDropdown(ddtype, def);
+}
+
+function updateDropdown(ddtype, val) {
+    switch (ddtype) {
+        case "status":
+            $("#dropdownStatus").html('<i class="fa ' + status_icons[val] + ' "></i> ' + status_titles[val]);
+            break;
+        case "type":
+            $("#dropdownType").html('<span class="fa-stack ' + type_colors[val] + ' type">' + '<i class="fa fa-square fa-stack-2x"></i>' + '<i class="fa ' + type_icons[val] + ' fa-stack-1x fa-inverse"></i></span> ' + type_titles[val]);
+            break;
+        case "priority":
+            $("#dropdownPriority").html('<i class="fa fa-thermometer-' + val + ' ' + priority_colors[val] + '"></i> ' + priority_titles[val]);
+            break;
+        case "access":
+            $("#dropdownAccess").html(access_titles[val]);
+            break;
+        default:
+            $("#dropdown" + ddtype).html(customDropdownValues[ddtype][val]);
+            break;
+    }
+    if (typeof changeDropdown !== 'undefined')
+        changeDropdown(ddtype, val);
 }
 
 //VIEWS
