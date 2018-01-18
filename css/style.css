@@ -134,11 +134,13 @@ body {
     font-weight: bold;
 }
 
-.dropdown-toggle {
+.dropdown-toggle,
+.dropdown-toggle-readonly {
     margin-left: 10px;
 }
 
-.dropdown-toggle i {
+.dropdown-toggle i,
+.dropdown-toggle-readonly i {
     font-size: 1.3em;
     margin-right: 0.2em;
 }
@@ -149,18 +151,21 @@ body {
 }
 
 .dropdown-toggle span,
+.dropdown-toggle-readonly span,
 .dropdown-item span {
     font-size: 0.8em;
     margin-right: 0.2em;
 }
 
 .dropdown-toggle span .fa-stack-2x,
+.dropdown-toggle-readonly span .fa-stack-2x,
 .dropdown-item span .fa-stack-2x {
     font-size: 2em;
     margin: 0;
 }
 
 .dropdown-toggle span .fa-stack-1x,
+.dropdown-toggle-readonly span .fa-stack-1x,
 .dropdown-item span .fa-stack-1x {
     font-size: 1em;
     margin: 0;

@@ -22,7 +22,6 @@
             loadList();
 
             setInterval(loadList, 5 * 60 * 1000);
-
         });
 
         function loadList() {
@@ -33,7 +32,7 @@
                 url: "/api/ticket/list",
                 success: function(content) {
                     content.forEach(function(ticket) {
-                        addTicket(ticket.simple_id, ticket.name, ticket.type, ticket.priority, ticket.state, ticket.manager_id);
+                        addTicket(getTicketName(ticket), ticket.name, ticket.type, ticket.priority, ticket.state, ticket.manager ? ticket.manager.name : "");
                     });
                     $("#new-ticket").css("display", "block");
                     removeLoading();

@@ -10,46 +10,208 @@
 <body>
     <?php include($_SERVER['DOCUMENT_ROOT']."/template/connected-nav.php"); ?>
     <script>
+        var project_id, simple_id, user_access, ticket_id, cancel_save, managers;
+
+        function loadInfos() {
+            $("#informations").css("display", "none");
+            addLoading(".jumbotron");
+            managers = {
+                0: "Nobody"
+            };
+            ajax_get({
+                url: "/api/project/" + project_id + "/users",
+                success: function(list) {
+                    list.forEach(function(user) {
+                        managers[user.id] = user.name;
+                    });
+                    initDropdown("dd-manager", "manager", 0, managers, user_access < 3);
+                    ajax_get({
+                        url: ticket_id ? "/api/ticket/" + ticket_id : "/api/project/" + project_id + "/ticket/" + simple_id,
+                        success: function(ticket) {
+                            ticket_id = ticket.id;
+                            cancel_save = true;
+
+                            updateDropdown("status", ticket.state);
+                            updateDropdown("priority", ticket.priority);
+                            updateDropdown("type", ticket.type);
+
+                            if (ticket.manager) {
+                                if (!managers[ticket.manager_id]) {
+                                    managers[ticket.manager_id] = ticket.manager.name;
+                                    initDropdown("dd-manager", "manager", 0, managers, user_access < 3);
+                                }
+                                updateDropdown("manager", ticket.manager_id);
+                            }
+
+                            $("#ticketTitle").val(ticket.name);
+                            $("#ticketDesc").val(ticket.description);
+                            if (ticket.due_date) {
+                                $('#datetimepicker').datepicker('setDate', new Date(ticket.due_date));
+                            } else {
+                                $('#datetimepicker').datepicker('setDate', null);
+                            }
+
+
+                            $("#ticketCreationDate").html(prettyDate(ticket.creation_date));
+                            $("#ticketCreator").html(ticket.creator.name);
+                            if (ticket.editor) {
+                                $("#ticketEdited").css("display", "inline");
+                                $("#ticketEditionDate").html(prettyDate(ticket.edition_date));
+                                $("#ticketEditor").html(ticket.editor.name);
+                            } else {
+                                $("#ticketEdited").css("display", "none");
+                            }
+                            cancel_save = false;
+                            removeLoading();
+                            $("#informations").css("display", "block");
+                        },
+                    });
+                }
+            });
+
+
+        }
+
+        function loadManagers() {
+
+        }
+
+        function saveInfo(data) {
+            if (!cancel_save && ticket_id) {
+                ajax_post({
+                    url: "/api/ticket/" + ticket_id + "/edit",
+                    data: data,
+                    success: function(content) {
+                        notify("<b>Success</b> changes saved !", "success");
+                    }
+                });
+            }
+        }
+
         $(document).ready(function() {
 
             initNotification(".jumbotron");
             $("#navTickets").addClass("active");
 
-            var id = window.location.href.split("/ticket/")[1].toUpperCase();
-            if (id.indexOf("/") !== -1 || id.length > 4) {
-                writeCookie("notify", "warning-Invalid ticket id.", 1);
+            var id = window.location.href.split("/ticket/")[1].toUpperCase().replace("#", "");
+            if (id.indexOf("/") !== -1 || id.split("-").length !== 2) {
+                writeCookie("notify", "warning-Invalid ticket id. / or -", 1);
                 window.location = "/tickets";
                 return;
             }
 
             $("#ticket-id").html("<b>[" + id + "]</b>");
             $("#ticketTitle").val("Loading...");
-            addLoading(".jumbotron");
 
-            /*
-            registerCustomInput("ticketTitle", false, function() {
-                console.log("todo save ticketTitle");
+            var ticket_prefix = id.split("-")[0];
+            simple_id = id.split("-")[1];
+
+            if (!isNumeric(simple_id)) {
+                writeCookie("notify", "warning-Invalid ticket id.", 1);
+                window.location = "/tickets";
+                return;
+            }
+
+            simple_id = parseInt(simple_id);
+
+            $('#datetimepicker').datepicker({
+                format: "dd/mm/yyyy",
+                maxViewMode: 2,
+                todayHighlight: true,
+                orientation: "bottom auto",
+                clearBtn: true,
+                autoclose: true
             });
-            registerCustomInput("ticketDesc", true, function() {
-                console.log("todo save ticketDesc");
-            });*/
 
-            initDropdown("dd-status", "status", 0);
-            initDropdown("dd-type", "type", 0);
-            initDropdown("dd-priority", "priority", 0);
+            $("#datetimepicker").datepicker()
+                .on("changeDate", function(e) {
 
+                    var date = $('#datetimepicker').datepicker('getDate');
+                    saveInfo({
+                        due_date: date ? getGTMDate(date).toJSON() : null
+                    });
+                });
+
+            ajax_get({
+                url: "/api/project/list",
+                success: function(content) {
+                    content.list.forEach(function(project) {
+                        if (project.ticket_prefix == ticket_prefix) {
+                            project_id = project.id;
+                            user_access = project.access_level;
+                        }
+                    });
+
+                    if (!project_id) {
+                        writeCookie("notify", "warning-Invalid ticket id. project", 1);
+                        window.location = "/tickets";
+                        return;
+                    }
+
+                    loadInfos();
+
+                    setInterval(loadInfos, 5 * 60 * 1000);
+
+                    if (user_access >= 3) {
+                        registerCustomInput("ticketTitle", false, function() {
+                            saveInfo({
+                                name: $("#ticketTitle").val()
+                            });
+                        });
+                        registerCustomInput("ticketDesc", true, function() {
+                            saveInfo({
+                                description: $("#ticketDesc").val()
+                            });
+                        }, autoscroll = false);
+                        initDropdown("dd-status", "status", 0);
+                        initDropdown("dd-type", "type", 0);
+                        initDropdown("dd-priority", "priority", 0);
+                        $("#btnDelete").css("display", "block");
+                    } else {
+                        initDropdown("dd-status", "status", 0, {}, true);
+                        initDropdown("dd-type", "type", 0, {}, true);
+                        initDropdown("dd-priority", "priority", 0, {}, true);
+                    }
+                },
+            });
+
+            $("#btnDelete").click(function() {
+                if (confirm('Are you sure you want to delete this ticket ?')) {
+                    ajax_delete({
+                        url: "/api/ticket/" + ticket_id + "/delete",
+                        success: function(content) {
+                            writeCookie("notify", "success-The ticket was successfuly deleted.", 1);
+                            window.location = "/tickets";
+                        }
+                    });
+                }
+                return false;
+            });
         });
 
-        function changeStatus(status) {
-
-        }
-
-        function changeType(type) {
-
-        }
-
-        function changePriority(priority) {
-
+        function changeDropdown(ddtype, val) {
+            switch (ddtype) {
+                case "status":
+                    saveInfo({
+                        state: val
+                    });
+                    break;
+                case "type":
+                    saveInfo({
+                        type: val
+                    });
+                    break;
+                case "priority":
+                    saveInfo({
+                        priority: val
+                    });
+                    break;
+                case "manager":
+                    saveInfo({
+                        manager_id: val == 0 ? null : val
+                    });
+                    break;
+            }
         }
 
     </script>
@@ -61,28 +223,41 @@
                     <input id="ticketTitle" class="form-control form-control-lg form-control-plaintext" readonly type="text" placeholder="Title" required autocomplete="off"> </div>
             </form>
             <div id="informations" style="display:none;">
-                <h4 style="margin-top:-0.8em;"><small>Created the 8th January 2018 by <a href="#">John ROBERT</a> - Edited the 9th January 2018 by <a href="#">Donald CHARLES</a></small></h4>
+                <h4 style="margin-top:-0.8em;"><small>Created <span id="ticketCreationDate" class="text-success"></span> by <span id="ticketCreator" class="text-primary"></span><span id="ticketEdited"> - Edited <span id="ticketEditionDate" class="text-success"></span> by <span id="ticketEditor" class="text-primary"></span></span></small></h4>
+
+
                 <div class="row">
-                    <h5 class="col-sm-3">Status :
+                    <h5 class="col-sm-4">Status :
                         <div class="dropdown" id="dd-status"></div>
                     </h5>
-                    <h5 class="col-sm-5">Manager : <a href="#">John ROBERT</a></h5>
-                </div>
-                <div class="row">
-                    <h5 class="col-sm-3">Type :
+                    <h5 class="col-sm-4">Manager :
+                        <div class="dropdown" id="dd-manager"></div>
+                    </h5>
+                    <h5 class="col-sm-4">Type :
                         <div class="dropdown" id="dd-type"></div>
                     </h5>
-                    <h5 class="col-sm-3">Priority :
+                </div>
+                <div class="form-group row">
+                    <h5 class="col-sm-4">Priority :
                         <div class="dropdown" id="dd-priority"></div>
                     </h5>
+                    <label class="h5 col-form-label" for="datetimepicker" style="margin-left:15px;">Due date :</label>
+                    <div class="input-group date col-sm-2" data-date-format="mm/dd/yyyy" data-provide="datepicker" id="datetimepicker">
+                        <input type="text" readonly class="form-control" placeholder="No date">
+                        <div class="input-group-addon">
+                            <span class="fa fa-calendar"></span>
+                        </div>
+                    </div>
+                    <button id="btnDelete" class="btn btn-outline-danger col-sm-1 offset-sm-1" style="cursor:pointer;display:none;"><i class="fa fa-trash"></i> Delete</button>
+
                 </div>
                 <form id="form-ticketDesc" class="form-group row form-custom">
                     <div class="col-sm-11">
-                        <textarea id="ticketDesc" class="form-control form-control-plaintext" readonly type="text" placeholder="Description..." autocomplete="off" wrap="hard" rows="3" maxlength="4096">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam in volutpat mauris, non finibus nulla. Vestibulum tincidunt diam ut magna efficitur tincidunt. Maecenas vitae sodales mi, non dictum dolor. Nullam imperdiet purus at magna aliquam, et tincidunt purus volutpat. Praesent nec nulla feugiat, placerat nisi in, interdum enim. Ut in vehicula nibh. Vivamus ullamcorper pellentesque arcu a mattis. Nulla a mi est. Suspendisse nec tincidunt elit, eu rutrum ante. Aenean ante mi, elementum in bibendum non, malesuada ac mauris.</textarea>
+                        <textarea id="ticketDesc" class="form-control form-control-plaintext" readonly type="text" placeholder="Description..." autocomplete="off" wrap="hard" rows="3" maxlength="4096"></textarea>
                     </div>
                 </form>
-                <h3>Comments</h3>
-                <h4 class="text-danger"><small>TODO</small></h4>
+                <!--<h3>Comments</h3>
+                <h4 class="text-danger"><small>TODO</small></h4>-->
             </div>
         </div>
     </div>
