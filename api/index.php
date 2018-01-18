@@ -337,11 +337,11 @@ $route->get(array("/api/user/me/projects",
                   "/api/project/list"), function($id = null){
 
     $id = ($id === null) ? force_auth() : (int) $id;
-    $offset = ((int) get("offset",true)) ?? 0;
-    $number = ((int) get("number",true)) ?? 20;
+    $offset = (int) (get("offset",true) ?? 0);
+    $number = (int) (get("number",true) ?? 20);
 
     $list = get_projects_for_user($id, $number, $offset);
-    $output = array("total" => count($list),
+    $output = array("total" => get_number_projects_for_user($id),
                     "list"=>$list,
                     "offset"=>$offset,
                     "number"=>$number);
@@ -509,15 +509,19 @@ $route->get("/api/project/{id}/users", function($id_project){
     $id_project = (int) $id_project;
     $id_user = force_auth();
 
-    $offset = ((int) get("offset",true)) ?? 0;
-    $number = ((int) get("number",true)) ?? 20;
+    $offset = (int) (get("offset",true) ?? 0);
+    $number = (int) (get("number",true) ?? 20);
 
     if (! project_exists($id_project)){
         http_error(404, "Project Not Found");
     }
 
     if (access_level($id_user, $id_project) > 0){
-        http_success(get_users_for_project($id_project, $number, $offset));
+        $output = array(
+            "list"=>get_users_for_project($id_project, $number, $offset),
+            "total"=>get_number_users_for_project($id_project)
+        );
+        http_success($output);
     }else{
         http_error(403, "You cannot see the users of a project you are not a part of.");
     }
@@ -568,12 +572,16 @@ $route->get("/api/project/{id}/tickets", function($id_project){
     $id_project = (int) $id_project;
     $current_user = force_auth();
 
-    $offset = ((int) get("offset",true)) ?? 0;
-    $number = ((int) get("number",true)) ?? 20;
+    $offset = (int) (get("offset",true) ?? 0);
+    $number = (int) (get("number",true) ?? 20);
 
     if (project_exists($id_project)){ 
         if (access_level($current_user, $id_project) >= 1){
-            http_success(get_tickets_for_project($id_project, $number, $offset));
+            $output= array(
+                "list"=> get_tickets_for_project($id_project, $number, $offset),
+                "total"=>get_number_tickets_for_project($id_project)
+            );
+            http_success($output);
         }else{
             http_error(403, "You do not have the right to access this project or his tickets");
         }     
@@ -609,11 +617,15 @@ $route->get("/api/project/{id_project}/ticket/{id_simple_ticket}", function($id_
 $route->get(array("/api/ticket/list",
                   "/api/tickets/list"), function(){
     $id_user = force_auth();
-    $offset = ((int) get("offset",true)) ?? 0;
-    $number = ((int) get("number",true)) ?? 150000000;
+    $offset = (int) (get("offset",true) ?? 0);
+    $number = (int) (get("number",true) ?? 150000000);
     $tickets = get_tickets_for_user($id_user, $number, $offset);
-    $max_tickets = count(get_tickets_for_user($id_user, 150000000, 0));
-    http_success($tickets);
+
+    $output = array(
+        "list"=>$tickets,
+        "total"=>get_number_tickets_for_user($id_user)
+    );
+    http_success($output);
 });
 
 $route->get("/api/ticket/{id}", function($id){
@@ -688,7 +700,7 @@ $route->post("/api/ticket/{id}/addcomment", function($ticket_id){
     if (rights_user_ticket($creator_id, $ticket_id) >= 2){
         $id = add_comment($ticket_id, $creator_id, $comment);
         $output = array("id_comment"=>$id,
-                       "comment"=>get_comment($id));
+                        "comment"=>get_comment($id));
         http_success($output);
     }else{
         http_error(403, "You do not have the permission to comment");
@@ -699,11 +711,16 @@ $route->get("/api/ticket/{id}/comments", function($id){
     $user_id = force_auth();
     $ticket_id = (int) $id;
 
-    $offset = ((int) get("offset",true)) ?? 0;
-    $number = ((int) get("number",true)) ?? 20;
+    $offset = (int) (get("offset",true) ?? 0);
+    $number = (int) (get("number",true) ?? 20);
 
     if (rights_user_ticket($user_id, $ticket_id) >= 1){
-        http_success(get_comments_for_ticket($id, $number, $offset));
+        $output = array(
+            "list"=>get_comments_for_ticket($id, $number, $offset),
+            "total"=>get_number_comments_ticket($id)
+        );
+
+        http_success($output);
     }else{
         http_error(403, "you do not have the permission to access this project");
     }

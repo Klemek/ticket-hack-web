@@ -226,7 +226,7 @@ function verify_user_ddos(){
             $req= "UPDATE connection_history SET request_count= request_count+1 WHERE user_id = ?";
             $values = array($id_user);
             execute($req, $values);
-            
+
             return $connection["request_count"] < $max_requests;
         }else{
             $req= "UPDATE connection_history SET request_count=1, first_request_date=? WHERE user_id = ?";
@@ -355,6 +355,19 @@ function get_projects_for_user($id_user, $limit=20, $offset=0){
     return $res;
 }
 
+
+/*return the number of project the user has access to*/
+function get_number_projects_for_user($id_user){
+    $req = "SELECT COUNT(*) AS c FROM projects WHERE id IN (SELECT project_id FROM link_user_project WHERE user_id = :user_id) OR creator_id = :user_id;";
+    $values = array(":user_id"=>$id_user);
+
+    $sth = execute($req, $values);
+
+    $res = $sth->fetch(PDO::FETCH_ASSOC);
+    
+    return (int) $res["c"];
+}
+
 /**
 * get all the users for the project
 * add a access_level to each user
@@ -387,6 +400,19 @@ function get_users_for_project($id_project, $limit=20, $offset=0){
     }
 
     return $output;
+}
+
+/*get the number of users on a project*/
+function get_number_users_for_project($id_project){
+    $req = "SELECT COUNT(*) AS c FROM users WHERE id IN (SELECT user_id FROM link_user_project WHERE project_id = :project_id UNION".
+        " SELECT creator_id FROM projects WHERE id=:project_id)";
+    $values = array(":project_id"=>$id_project);
+
+    $sth = execute($req, $values);
+
+    $result = $sth->fetch(PDO::FETCH_ASSOC)["c"];
+
+    return $result;
 }
 
 /*modify the level on the (id_user, id_project) link*/
@@ -545,7 +571,6 @@ function get_ticket_simple($id_project, $id_simple){
 *
 **/
 function get_tickets_for_project($id_project, $limit=20, $offset=0){
-    global $db;
 
     $req = "SELECT * FROM tickets WHERE project_id = :project_id ORDER BY simple_id ASC OFFSET :offset LIMIT :limit;";
     $values = array(
@@ -570,6 +595,18 @@ function get_tickets_for_project($id_project, $limit=20, $offset=0){
     return $res;
 }
 
+/*return the number of tickets a project possess*/
+function get_number_tickets_for_project($id_project){
+    $req = "SELECT COUNT(*) AS c FROM tickets WHERE project_id = :project_id;";
+    $values = array(
+        ":project_id"=>$id_project
+    );
+
+    $res = execute($req, $values)->fetch(PDO::FETCH_ASSOC);
+
+    return $res["c"];
+}
+
 /*return all the tickets the user has access to*/
 function get_tickets_for_user($id_user, $limit=20, $offset=0){
     $req = "SELECT * FROM tickets WHERE project_id IN (SELECT project_id FROM link_user_project WHERE user_id = :user_id AND user_access > 0 UNION SELECT id FROM projects WHERE creator_id = :user_id) ORDER BY project_id, simple_id OFFSET :offset LIMIT :limit;";
@@ -590,6 +627,16 @@ function get_tickets_for_user($id_user, $limit=20, $offset=0){
         }
         $output[$i]["creator"] = get_user($output[$i]["creator_id"]);
     }
+    return $output;
+}
+
+/*return the number of tickets a user has access to*/
+function get_number_tickets_for_user($id_user){
+    $req = "SELECT COUNT(*) AS c FROM tickets WHERE project_id IN (SELECT project_id FROM link_user_project WHERE user_id = :user_id AND user_access > 0 UNION SELECT id FROM projects WHERE creator_id = :user_id);";
+    $values = array(":user_id"=>$id_user);
+
+    $output = execute($req, $values)->fetch(PDO::FETCH_ASSOC)["c"];
+
     return $output;
 }
 
@@ -698,6 +745,16 @@ function get_comments_for_ticket($id_ticket, $limit=20, $offset=0){
     }
 
     return $res;
+}
+
+/*return the number of comments on the ticket*/
+function get_number_comments_ticket($id_ticket){
+    $req = "SELECT COUNT(*) AS c FROM comments WHERE ticket_id = :ticket_id;";
+    $values= array(":ticket_id" =>$id_ticket);
+    $sth = execute($req, $values);
+    $res = $sth->fetch(PDO::FETCH_ASSOC);
+
+    return $res["c"];
 }
 
 /** return the rights of the user on the ticket
