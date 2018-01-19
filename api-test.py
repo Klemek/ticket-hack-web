@@ -110,7 +110,7 @@ def executeTests():
     global server, cookie, context
     context = ssl._create_unverified_context()
     print("Ticket'Hack API test")
-    server = "http://192.168.56.101"
+    server = "https://kalioz.fr"
 
     print("EXECUTING TESTS ON "+server)
 
