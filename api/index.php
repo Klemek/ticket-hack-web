@@ -1,63 +1,10 @@
 <?php
 /** Ticket'Hack API
 * enables to access to projects, tickets and users with web commands
-* 
-* root = "tickethack.com/api/";
-* USER:
-* - /user/ access to users data
-*   /user/{id} get the json output of the database for the user at the id {id}
-*   /user/{id}/projects get the projects the user has access to.
-*   /user/me  shortcut to /user/{my id} for authentified users.
-*   /user/new adds a user : it neeed POST parameters
-*      -name
-*      -email
-*      -password
-*
-* PROJECT
-* - /project/ access to the projects data
-*   /project/{id} get the data of the project if the user has the right to access it.
-*   /project/{id}/delete delete the project; only an admin or a maximum level user on this project can use this.
-*   /project/{id}/adduser add a user to the project; POST parameters
-*      -id_user
-*      -access_level
-*      please note this function can only be used by someone with higher access level than 0 AND he cannot gives higher clearance to someone else.
-*   /project/{id}/removeuser remove a user; POST parameters
-*      -id_user
-*
-*
-*   /project/{id}/addticket add a ticket to the project. POST parameters : 
-*      -title
-*      -priority 
-*      -description 
-*      -due_date
-*
-*      returns the ticket as it is in the database. user need to be identificated
-*
-*   /project/{id}/tickets return tickets of the project
-*   /project/{id}/ticket/{id_simple_ticket} return the ticket
-*   /project/add add a project; POST parameters
-*      -name
-*      -ticket_prefix
-*      
-*      returns th project as it is in the db
-* 
-* TICKETS
-*   /ticket/{id} return the ticket information IF the user has access to the project
-*                equivalent to /project/{id}/ticket/{id_simple_ticket}. all the following can be used on both path
-*   /ticket/{id}/comments get the comments of the ticket
-*   /ticket/{id}/comment/{id_comment} return the comment detail/edit parametre POST
-*      -comment
-*   /ticket/{id}/addcomment POST
-*      -comment
-*      user needs to be authenticated
-*
-* COMMENTS
-* /comment/{id}
-* /comment/{id}/remove
-* /comment/{id}/edit
-*    -comment
-* 
+* to have a detailed view of the API, please go to https://app.swaggerhub.com/apis/top8/TicketHack/1.0.0
+* json detailed scheme of the API can be found in ./scheme_by_swagger.zip
 **/
+
 require_once "router.php";
 require_once "../functions.php";
 
@@ -67,6 +14,13 @@ if (session_status() == PHP_SESSION_NONE) {
 
 header('Content-type: application/json');
 
+/**
+* shorcut to $_GET[""] with error handling
+* @param $str the item to fetch
+* @param optionnal if the argument can be missing. setting it to false raise an error if it is missing and stop the program.
+*
+* @return $_GET[$str]
+**/
 function get($str, $optionnal = false){
     if (isset($_GET[$str])){
         return $_GET[$str];
@@ -79,6 +33,13 @@ function get($str, $optionnal = false){
     return null;
 }
 
+/**
+* shorcut to $_POST[""] with error handling
+* @param $str the item to fetch
+* @param optionnal if the argument can be missing. setting it to false raise an error if it is missing and stop the program.
+*
+* @return $_POST[$str]
+**/
 function post($str, $optionnal = false){
     if (isset($_POST[$str])){
         return $_POST[$str];
@@ -91,7 +52,7 @@ function post($str, $optionnal = false){
 }
 
 /**
-* generate an error and close the programm
+* generate an http error and close the programm
 * @param code the http code
 * @param msg the message you want to display
 * @param args additionnal output you may want to display
@@ -139,8 +100,8 @@ function http_success($content, $args = array()){
 
 
 /**
-* return the user id if he is connected
-* kill the process otherwise
+* check if the user is connected and close the program if he is not.
+* @return the user id if he is connected
 **/
 function force_auth(){
     if (isset($_SESSION["user_id"])){
@@ -150,21 +111,16 @@ function force_auth(){
     }
 }
 
-$route = new Route();
-
 /* anti ddos handmade */
 if (verify_user_ddos() == false){
     http_error(403, "Too many requests in less than a minute. please wait a little");
 }
 
-/*-----------------------------------------------------------------------------------------------------------------------------------------*/
+// our route
+$route = new Route();
 
-/** GENERAL
-* /login login a user - return truthy or falsey depending on if the user successfully connected
-*     - POST:email
-*     - POST:password
-* /disconnect disconnect a user - clear all cookies and delete the session
-*
+/**
+* ------------------------------------------------------- GENERAL --------------------------------------------------------------
 **/
 $route->post(array("/api/login",
                    "/api/user/login",
@@ -199,18 +155,8 @@ $route->route(array("/api/logout",
     http_success(array("disconnected"=>true));
 });
 
-
-
 /**
-* USER:
-* - /user/ access to users data
-*   /user/{id} get the json output of the database for the user at the id {id}
-*   /user/{id}/projects get the projects the user has access to.
-*   /user/me  shortcut to /user/{my id} for authentified users.
-*   /user/add adds a user : it neeed POST parameters
-*      -name
-*      -email
-*      -password
+* ------------------------------------------------------- USER --------------------------------------------------------------
 **/
 $route->post(array("/api/user/new",
                    "/api/user/add"), function(){
@@ -256,14 +202,6 @@ $route->get("/api/user/{id}", function($id){
     }
 });
 
-/** edit the user info - POST
-* POST: user_id
-* optional parameter : password, name, email
-*
-* @return the user infos
-*
-* you can only edit your own profile
-**/
 $route->post(array("/api/user/me/edit",
                    "/api/user/{id}/edit"), function($id = null){
     $id = ($id !== null) ? (int) $id : force_auth();
@@ -303,11 +241,6 @@ $route->post(array("/api/user/me/edit",
     http_success($output);
 });
 
-/**
-* Delete the user account
-* only the logged in user can delete his own account.
-*
-**/
 $route->delete(array("/api/user/me/delete",
                      "/api/user/{id}/delete"),
                function($id = null){
@@ -324,11 +257,6 @@ $route->delete(array("/api/user/me/delete",
                    }
                });
 
-/**
-* get the user projects
-* optional parameters : number = 20, offset = 0 by default.
-**/
-/*todo : test that*/
 $route->get(array("/api/user/me/projects",
                   "/api/user/{id}/projects",
                   "/api/projects/list",
@@ -347,33 +275,7 @@ $route->get(array("/api/user/me/projects",
 });
 
 /**
-* PROJECT:
-* - /project/ access to the projects data
-*   /project/{id} get the data of the project if the user has the right to access it.
-*   /project/{id}/delete delete the project; only an admin or a maximum level user on this project can use this.
-*   /project/{id}/adduser add a user to the project; POST parameters
-*      -id_user
-*      -access_level
-*      please note this function can only be used by someone with higher access level than 0 AND he cannot gives higher clearance to someone else.
-*   /project/{id}/removeuser remove a user; POST parameters
-*      -id_user
-*
-*
-*   /project/{id}/addticket add a ticket to the project. POST parameters : 
-*      -title
-*      -priority 
-*      -description 
-*      -due_date
-*
-*      returns the ticket as it is in the database. user need to be identificated
-*
-*   /project/{id}/tickets return tickets of the project
-*   /project/{id}/ticket/{id_simple_ticket} return the ticket
-*   /project/new add a project; POST parameters
-*      -name
-*      -ticket_prefix
-*      
-*      returns th project as it is in the db
+* ------------------------------------------------------- ¨PROJECT --------------------------------------------------------------
 **/
 
 $route->post("/api/project/new", function(){
@@ -387,10 +289,6 @@ $route->post("/api/project/new", function(){
     http_success($output);
 });
 
-/**
-* return the project info
-* add a user_access info depending on the session; this field will valu false if the user isn't connected
-**/
 $route->get("/api/project/{id}", function($id){
     $id = (int) $id;
     $project = get_project($id);
@@ -410,7 +308,6 @@ $route->get("/api/project/{id}", function($id){
     }
 });
 
-/*only the creator can change these parameters for now*/
 $route->post("/api/project/{id}/edit", function($id){
     $name = post("name", true);
     $id_user = force_auth();
@@ -502,7 +399,6 @@ $route->post("/api/project/{id}/edituser", function($id_project){
     }
 });
 
-/*return the users on the project*/
 $route->get("/api/project/{id}/users", function($id_project){
     $id_project = (int) $id_project;
     $id_user = force_auth();
@@ -525,10 +421,6 @@ $route->get("/api/project/{id}/users", function($id_project){
     }
 });
 
-/**
-* remove an user from a project
-* note that only an admin can remove other users, and only the creator can remove admins.
-**/
 $route->post("/api/project/{id}/removeuser", function($id_project){
     $id_project = (int) $id_project;
     $id_user = (int) post("user_id");
@@ -609,7 +501,7 @@ $route->get("/api/project/{id_project}/ticket/{id_simple_ticket}", function($id_
 });
 
 /**
-* ------------------ TICKETS ---------------------------------------------------------------------------------------------------
+* ------------------------------------------------------- TICKETS --------------------------------------------------------------
 **/
 
 $route->get(array("/api/ticket/list",
@@ -725,7 +617,7 @@ $route->get("/api/ticket/{id}/comments", function($id){
 });
 
 /**
-* ------------------ COMMENTS ---------------------------------------------------------------------------------------------------
+* ------------------------------------------------------- COMMENTS --------------------------------------------------------------
 **/
 $route->get("/api/comment/{id_comment}", function($id_comment){
     if (rights_user_comment(force_auth(), $id_comment) > 0){
@@ -762,7 +654,7 @@ $route->delete("/api/comment/{id}/delete", function($comment_id){
 });
 
 /**
-* ------------------ ERRORS ---------------------------------------------------------------------------------------------------
+* ------------------------------------------------------- ERROR HANDLING --------------------------------------------------------------
 **/
 $route->error_404(function(){
     http_error(404, "Error 404 - The server cannot find a page corresponding to your request. please check your url and method. do note this does NOT correspond to missing parameters.");
