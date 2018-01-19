@@ -41,12 +41,12 @@ function hash_passwd($pswd){//TODO add salt with timestamp
 * @return boolean
 **/
 function user_test_mail($mail){
-    $req = "SELECT COUNT(email) FROM users WHERE email=?;";
+    $req = "SELECT COUNT(email) AS c FROM users WHERE email=?;";
     $values = array($mail);
 
     $result = execute($req, $values);
 
-    return $result->fetchColumn() === 1;
+    return $result->fetch()["c"] >= 1;//fetchColumn diffère en 32 et 64 bits
 }
 
 /** add a user
@@ -412,7 +412,7 @@ function get_number_users_for_project($id_project){
 
     $result = $sth->fetch(PDO::FETCH_ASSOC)["c"];
 
-    return $result;
+    return (int) $result;
 }
 
 /*modify the level on the (id_user, id_project) link*/
@@ -474,7 +474,7 @@ function access_level($id_user, $id_project){
 **/
 function add_ticket($title, $project_id, $creator_id, $manager_id ,$priority, $description, $due_date , $state, $type){
 
-    $simple_id = count(get_tickets_for_project($project_id));
+    $simple_id = get_number_tickets_for_project($project_id);//starts at 0
 
     $values = array(
         ":simple_id" => $simple_id,
@@ -604,7 +604,7 @@ function get_number_tickets_for_project($id_project){
 
     $res = execute($req, $values)->fetch(PDO::FETCH_ASSOC);
 
-    return $res["c"];
+    return (int) $res["c"];
 }
 
 /*return all the tickets the user has access to*/
@@ -637,7 +637,7 @@ function get_number_tickets_for_user($id_user){
 
     $output = execute($req, $values)->fetch(PDO::FETCH_ASSOC)["c"];
 
-    return $output;
+    return (int) $output;
 }
 
 /*delete a ticket from the database (!= ticket passed to achieved) */
@@ -754,7 +754,7 @@ function get_number_comments_ticket($id_ticket){
     $sth = execute($req, $values);
     $res = $sth->fetch(PDO::FETCH_ASSOC);
 
-    return $res["c"];
+    return (int) $res["c"];
 }
 
 /** return the rights of the user on the ticket

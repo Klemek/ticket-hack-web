@@ -2,7 +2,7 @@
 /** Ticket'Hack API
 * enables to access to projects, tickets and users with web commands
 * 
-* root = "ticket'hack.com/api/";
+* root = "tickethack.com/api/";
 * USER:
 * - /user/ access to users data
 *   /user/{id} get the json output of the database for the user at the id {id}
@@ -45,9 +45,7 @@
 *   /ticket/{id} return the ticket information IF the user has access to the project
 *                equivalent to /project/{id}/ticket/{id_simple_ticket}. all the following can be used on both path
 *   /ticket/{id}/comments get the comments of the ticket
-*   /ticket/{id}/comment/{id_comment} return the comment detail
-*   /ticket/{id}/comment/{id_comment}/remove
-*   /ticket/{id}/comment/{id_comment}/edit parametre POST
+*   /ticket/{id}/comment/{id_comment} return the comment detail/edit parametre POST
 *      -comment
 *   /ticket/{id}/addcomment POST
 *      -comment
