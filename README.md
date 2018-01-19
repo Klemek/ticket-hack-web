@@ -35,7 +35,7 @@ Deploying this application can be done with the [deploy documentation](./doc/dep
 
 ## API
 
-API definition can be found at [Swagger](https://app.swaggerhub.com/apis/top8/TicketHack/ "Click to see full API").
+API definition can be found at [Swagger](https://app.swaggerhub.com/apis/top8/TicketHack/ "Click to see full API") or get [JSON version](./doc/scheme_by_swagger.zip).
 
 API tests can be done from the [api-test.py](./api-test.py).
 
