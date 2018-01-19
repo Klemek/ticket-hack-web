@@ -1,3 +1,4 @@
+//register Math functions to be used without 'Math.(...)'
 'floor|random|round|abs|sqrt|PI|atan2|sin|cos|pow|max|min|hypot'.split('|').forEach(function (p) {
     window[p] = Math[p];
 });
@@ -5,43 +6,47 @@
 
 //GENERAL
 
+//Generate an integer within range [min, max]
 function randInt(min, max) {
     return floor((random() * (max + 1)) + min);
 }
 
-function randString(list) {
-    return list[randInt(0, list.length - 1)];
-}
-
+//Pad a number with leading 0 to the given size : 3 -> 003
 function pad(num, size) {
     var s = num + "";
     while (s.length < size) s = "0" + s;
     return s;
 }
 
+//Check validity of JSON with a regex
 function validJSON(text) {
     return /^[\],:{}\s]*$/.test(text.replace(/\\["\\\/bfnrtu]/g, '@').replace(/"[^"\\\n\r]*"|true|false|null|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?/g, ']').replace(/(?:^|:|,)(?:\s*\[)+/g, ''));
 }
 
+//Transform a timestamp to a readable date
 function prettyDate(timestamp) {
     var date = new Date(timestamp);
     return date.toGMTString();
 }
 
+//Check if a string is numeric
 function isNumeric(n) {
     return !isNaN(parseFloat(n)) && isFinite(n);
 }
 
+//Get the GMT equivalent of given date
+function getGMTDate(date) {
+    return new Date(date.valueOf() - date.getTimezoneOffset() * 60000);
+}
+
+//Get a formated ticket name from JSON value returned by API
 function getTicketName(ticket) {
     return ticket.ticket_prefix + "-" + pad(parseInt(ticket.simple_id), 3);
 }
 
-function getGTMDate(date) {
-    return new Date(date.valueOf() - date.getTimezoneOffset() * 60000);
-}
-
 //COOKIES
 
+//write a cookie with the given name, value and lifetime in days
 function writeCookie(cname, cvalue, exdays) {
     var d = new Date();
     d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
@@ -49,6 +54,7 @@ function writeCookie(cname, cvalue, exdays) {
     document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
 }
 
+//read a cookie from its name
 function readCookie(cname) {
     var name = cname + "=";
     var decodedCookie = decodeURIComponent(document.cookie);
@@ -65,18 +71,21 @@ function readCookie(cname) {
     return "";
 }
 
+//read a cookie and delete it
 function readAndErase(name) {
     var c = readCookie(name);
     eraseCookie(name);
     return c;
 }
 
+//delete a cookie
 function eraseCookie(name) {
     writeCookie(name, "", -1);
 }
 
 //AJAX
 
+//create an ajax request with support of current API response format
 function ajax(method, url, data, callbacksuccess, callbackerror) {
     $.ajax({
         url: url,
@@ -119,20 +128,24 @@ function ajax(method, url, data, callbacksuccess, callbackerror) {
     });
 }
 
+//create a get request with support of current API response format
 function ajax_get(request) {
     ajax('GET', request['url'], request['data'], request['success'], request['error']);
 }
 
+//create a post request with support of current API response format
 function ajax_post(request) {
     ajax('POST', request['url'], request['data'], request['success'], request['error']);
 }
 
+//create a delete request with support of current API response format
 function ajax_delete(request) {
     ajax('DELETE', request['url'], request['data'], request['success'], request['error']);
 }
 
 //NOTIFICATIONS
 
+//initialize the notifications div and read notification cookie if it exists
 function initNotification(divName) {
     $(divName).append('<div id="notifications"></div>');
     //$("#notifications").width($(divName).width());
@@ -142,6 +155,7 @@ function initNotification(divName) {
         notify(notf);
 }
 
+//create a notification
 function notify(msg, type) {
     if ($("#notifications").length > 0) {
 
@@ -174,6 +188,7 @@ function notify(msg, type) {
     }
 }
 
+//remove all notifications shown on screen
 function clearNotification() {
     if ($("#notifications").length > 0) {
         $("#notifications").html("");
@@ -182,10 +197,12 @@ function clearNotification() {
 
 // LOADING
 
+//Add a loading element to given div
 function addLoading(divName, size = 3) {
     $(divName).append('<div id="load-div" class="text-center"><i class="fa fa-spinner fa-spin fa-' + size + 'x fa-fw"></i><span class="sr-only">Loading...</span></div>');
 }
 
+//remove the loading element from screen
 function removeLoading() {
     while ($("#load-div").length > 0) {
         $("#load-div").remove();
@@ -246,14 +263,17 @@ var type_titles = {
 
 //INPUTS
 
+//return the hash of an input and clean it
 function getHashAndClean(inputName) {
     var hash = CryptoJS.SHA256($(inputName).val()).toString();
     $(inputName).val("");
     return hash;
 }
 
+//register current modifications
 var customInputInfos = {};
 
+//add components around an input to be modified with style
 function registerCustomInput(name, textarea, callback, autoscroll = true) {
     $("#form-" + name).append('<label id="' + name + 'Edit" style="display: none;" class="col-form-label"><i id="' + name + 'Confirm" class="fa fa-check"></i><i id="' + name + 'Cancel" class="fa fa-times" style="margin-left: 10px;"></i></label><label id="' + name + 'EditHint" style="display: none;" class="col-form-label"><i class="fa fa-pencil"></i></label>');
     $("#" + name).click(function () {
@@ -309,6 +329,7 @@ function registerCustomInput(name, textarea, callback, autoscroll = true) {
     }
 }
 
+//Format a textarea to resize with content change
 function autoTextArea(name) {
     $("#" + name).on("change", function () {
         $("#" + name).scroll();
@@ -322,8 +343,10 @@ function autoTextArea(name) {
     });
 }
 
+//Register current dropdown custom lists
 var customDropdownValues = {};
 
+//Create a dropdown in the given div
 function initDropdown(name, ddtype, def, values = {}, readonly = false) {
     switch (ddtype) {
         case "status":
@@ -381,6 +404,7 @@ function initDropdown(name, ddtype, def, values = {}, readonly = false) {
     updateDropdown(ddtype, def);
 }
 
+//Update a dropdown selected information and call changeDropdown(ddtype,val) if it exists
 function updateDropdown(ddtype, val) {
     switch (ddtype) {
         case "status":
@@ -405,6 +429,7 @@ function updateDropdown(ddtype, val) {
 
 //VIEWS
 
+//Add a project into the project list
 function addProject(id, simple_id, name) {
     if ($("#projectList").length > 0) {
         var html = '<div class="project" onclick="project_click(' + id + ',\'' + simple_id + '\')">' + '<h4>' + simple_id + ' <small>' + name + '</small></h4></div>';
@@ -412,6 +437,7 @@ function addProject(id, simple_id, name) {
     }
 }
 
+//Add a ticket into the ticket list
 function addTicket(name, desc, type, priority, status, user) {
     if ($("#ticketList").length > 0) {
         if (user && user.length > 0) user = '<h5 class="text-primary">' + user + '</h5>';
@@ -420,41 +446,10 @@ function addTicket(name, desc, type, priority, status, user) {
     }
 }
 
+//Add a user into the user list
 function addUser(id, user_access, name, del) {
     if ($("#userList").length > 0) {
         var html = '<div id="user-' + id + '" class="user col-lg-3 col-6" ' + (del ? 'onclick="delete_user(' + id + ')"' : 'style="cursor:default;"') + '><b>' + access_titles[user_access] + '</b> ' + name + (del ? '<i class="fa fa-times"></i>' : '') + '</div>';
         $("#userList").append(html);
     }
-}
-
-//DESIGN FAKE VIEWS
-
-var fakeProjectNames = ['TEST', 'RAND', 'EX', 'ABC', 'SAMP'],
-    fakeProjectDesc = ['Sample project', 'Example project', 'Some project', 'Rule the world'],
-    fakeTicketDesc = [
-    'randomly generated ticket', 'a random ticket', 'some ticket', 'omg a ticket', 'a nice ticket', 'you should open this one'
-],
-    fakeUserNames = [
-    'John ROBERT', 'Joseph DAVID', 'Donald CHARLES', 'Michael WILLIAMS'
-];
-
-function addFakeTicket(project) {
-    if (!project)
-        project = randString(fakeProjectNames)
-
-    var name = project + "-" + pad(randInt(1, 999), 3),
-        desc = randString(fakeTicketDesc),
-        type = randInt(0, 2),
-        priority = randInt(0, 4),
-        status = randInt(0, 3),
-        user = randString(fakeUserNames);
-
-    if (randInt(0, 2) == 0)
-        user = "";
-
-    addTicket(name, desc, type, priority, status, user);
-}
-
-function addFakeProject() {
-    addProject(0, randString(fakeProjectNames), randString(fakeProjectDesc));
 }

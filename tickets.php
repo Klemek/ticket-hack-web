@@ -13,6 +13,7 @@
         var page = 1,
             page_number = 8;
 
+        //Start page treatment
         $(document).ready(function() {
             initNotification(".jumbotron");
             $("#navTickets").addClass("active");
@@ -24,11 +25,11 @@
 
             loadList();
 
+            //refresh every 5 minutes
             setInterval(loadList, 5 * 60 * 1000);
-
-
         });
 
+        //load the ticket list
         function loadList() {
             $("#ticketList").empty();
             $("#new-ticket").css("display", "none");
@@ -46,6 +47,7 @@
                     $("#new-ticket").css("display", "block");
                     removeLoading();
 
+                    //init pagination system
                     var maxpage = content.total / page_number;
                     if (floor(maxpage) !== maxpage)
                         maxpage = floor(maxpage) + 1;
@@ -66,6 +68,7 @@
             });
         }
 
+        //a ticket was clicked
         function ticket_click(id) {
             var win = window.open("/ticket/" + id, '_blank');
             win.focus();

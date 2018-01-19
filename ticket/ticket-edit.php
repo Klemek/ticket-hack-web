@@ -12,19 +12,129 @@
     <script>
         var project_id, simple_id, user_access, ticket_id, cancel_save, managers;
 
+        //Start page treatment
+        $(document).ready(function() {
+            initNotification(".jumbotron");
+            $("#navTickets").addClass("active");
+
+            //check ticket name validity
+            var id = window.location.href.split("/ticket/")[1].toUpperCase().replace("#", "");
+            if (id.indexOf("/") !== -1 || id.split("-").length !== 2) {
+                writeCookie("notify", "warning-Invalid ticket id. / or -", 1);
+                window.location = "/tickets";
+                return;
+            }
+
+            $("#ticket-id").html("<b>[" + id + "]</b>");
+            $("#ticketTitle").val("Loading...");
+
+            var ticket_prefix = id.split("-")[0];
+            simple_id = id.split("-")[1];
+
+            if (!isNumeric(simple_id)) {
+                writeCookie("notify", "warning-Invalid ticket id.", 1);
+                window.location = "/tickets";
+                return;
+            }
+
+            simple_id = parseInt(simple_id);
+
+            //init datetime picker
+            $('#datetimepicker').datepicker({
+                format: "dd/mm/yyyy",
+                maxViewMode: 2,
+                todayHighlight: true,
+                orientation: "bottom auto",
+                clearBtn: true,
+                autoclose: true
+            });
+
+            $("#datetimepicker").datepicker()
+                .on("changeDate", function(e) {
+
+                    var date = $('#datetimepicker').datepicker('getDate');
+                    saveInfo({
+                        due_date: date ? getGMTDate(date).toJSON() : null
+                    });
+                });
+
+            //check project name from list
+            ajax_get({
+                url: "/api/project/list",
+                success: function(content) {
+                    content.list.forEach(function(project) {
+                        if (project.ticket_prefix == ticket_prefix) {
+                            project_id = project.id;
+                            user_access = project.access_level;
+                        }
+                    });
+
+                    if (!project_id) {
+                        writeCookie("notify", "warning-Invalid ticket id. project", 1);
+                        window.location = "/tickets";
+                        return;
+                    }
+
+                    loadInfos();
+
+                    //refresh every 5 minutes
+                    setInterval(loadInfos, 5 * 60 * 1000);
+
+                    //user can edit ticket
+                    if (user_access >= 3) {
+                        registerCustomInput("ticketTitle", false, function() {
+                            saveInfo({
+                                name: $("#ticketTitle").val()
+                            });
+                        });
+                        registerCustomInput("ticketDesc", true, function() {
+                            saveInfo({
+                                description: $("#ticketDesc").val()
+                            });
+                        }, autoscroll = false);
+                        initDropdown("dd-status", "status", 0);
+                        initDropdown("dd-type", "type", 0);
+                        initDropdown("dd-priority", "priority", 0);
+                        $("#btnDelete").css("display", "block");
+                    } else {
+                        initDropdown("dd-status", "status", 0, {}, true);
+                        initDropdown("dd-type", "type", 0, {}, true);
+                        initDropdown("dd-priority", "priority", 0, {}, true);
+                    }
+                },
+            });
+
+            //deleting the ticket
+            $("#btnDelete").click(function() {
+                if (confirm('Are you sure you want to delete this ticket ?')) {
+                    ajax_delete({
+                        url: "/api/ticket/" + ticket_id + "/delete",
+                        success: function(content) {
+                            writeCookie("notify", "success-The ticket was successfuly deleted.", 1);
+                            window.location = "/tickets";
+                        }
+                    });
+                }
+                return false;
+            });
+        });
+
+        //load all of ticket's informations
         function loadInfos() {
             $("#informations").css("display", "none");
             addLoading(".jumbotron");
+            //load all possible managers for project
             managers = {
                 0: "Nobody"
             };
             ajax_get({
                 url: "/api/project/" + project_id + "/users",
-                success: function(list) {
-                    list.forEach(function(user) {
+                success: function(content) {
+                    content.list.forEach(function(user) {
                         managers[user.id] = user.name;
                     });
                     initDropdown("dd-manager", "manager", 0, managers, user_access < 3);
+                    //get ticket informations
                     ajax_get({
                         url: ticket_id ? "/api/ticket/" + ticket_id : "/api/project/" + project_id + "/ticket/" + simple_id,
                         success: function(ticket) {
@@ -51,7 +161,6 @@
                                 $('#datetimepicker').datepicker('setDate', null);
                             }
 
-
                             $("#ticketCreationDate").html(prettyDate(ticket.creation_date));
                             $("#ticketCreator").html(ticket.creator.name);
                             if (ticket.editor) {
@@ -68,10 +177,9 @@
                     });
                 }
             });
-
-
         }
 
+        //update the given information in the database
         function saveInfo(data) {
             if (!cancel_save && ticket_id) {
                 ajax_post({
@@ -84,107 +192,7 @@
             }
         }
 
-        $(document).ready(function() {
-
-            initNotification(".jumbotron");
-            $("#navTickets").addClass("active");
-
-            var id = window.location.href.split("/ticket/")[1].toUpperCase().replace("#", "");
-            if (id.indexOf("/") !== -1 || id.split("-").length !== 2) {
-                writeCookie("notify", "warning-Invalid ticket id. / or -", 1);
-                window.location = "/tickets";
-                return;
-            }
-
-            $("#ticket-id").html("<b>[" + id + "]</b>");
-            $("#ticketTitle").val("Loading...");
-
-            var ticket_prefix = id.split("-")[0];
-            simple_id = id.split("-")[1];
-
-            if (!isNumeric(simple_id)) {
-                writeCookie("notify", "warning-Invalid ticket id.", 1);
-                window.location = "/tickets";
-                return;
-            }
-
-            simple_id = parseInt(simple_id);
-
-            $('#datetimepicker').datepicker({
-                format: "dd/mm/yyyy",
-                maxViewMode: 2,
-                todayHighlight: true,
-                orientation: "bottom auto",
-                clearBtn: true,
-                autoclose: true
-            });
-
-            $("#datetimepicker").datepicker()
-                .on("changeDate", function(e) {
-
-                    var date = $('#datetimepicker').datepicker('getDate');
-                    saveInfo({
-                        due_date: date ? getGTMDate(date).toJSON() : null
-                    });
-                });
-
-            ajax_get({
-                url: "/api/project/list",
-                success: function(content) {
-                    content.list.forEach(function(project) {
-                        if (project.ticket_prefix == ticket_prefix) {
-                            project_id = project.id;
-                            user_access = project.access_level;
-                        }
-                    });
-
-                    if (!project_id) {
-                        writeCookie("notify", "warning-Invalid ticket id. project", 1);
-                        window.location = "/tickets";
-                        return;
-                    }
-
-                    loadInfos();
-
-                    setInterval(loadInfos, 5 * 60 * 1000);
-
-                    if (user_access >= 3) {
-                        registerCustomInput("ticketTitle", false, function() {
-                            saveInfo({
-                                name: $("#ticketTitle").val()
-                            });
-                        });
-                        registerCustomInput("ticketDesc", true, function() {
-                            saveInfo({
-                                description: $("#ticketDesc").val()
-                            });
-                        }, autoscroll = false);
-                        initDropdown("dd-status", "status", 0);
-                        initDropdown("dd-type", "type", 0);
-                        initDropdown("dd-priority", "priority", 0);
-                        $("#btnDelete").css("display", "block");
-                    } else {
-                        initDropdown("dd-status", "status", 0, {}, true);
-                        initDropdown("dd-type", "type", 0, {}, true);
-                        initDropdown("dd-priority", "priority", 0, {}, true);
-                    }
-                },
-            });
-
-            $("#btnDelete").click(function() {
-                if (confirm('Are you sure you want to delete this ticket ?')) {
-                    ajax_delete({
-                        url: "/api/ticket/" + ticket_id + "/delete",
-                        success: function(content) {
-                            writeCookie("notify", "success-The ticket was successfuly deleted.", 1);
-                            window.location = "/tickets";
-                        }
-                    });
-                }
-                return false;
-            });
-        });
-
+        //a change has occured on a dropdown
         function changeDropdown(ddtype, val) {
             switch (ddtype) {
                 case "status":

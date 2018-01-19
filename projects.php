@@ -13,6 +13,7 @@
         var page = 1,
             page_number = 8;
 
+        //Start page treatment
         $(document).ready(function() {
             initNotification(".jumbotron");
             $("#navProjects").addClass("active");
@@ -24,10 +25,11 @@
 
             loadList();
 
+            //refresh every 5 minutes
             setInterval(loadList, 5 * 60 * 1000);
-
         });
 
+        //load the project list
         function loadList() {
             $("#projectList").empty();
             $("#new-project").css("display", "none");
@@ -45,6 +47,7 @@
                         addProject(project.id, project.ticket_prefix, project.name);
                     });
 
+                    //init pagination system
                     var maxpage = content.total / page_number;
                     if (floor(maxpage) !== maxpage)
                         maxpage = floor(maxpage) + 1;
@@ -65,6 +68,7 @@
             });
         }
 
+        //a project was clicked
         function project_click(id, simple_id) {
             writeCookie("project_id", id, 1);
             var win = window.open("/project/" + simple_id, '_blank');

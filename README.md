@@ -4,13 +4,40 @@
 
 ## Menu
 
+* [Features](#features)
+* [Deployment](#deployment)
 * [API](#api)
 * [Data formats](#data-formats)
 * [Database Diagram](#database)
 
+## Features
+
+### Current features
+
+* Create a user account
+* Login and logout
+* Change password
+* See project list
+* Create, manage and remove projects
+* Add or remove user access to projects
+* See ticket list
+* Create, manage and remove tickets
+
+### Future features
+
+* Sort ticket or project list by filters
+* Search for tickets
+* Comment tickets
+
+## Deployment
+
+Deploying this application can be done with the [deploy documentation](./doc/deploy-fr.md) (in french). 
+
 ## API
 
 API definition can be found at [Swagger](https://app.swaggerhub.com/apis/top8/TicketHack/ "Click to see full API").
+
+API tests can be done from the [api-test.py](./api-test.py).
 
 ## Data formats
 
