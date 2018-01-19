@@ -15,87 +15,12 @@
         var page = 1,
             page_number = 5;
 
-        function loadInfos() {
-            $("#informations").css("display", "none");
-            addLoading(".jumbotron");
-            ajax_get({
-                url: "/api/project/" + project_id,
-                success: function(project) {
-                    user_access = project.user_access;
-
-                    $("#btnDelete").css("display", user_access >= 4 ? "block" : "none");
-                    $("#form-add").css("display", user_access >= 4 ? "block" : "none");
-                    $("#new-ticket").css("display", user_access >= 3 ? "block" : "none");
-
-                    $("#new-project").css("display", "block");
-
-                    $("#projectTitle").val(project.name);
-                    $("#projectCreationDate").html(prettyDate(project.creation_date));
-                    $("#projectCreator").html(project.creator.name);
-                    if (project.editor) {
-                        $("#projectEdited").css("display", "inline");
-                        $("#projectEditionDate").html(prettyDate(project.edition_date));
-                        $("#projectEditor").html(project.editor.name);
-                    } else {
-                        $("#projectEdited").css("display", "none");
-                    }
-                    $("#userList").html("");
-                    users = [];
-                    ajax_get({
-                        url: "/api/project/" + project_id + "/users",
-                        success: function(content) {
-                            content.list.forEach(function(user) {
-                                addUser(user.id, user.access_level, user.name, user_access >= 4 && user.id != current_user);
-                                users.push(user.id);
-                            });
-                        }
-                    });
-
-                    loadList();
-
-                    removeLoading();
-                    $("#informations").css("display", "block");
-                },
-                error: function(code, data) {
-                    removeLoading();
-                }
-            });
-        }
-
-        function loadList() {
-            $("#ticketList").html("");
-            ajax_get({
-                url: "/api/project/" + project_id + "/tickets",
-                data: {
-                    number: page_number,
-                    offset: (page - 1) * page_number
-                },
-                success: function(content) {
-                    content.list.forEach(function(ticket) {
-                        addTicket(getTicketName(ticket), ticket.name, ticket.type, ticket.priority, ticket.state, ticket.manager ? ticket.manager.name : "");
-                    });
-
-                    var maxpage = content.total / page_number;
-                    if (floor(maxpage) !== maxpage)
-                        maxpage = floor(maxpage) + 1;
-
-                    $('#pagination').pagination({
-                        pages: maxpage,
-                        currentPage: page,
-                        cssStyle: 'light-theme',
-                        onPageClick: function(num) {
-                            page = num;
-                            loadList();
-                        }
-                    });
-                }
-            });
-        }
-
+        //Start page treatment
         $(document).ready(function() {
             initNotification(".jumbotron");
             $("#navProjects").addClass("active");
 
+            //check project name validity
             var simple_id = window.location.href.split("/project/")[1].toUpperCase().split("#")[0];
             if (simple_id.indexOf("/") !== -1) {
                 writeCookie("notify", "warning-Invalid project id.", 1);
@@ -106,6 +31,7 @@
             $("#project-id").html("<b>[" + simple_id + "]</b>");
             $("#projectTitle").val("Loading...");
 
+            //check project name from list
             ajax_get({
                 url: "/api/project/list",
                 success: function(content) {
@@ -124,8 +50,10 @@
 
                     loadInfos();
 
+                    //refresh infos every 5 minutes
                     setInterval(loadInfos, 5 * 60 * 1000);
 
+                    //user can edit project
                     if (user_access >= 4) {
                         registerCustomInput("projectTitle", false, function() {
                             var name = $("#projectTitle").val();
@@ -144,6 +72,7 @@
                 },
             });
 
+            //adding a user
             $("#form-add").submit(function() {
                 var mail = $("#inputEmail").val();
                 ajax_get({
@@ -174,13 +103,96 @@
                 return false;
             });
 
+            //load project informations
+            function loadInfos() {
+                $("#informations").css("display", "none");
+                addLoading(".jumbotron");
+                ajax_get({
+                    url: "/api/project/" + project_id,
+                    success: function(project) {
+                        user_access = project.user_access;
+
+                        $("#btnDelete").css("display", user_access >= 4 ? "block" : "none");
+                        $("#form-add").css("display", user_access >= 4 ? "block" : "none");
+                        $("#new-ticket").css("display", user_access >= 3 ? "block" : "none");
+
+                        $("#new-project").css("display", "block");
+
+                        $("#projectTitle").val(project.name);
+                        $("#projectCreationDate").html(prettyDate(project.creation_date));
+                        $("#projectCreator").html(project.creator.name);
+                        if (project.editor) {
+                            $("#projectEdited").css("display", "inline");
+                            $("#projectEditionDate").html(prettyDate(project.edition_date));
+                            $("#projectEditor").html(project.editor.name);
+                        } else {
+                            $("#projectEdited").css("display", "none");
+                        }
+                        //load users associated to project
+                        $("#userList").html("");
+                        users = [];
+                        ajax_get({
+                            url: "/api/project/" + project_id + "/users",
+                            success: function(content) {
+                                content.list.forEach(function(user) {
+                                    addUser(user.id, user.access_level, user.name, user_access >= 4 && user.id != current_user);
+                                    users.push(user.id);
+                                });
+                            }
+                        });
+
+                        loadList();
+
+                        removeLoading();
+                        $("#informations").css("display", "block");
+                    },
+                    error: function(code, data) {
+                        removeLoading();
+                    }
+                });
+            }
+
+            //load the associated ticket list
+            function loadList() {
+                $("#ticketList").html("");
+                ajax_get({
+                    url: "/api/project/" + project_id + "/tickets",
+                    data: {
+                        number: page_number,
+                        offset: (page - 1) * page_number
+                    },
+                    success: function(content) {
+                        content.list.forEach(function(ticket) {
+                            addTicket(getTicketName(ticket), ticket.name, ticket.type, ticket.priority, ticket.state, ticket.manager ? ticket.manager.name : "");
+                        });
+
+                        //init pagination system
+                        var maxpage = content.total / page_number;
+                        if (floor(maxpage) !== maxpage)
+                            maxpage = floor(maxpage) + 1;
+
+                        $('#pagination').pagination({
+                            pages: maxpage,
+                            currentPage: page,
+                            cssStyle: 'light-theme',
+                            onPageClick: function(num) {
+                                page = num;
+                                loadList();
+                            }
+                        });
+                    }
+                });
+            }
+
             initDropdown("dd-access", "access", 1);
 
+            //creating a ticket
             $("#new-ticket").click(function() {
                 var win = window.open("/ticket/new", '_blank');
                 win.focus();
             });
 
+            //deleting the project
             $("#btnDelete").click(function() {
                 if (confirm('Are you sure you want to delete this project ?')) {
                     ajax_delete({
@@ -195,6 +207,7 @@
             });
         });
 
+        //a change has occured on a dropdown
         function changeDropdown(ddtype, val) {
             switch (ddtype) {
                 case "access":
@@ -203,11 +216,13 @@
             }
         }
 
+        //a ticket was clicked
         function ticket_click(id) {
             var win = window.open("/ticket/" + id, '_blank');
             win.focus();
         }
 
+        //a user was clicked
         function delete_user(id) {
             ajax_post({
                 url: "/api/project/" + project_id + "/removeuser",
