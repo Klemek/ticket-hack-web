@@ -12,10 +12,12 @@
     <script>
         var currEmail = '<?php echo $_SESSION["user"]["email"]; ?>';
 
+        //Start page treatment
         $(document).ready(function() {
             initNotification("#main-form");
             $("#dropdownUser").addClass("active");
 
+            //changing password
             $("#main-form").submit(function() {
 
                 $("#btnSubmit").attr("disabled", "true");

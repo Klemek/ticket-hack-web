@@ -14,11 +14,13 @@
             managers = {},
             selectedStatus, selectedType, selectedPriority, selectedProject, selectedManager;
 
+        //Start page treatment
         $(document).ready(function() {
             initNotification(".jumbotron");
             $("#navTickets").addClass("active");
             autoTextArea("inputDesc");
 
+            //load project list and each projects' managers
             ajax_get({
                 url: "/api/project/list",
                 success: function(content) {
@@ -48,6 +50,7 @@
             initDropdown("dd-type", "type", 0);
             initDropdown("dd-priority", "priority", 0);
 
+            //init datetime picker
             $('#datetimepicker').datepicker({
                 format: "dd/mm/yyyy",
                 maxViewMode: 2,
@@ -57,6 +60,7 @@
                 autoclose: true
             });
 
+            //creating the ticket
             $("#main-form").submit(function() {
                 if (Object.keys(projects).length > 0 && Object.keys(managers).length > 0) {
                     $("#btnSubmit").attr("disabled");
@@ -95,6 +99,7 @@
             });
         });
 
+        //load manager list for the given project
         function loadManagers(project_id) {
             managers[project_id] = {
                 0: "Nobody"
@@ -113,6 +118,7 @@
             });
         }
 
+        //a change has occured on a dropdown
         function changeDropdown(ddtype, val) {
             switch (ddtype) {
                 case "status":

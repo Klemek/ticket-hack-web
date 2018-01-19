@@ -10,9 +10,11 @@
 <body>
     <?php include($_SERVER['DOCUMENT_ROOT']."/template/anonymous-nav.php"); ?>
     <script>
+        //Start page treatment
         $(document).ready(function() {
             initNotification("#main-form");
 
+            //logging in the user
             $("#main-form").submit(function() {
                 $("#btnSubmit").attr("disabled", "true");
                 clearNotification();

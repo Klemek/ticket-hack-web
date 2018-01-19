@@ -3,7 +3,6 @@
 try{
     $db = new PDO("pgsql:user=php;dbname=postgres;password=password;host=localhost");
 }catch(PDOException $e){
-    die("Erreur de connexion à la base de donnée");
     http_response_code(500);
     $output = array(
         "status"=>500,
@@ -14,16 +13,25 @@ try{
     exit;
 }
 
-/** prepare and execute the query
+/** 
+* prepare and execute the query. shortcut for $db->prepare($req)->execute($values); 
 * $req = request (string)
-* $values = array
-@return PDOStatement $sth
+* $values = array : can be unindexed or indexed. 
+*
+* note all null values will be replaced by a NULL string
+* @return PDOStatement $sth
 **/
 function execute($req, $values){
     global $db;
     $sth = $db->prepare($req);
+    
+    foreach($values as $key=>$v){
+        if ($v === null){
+            $values[$key] = "NULL";
+        }
+    }
 
-    if (! $sth){
+    if (! $sth){//shouldn't happen - but sometimes, it happen. 
         http_response_code(500);
         $output = array(
             "status"=>500,
@@ -38,15 +46,4 @@ function execute($req, $values){
 
     return $sth;
 }
-
-/*apply the init SQL script*/
-function init_database(){
-    global $db;
-    $path_to_init = "./sql/initdb.sql";
-
-    $file = file_get_contents($path_to_init);
-
-    $db->exec($file);
-}
-
-?>
+//php file : do not put "? >" at the end to the risk of having a whitespace included 

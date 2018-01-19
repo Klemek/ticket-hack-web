@@ -8,8 +8,10 @@ if (session_status() == PHP_SESSION_NONE) {
 require_once "db_connect.php";
 
 /**
-* function returning current time - use only this one to avoid using two references
-* @param str the date in string : "2017-12-19 14:38:45.12345"
+*
+* @param $str = null the date in string : "2017-12-19 14:38:45.12345". not puting a date returns tha current time
+*
+* @return a unix timestamp
 **/
 function get_date($str = null){
     if ($str){
@@ -19,7 +21,8 @@ function get_date($str = null){
 }
 
 /**
-* use this function instead of the pgsql::now() to avoid time differences
+* get the current date in a pgsql format
+* @return the current date formated to pgsql timestamp
 **/
 function get_date_string(){
     return date("Y-m-d h:i:s", get_date());
@@ -27,17 +30,23 @@ function get_date_string(){
 
 /*-------------------------------------------------------------- USERS -------------------------------------------------------------------*/
 
-/** hash the password
-* V1 : stupid hash + permasalt
+/**
+* hash the user password
+* @param $pswd the password to hash
+*
+* @return a sha256 hash
 **/
-function hash_passwd($pswd){//TODO add salt with timestamp
+function hash_passwd($pswd){
     $salt_pre = "ticket'hack";
     $salt_post = "145698235";
 
     return hash('sha256',$salt_pre.$pswd.$salt_post);
 }
 
-/*test a mail to check if it exists within the database
+/**
+* test a mail to check if it exists within the database
+* @param mail the mail to test
+*
 * @return boolean
 **/
 function user_test_mail($mail){
@@ -49,9 +58,15 @@ function user_test_mail($mail){
     return $result->fetch()["c"] >= 1;//fetchColumn diffère en 32 et 64 bits
 }
 
-/** add a user
-* the function user_test_mail is called prior to this function
-* return the id of the row inserted
+/** 
+* add a user
+* @param name the name of the new user
+* @param email the email of the new user
+* @param password the password of the new user
+*
+* @return the id of the row inserted
+*
+* die if the mail already exists within the database
 **/
 function add_user($name, $email, $password){
     global $db;
@@ -67,9 +82,11 @@ function add_user($name, $email, $password){
     return $sth->fetch()["id"];
 }
 
-/** get the data from the user
-* the password will NOT be transmitted here
+/**
+* get the user's data, without his password
+* @param id the user's id
 *
+* @return the user data in an object. returns false if the user doesn't exists
 **/
 function get_user($id){
     global $db;
@@ -84,6 +101,12 @@ function get_user($id){
     return false;
 }
 
+/**
+* get the user's data, without his password
+* @param email the user's email
+*
+* @return the user data in an object. returns false if the user doesn't exists
+**/
 function get_user_by_email($email){
     global $db;
     $req = "SELECT * FROM users WHERE email = ?";
@@ -98,7 +121,13 @@ function get_user_by_email($email){
     return false;
 }
 
-/** validate the user's password**/
+/**
+* Verify if the combination email/password exists within the database AND if the user hasn't closed his account
+* @param email
+* @param password the password associated to the email
+*
+* @return boolean
+**/
 function validate_user($email, $password){
     global $db;
 
@@ -109,8 +138,13 @@ function validate_user($email, $password){
     return $result->fetch()["c"] >= 1; 
 }
 
-/*test this function*/
-/*validate the user's password with a fail count, and deny access if the fail count is too high even if the combination is good*/
+/**
+* Verify if the combination email/password exists within the database and if the user hasn't tried to login too much in the last minute. uses validate_user
+* @param email
+* @param password the password associated to the email
+*
+* @return boolean
+**/
 function validate_user_with_fail($email, $password){
     /*check the db*/
     $i = 5;//paramètre anti-boucle infine
@@ -176,11 +210,11 @@ function validate_user_with_fail($email, $password){
 
 /**
 * verify if the user has the right to access the API with an anti-DDOS like system
-* return true if the user can continue, false if he should be disconnected.
-* v1 : use cookies to verify the user. 
 * 
+* @return true if the user can continue, false if he should be disconnected.
+* v1 : use cookies to verify the user. 
+* todo : add verification with IP
 **/
-//todo : add verification by ip with fail2ban
 function verify_user_ddos(){
 
     $max_requests = 100;
@@ -237,15 +271,21 @@ function verify_user_ddos(){
     }
 }
 
-
+/**
+* update the last_connection_date of the user 
+* @param id the user's id
+**/
 function update_last_connection_user($id){
     $req = "UPDATE users SET last_connection_date = ? WHERE id = ?";
     $values = array(get_date_string(), $id);
     execute($req, $values);
 }
 
+/**
+* "delete" the user from the database by setting his deletion_date.
+* @param id the user's id
+**/
 function delete_user($id){
-    /*$req = "DELETE FROM users WHERE id=:id";*/
     $req = "UPDATE users SET deletion_date=NOW() WHERE id=:id;";
     $values = array(":id"=>$id);
     execute($req, $values);
@@ -253,8 +293,13 @@ function delete_user($id){
 
 /*------------------------------------------------------------ PROJECTS ------------------------------------------------------------------*/
 
-/** add a project
-* return the id of the row inserted
+/**
+* add a project
+* @param name the name of the project
+* @param creator_id a user's id
+* @param ticket_prefix the prefix of the ticket (4 char)
+*
+* @return the id of the project
 **/
 function add_project($name, $creator_id, $ticket_prefix){
     $req = "INSERT INTO projects(name, creator_id, ticket_prefix) VALUES (?, ?, ?)  RETURNING id;";
@@ -264,7 +309,10 @@ function add_project($name, $creator_id, $ticket_prefix){
     return $sth->fetch()["id"];
 }
 
-/*delete a project*/
+/**
+* delete a project*
+* @param id the project's id
+**/
 function delete_project($id){
     $req = "DELETE FROM projects WHERE id = ?";
     $values = array($id);
@@ -272,8 +320,11 @@ function delete_project($id){
 }
 
 /**
-* get a project
-* add a "creator" field, corresponding to a user information
+* get a project's data
+* @param id the project's id
+*
+* add a "creator" and "editor" field, which contains an user's data or null if the id is not defined
+* @return the project's data + creator and editor fields
 **/
 function get_project($id){
     $req = "SELECT * FROM projects WHERE id = ?";
@@ -290,10 +341,15 @@ function get_project($id){
             $res["editor"] = null;
         }
     }
-
     return $res;
 }
 
+/**
+* check if the project exists
+* @param $id the project's id
+*
+* @return boolean
+**/
 function project_exists($id){
     if (get_project($id)){
         return true;
@@ -303,6 +359,14 @@ function project_exists($id){
 
 /*------------------------------------------------------------ PROJECTS & USER -----------------------------------------------------------*/
 
+/**
+* add a link between a user and a project
+* @param id_user the user's id
+* @param id_project the project's id
+* @param level the level of access to the project. levels go from 0 (no access) to 4 (administrator)
+*
+* die if a link already exists
+**/
 function add_link_user_project($id_user, $id_project, $level){
     //check if the user does'nt already possess a link to this project
     if (get_link_user_project($id_user, $id_project) !== false){
@@ -314,7 +378,13 @@ function add_link_user_project($id_user, $id_project, $level){
     execute($req, $values);
 }
 
-/*get the link between the user and the project. returns false if the link doesn't exist*/
+/**
+* get the link between the user and the project. returns false if the link doesn't exist
+* @param id_user the user's id
+* @param id_project the project's id
+*
+* @return the full link or false if the link doesn't exist
+**/
 function get_link_user_project($id_user, $id_project){
     $req = "SELECT * FROM link_user_project WHERE user_id = ? AND project_id = ?";
     $values = array($id_user, $id_project);
@@ -328,7 +398,13 @@ function get_link_user_project($id_user, $id_project){
 
 /**
 * get all the projects for a user
-* add a access_level field to each project
+* @param id_user
+* @param limit = 20 the max number of result to return
+* @param offset = 0 the offset to apply to the results
+*
+* @return a list of projects
+*
+* add a access_level field to each project corresponding to the user access : 1 = read only --> 5 = creator
 **/
 function get_projects_for_user($id_user, $limit=20, $offset=0){
     $req = "SELECT * FROM projects WHERE id IN (SELECT project_id FROM link_user_project WHERE user_id = :user_id) OR creator_id = :user_id ORDER BY name OFFSET :offset LIMIT :limit;";
@@ -356,7 +432,12 @@ function get_projects_for_user($id_user, $limit=20, $offset=0){
 }
 
 
-/*return the number of project the user has access to*/
+/**
+* return the number of project the user has access to
+* @param id_user
+*
+* @return integer
+**/
 function get_number_projects_for_user($id_user){
     $req = "SELECT COUNT(*) AS c FROM projects WHERE id IN (SELECT project_id FROM link_user_project WHERE user_id = :user_id) OR creator_id = :user_id;";
     $values = array(":user_id"=>$id_user);
@@ -370,7 +451,11 @@ function get_number_projects_for_user($id_user){
 
 /**
 * get all the users for the project
-* add a access_level to each user
+* @param limit = 20 the max number of result to return
+* @param offset = 0 the offset to apply to the results
+*
+* add a access_level to each user : 1 : read only -> 5 : creator
+* @return a list of users
 */
 function get_users_for_project($id_project, $limit=20, $offset=0){
     $req = "SELECT * FROM users WHERE id IN (SELECT user_id FROM link_user_project WHERE project_id = :project_id UNION".
@@ -402,7 +487,11 @@ function get_users_for_project($id_project, $limit=20, $offset=0){
     return $output;
 }
 
-/*get the number of users on a project*/
+/**
+* get the number of users on a project
+* @param id_project
+* @return integer
+**/
 function get_number_users_for_project($id_project){
     $req = "SELECT COUNT(*) AS c FROM users WHERE id IN (SELECT user_id FROM link_user_project WHERE project_id = :project_id UNION".
         " SELECT creator_id FROM projects WHERE id=:project_id)";
@@ -415,7 +504,12 @@ function get_number_users_for_project($id_project){
     return (int) $result;
 }
 
-/*modify the level on the (id_user, id_project) link*/
+/**
+* modify the level on the (id_user, id_project) link
+* @param $id_user
+* @param $id_project
+* @param $level
+**/
 function edit_link_user_project($id_user, $id_project, $level){
     //check if the user does'nt already possess a link to this project
     if (get_link_user_project($id_user, $id_project) === false){
@@ -427,19 +521,34 @@ function edit_link_user_project($id_user, $id_project, $level){
     execute($req, $values);
 }
 
-/*delete the link*/
+/**
+* delete the link between an user and a project
+* @param id_user
+* @param id_project
+**/
 function delete_link_user_project($id_user, $id_project){
     $req = "DELETE FROM link_user_project WHERE user_id = ? AND project_id = ?;";
     $values = array($id_user, $id_project);
     execute($req, $values);
 }
 
+/**
+* check if the user is an admin on the project
+* @param $id_user
+* @param $id_project
+*
+* @return a boolean indicating if his access is >= 4 (admins & creator)
+**/
 function is_admin($id_user, $id_project){
     return access_level($id_user, $id_project) >= 4;
 }
 
 /**
-* return the access that a user has for a project.
+* get the access the user has on the project
+* @param $id_user
+* @param $id_project
+*
+* @return the access that a user has for a project.
 * 0 : no access
 * 1 : read only
 * 2 : comment + read
@@ -469,8 +578,20 @@ function access_level($id_user, $id_project){
 
 /*----------------------------------------------------------------- TICKETS --------------------------------------------------------------*/
 
-/** add a ticket
-* return the id of the row inserted
+
+/**
+* add a ticket
+* @param $title string
+* @param $project_id integer
+* @param $creator_id integer
+* @param $manager_id integer
+* @param $priority integer
+* @param $description string
+* @param $due_date string
+* @param $state integer
+* @param $type integer
+*
+* @return the ticket's id
 **/
 function add_ticket($title, $project_id, $creator_id, $manager_id ,$priority, $description, $due_date , $state, $type){
 
@@ -514,12 +635,14 @@ function add_ticket($title, $project_id, $creator_id, $manager_id ,$priority, $d
     return $sth->fetch()["id"];
 }
 
-/**  
+/**
 * return the tickets
+* @param $id
+*
+* @return the ticket's data with added fields :
 * add a creator field
 * add a manager field
 * add a project field
-*
 **/
 function get_ticket($id){
     global $db;
@@ -543,6 +666,16 @@ function get_ticket($id){
     return false;
 }
 
+/**
+* get a ticket by his simple_id
+* @param $id_project
+* @param $id_simple
+*
+* @return the ticket's data with added fields :
+* add a creator field
+* add a manager field
+* add a project field
+**/
 function get_ticket_simple($id_project, $id_simple){
     $id_project = (int) $id_project;
     $id_simple = (int) $id_simple;
@@ -564,11 +697,15 @@ function get_ticket_simple($id_project, $id_simple){
     return false;
 }
 
-/** 
-* return the tickets
+/**
+* return the tickets associated with the project
+* @param $id_project
+* @param $limit = 20 the maximum nummber of items to fetch
+* @param $offset = 0 the offset to applu
+*
+* @return a list of tickets, with added fileds to each ticket
 * add a creator field
 * add a manager field
-*
 **/
 function get_tickets_for_project($id_project, $limit=20, $offset=0){
 
@@ -595,7 +732,12 @@ function get_tickets_for_project($id_project, $limit=20, $offset=0){
     return $res;
 }
 
-/*return the number of tickets a project possess*/
+/**
+* return the number of tickets a project possess
+* @param $id_project
+*
+* @return integer the number of tickets
+**/
 function get_number_tickets_for_project($id_project){
     $req = "SELECT COUNT(*) AS c FROM tickets WHERE project_id = :project_id;";
     $values = array(
@@ -607,7 +749,18 @@ function get_number_tickets_for_project($id_project){
     return (int) $res["c"];
 }
 
-/*return all the tickets the user has access to*/
+
+/**
+* return all the tickets the user has access to
+* @param $id_user
+* @param $limit = 20 the maximum nummber of items to fetch
+* @param $offset = 0 the offset to apply
+*
+* @return a list of tickets, with added fields
+* add a creator field
+* add a manager field
+* add a project field
+**/
 function get_tickets_for_user($id_user, $limit=20, $offset=0){
     $req = "SELECT * FROM tickets WHERE project_id IN (SELECT project_id FROM link_user_project WHERE user_id = :user_id AND user_access > 0 UNION SELECT id FROM projects WHERE creator_id = :user_id) ORDER BY project_id, simple_id OFFSET :offset LIMIT :limit;";
     $values = array(":user_id"=>$id_user,
@@ -618,7 +771,7 @@ function get_tickets_for_user($id_user, $limit=20, $offset=0){
 
     for ($i = 0; $i < count($output); $i++){
         $project = get_project($output[$i]["project_id"]);
-        //$output[$i]["project"] = $project;
+        $output[$i]["project"] = $project;
         $output[$i]["ticket_prefix"] = $project["ticket_prefix"];
         if ($output[$i]["manager_id"]){
             $output[$i]["manager"] = get_user($output[$i]["manager_id"]);
@@ -630,7 +783,12 @@ function get_tickets_for_user($id_user, $limit=20, $offset=0){
     return $output;
 }
 
-/*return the number of tickets a user has access to*/
+/**
+* return the number of tickets a user has access to
+* @param $id_user
+*
+* @return integer the number of tickets
+**/
 function get_number_tickets_for_user($id_user){
     $req = "SELECT COUNT(*) AS c FROM tickets WHERE project_id IN (SELECT project_id FROM link_user_project WHERE user_id = :user_id AND user_access > 0 UNION SELECT id FROM projects WHERE creator_id = :user_id);";
     $values = array(":user_id"=>$id_user);
@@ -640,14 +798,22 @@ function get_number_tickets_for_user($id_user){
     return (int) $output;
 }
 
-/*delete a ticket from the database (!= ticket passed to achieved) */
+/**
+* delete a ticket from the database
+* @param $id
+**/
 function delete_ticket($id){
     global $db;
     $req = "DELETE FROM tickets WHERE id = ".(int) $id;
     $db->exec($req);
 }
 
-/** return the rights of the user on the ticket
+/**
+* get the rights of the user on the ticket
+* @param $user_id
+* @param $ticket_id
+*
+* @return an integer indicating the user's rights on the ticket
 *0 : no access
 *1 : read only
 *2 : comment
@@ -684,8 +850,14 @@ function rights_user_ticket($user_id, $ticket_id){
 
 /*----------------------------------------------------------------- COMMENTS -------------------------------------------------------------*/
 
-/*add a comment
-@return the id of the created comment*/
+/**
+* add a comment
+* @param $ticket_id
+* @param $creator_id
+* @param $comment
+*
+* @return the id of the created comment
+**/
 function add_comment($ticket_id, $creator_id, $comment){
     $req = "INSERT INTO comments(ticket_id, creator_id, comment) VALUES (?,?,?) RETURNING id;";
     $values = array($ticket_id, $creator_id, $comment);
@@ -694,6 +866,11 @@ function add_comment($ticket_id, $creator_id, $comment){
     return $sth->fetch()["id"];
 }
 
+/**
+* edit a comment
+* @param $id the comment's id
+* @param $comment the edited comment
+**/
 function edit_comment($id, $comment){
     $req = "UPDATE comments SET comment = ?, edition_date = ? WHERE id = ?";
     $values = array($comment,get_date_string(), $id);
@@ -701,6 +878,10 @@ function edit_comment($id, $comment){
     execute($req, $values);
 }
 
+/**
+* delete a comment
+* @param $id the comment's id
+**/
 function delete_comment($id){
     global $db;
     $req = "DELETE FROM comments WHERE id = ".(int) $id;
@@ -709,6 +890,9 @@ function delete_comment($id){
 
 /**
 * return the comment
+* @param $id
+*
+* @return the comment with added fields
 * add a creator field
 * add a ticket field
 **/
@@ -728,7 +912,12 @@ function get_comment($id){
 }
 
 /**
-* return the comment
+* return the comments for a ticket
+* @param $id_ticket
+* @param $limit = 20 the maximum nummber of items to fetch
+* @param $offset = 0 the offset to applu
+*
+* @return a list of comments with added field to each comment : 
 * add a creator field
 **/
 function get_comments_for_ticket($id_ticket, $limit=20, $offset=0){
@@ -747,7 +936,12 @@ function get_comments_for_ticket($id_ticket, $limit=20, $offset=0){
     return $res;
 }
 
-/*return the number of comments on the ticket*/
+/**
+* return the number of comments on the ticket
+* @param $id_ticket
+*
+* @return integer the number of comments
+**/
 function get_number_comments_ticket($id_ticket){
     $req = "SELECT COUNT(*) AS c FROM comments WHERE ticket_id = :ticket_id;";
     $values= array(":ticket_id" =>$id_ticket);
@@ -757,11 +951,15 @@ function get_number_comments_ticket($id_ticket){
     return (int) $res["c"];
 }
 
-/** return the rights of the user on the ticket
-*0 : no access
-*1 : read
-*2 : edit
-* return false in case of error
+/**
+* get the user's rigts over a comment
+* @param $user_id
+* @param $comment_id
+*
+* @return the rights of the user on the comment
+* 0 : no access
+* 1 : read
+* 2 : edit
 **/
 function rights_user_comment($user_id, $comment_id){
     $comment = get_comment($comment_id);
@@ -787,8 +985,19 @@ function rights_user_comment($user_id, $comment_id){
 
 /*----------------------------------------------------------------- CATEGORIES -----------------------------------------------------------*/
 
-/** add a category
-* return the inserted id
+/**
+* N.B : these functions are not yet used by the api. they belong to a higher version of the application we haven't reached yet
+*
+*
+**/
+
+
+/**
+* add a category
+* @param $project_id
+* @param $name_category
+*
+* @return tha category's id
 **/
 function add_category($project_id, $name_category){
     $req = "INSERT INTO categories(project_id, name) VALUES (?,?) RETURNING id;";
@@ -798,6 +1007,12 @@ function add_category($project_id, $name_category){
     return $sth->fetch()["id"];
 }
 
+/**
+* edit a category
+* @param $id
+* @param $project_id
+* @param $name_category
+**/
 function edit_category($id, $project_id, $name_category){
     $req = "UPDATE categories SET project_id = ?, name = ? WHERE id = ?";
     $values = array($project_id, $name_category, $id);
@@ -805,12 +1020,22 @@ function edit_category($id, $project_id, $name_category){
     $sth = execute($req, $values);
 }
 
+/**
+* delete a category
+* @param $id the category's id
+**/
 function delete_category($id){
     global $db;
     $req = "DELETE FROM categories WHERE id = ".(int) $id;
     $db->exec($req);
 }
 
+/**
+* get the category's data
+* @param $id the category's id
+*
+* @return the category's data
+**/
 function get_category($id){
     global $db;
     $req = "SELECT * FROM categories WHERE id = ".(int) $id;
@@ -818,6 +1043,12 @@ function get_category($id){
     return $sth->fetch(PDO::FETCH_ASSOC);
 }
 
+/**
+* get all categories associated with a project
+* @param $id_project
+*
+* @return a list of categories
+**/
 function get_categories_for_project($id_project){
     global $db;
     $req = "SELECT * FROM categories WHERE project_id = ".(int) $id_project;
@@ -827,8 +1058,12 @@ function get_categories_for_project($id_project){
 
 /*--------------------------------------------------------- CATEGORIES & TICKETS ---------------------------------------------------------*/
 
-/** add the link if the ticket and the category are on the same project
-* return true if the link exists at the end of this function
+/**
+* add the link if the ticket and the category are on the same project
+* @param $id_ticket
+* @param $id_category
+*
+* @return boolean indicating if the link has been created
 **/
 function add_link_ticket_category($id_ticket, $id_category){
     $ticket = get_ticket($id_ticket);
@@ -845,7 +1080,11 @@ function add_link_ticket_category($id_ticket, $id_category){
     return false;
 }
 
-/** delete the link between a ticket and a category**/
+/**
+* delete the link between a ticket and a category
+* @param $id_ticket
+* @param $id_category
+**/
 function delete_link_ticket_category($id_ticket, $id_category){
     $req = "DELETE FROM link_ticket_category WHERE ticket_id = ? AND category_id = ?;";
     $values = array($id_ticket, $id_category);
@@ -853,7 +1092,12 @@ function delete_link_ticket_category($id_ticket, $id_category){
     execute($req, $values);
 }
 
-/* get categories id for a ticket */
+/**
+* get the categories a ticket has
+* @param $id_ticket
+*
+* @return a list of categories
+**/
 function get_categories_for_ticket($id_ticket){
     $req = "SELECT * FROM categories WHERE id IN (SELECT category_id FROM link_ticket_category WHERE ticket_id = ?);";
     $values = array($id_ticket);
@@ -863,7 +1107,12 @@ function get_categories_for_ticket($id_ticket){
     return $sth->fetchall(PDO::FETCH_ASSOC);
 }
 
-/*get all tickets of a designed category*/
+/**
+* get all tickets of a designed category
+* @param $id_category
+*
+* @return a list of tickets
+**/
 function get_tickets_for_category($id_category){
     $req = "SELECT * FROM tickets WHERE id IN (SELECT ticket_id FROM link_ticket_category WHERE category_id = ?);";
     $values = array($id_category);

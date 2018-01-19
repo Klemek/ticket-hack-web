@@ -34,6 +34,7 @@ if (!isset($_SESSION["user_id"])){
         </div>
     </nav>
     <script>
+        //user wants to logout
         function logout() {
             ajax_get({
                 url: "/api/user/disconnect",

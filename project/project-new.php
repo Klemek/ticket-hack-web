@@ -10,6 +10,7 @@
 <body>
     <?php include($_SERVER['DOCUMENT_ROOT']."/template/connected-nav.php"); ?>
     <script>
+        //Start page treatment
         $(document).ready(function() {
             initNotification(".jumbotron");
             $("#navProjects").addClass("active");
@@ -20,6 +21,7 @@
                 $("#inputPrefix").val(val);
             });
 
+            //creating the project
             $("#main-form").submit(function() {
 
                 $("#btnSubmit").attr("disabled");
@@ -32,6 +34,7 @@
                     return false;
                 }
 
+                //get project list to check if it isn't exists already
                 ajax_get({
                     url: "/api/project/list",
                     success: function(content) {
@@ -47,29 +50,22 @@
                             notify("<b>Error</b> You are already associated to a project with the prefix '" + prefix + "'", "danger");
                             return false;
                         }
-
-                        if (!cancel) {
-                            ajax_post({
-                                url: "/api/project/new",
-                                data: {
-                                    name: title,
-                                    ticket_prefix: prefix
-                                },
-                                success: function(content) {
-                                    writeCookie("notify", "success-Project created successfuly !", 1);
-                                    window.location = "/project/" + prefix;
-                                },
-                                error: function(code, data) {
-                                    $("#btnSubmit").removeAttr("disabled");
-                                }
-                            });
-                        }
-
-
+                        ajax_post({
+                            url: "/api/project/new",
+                            data: {
+                                name: title,
+                                ticket_prefix: prefix
+                            },
+                            success: function(content) {
+                                writeCookie("notify", "success-Project created successfuly !", 1);
+                                window.location = "/project/" + prefix;
+                            },
+                            error: function(code, data) {
+                                $("#btnSubmit").removeAttr("disabled");
+                            }
+                        });
                     },
                 });
-
-
 
                 return false;
             });
