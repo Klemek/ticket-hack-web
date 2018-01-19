@@ -20,8 +20,8 @@
             };
             ajax_get({
                 url: "/api/project/" + project_id + "/users",
-                success: function(list) {
-                    list.forEach(function(user) {
+                success: function(content) {
+                    content.list.forEach(function(user) {
                         managers[user.id] = user.name;
                     });
                     initDropdown("dd-manager", "manager", 0, managers, user_access < 3);
